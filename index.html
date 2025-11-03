@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zerotrace's cybersecurity blog</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="sidebar-open">
+    <header>
+        <h1>Zerotrace's cybersecurity blog</h1>
+    
+    </header>
+
+    <!-- Side hamburger control -->
+    <button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="hamburger-icon" aria-hidden="true"></span>
+    </button>
+
+    <!-- Sidebar navigation -->
+    <aside class="sidebar open" id="sidebar" aria-label="Main navigation">
+        <div class="sidebar-header">
+            <h3>Navigate</h3>
+            <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">×</span></button>
+        </div>
+        <div class="sidebar-content">
+            <ul class="sidebar-nav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="vector1.html">Vector 1 · Professional Playbook</a></li>
+                <li><a href="vector2.html">Vector 2 · Network Stack</a></li>
+                <li><a href="vector3.html">Vector 3 · Certification Journey</a></li>
+                <li><a href="vector4.html">Vector 4 · Tool-Craft</a></li>
+            </ul>
+        </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+    <section id="welcome">
+        <h2>Welcome to the journey</h2>
+        <p>In the world of cybersecurity, vulnerabilities don't exist in a vacuum. They are exploitable because of how systems are connected, configured, and communicate at a fundamental network level. This blog is dedicated to that principle.</p>
+        <p>I'm a certified professional with a passion for all things cyber, holding certifications in networking (CCNA), foundational security (CompTIA Security+), and practical penetration testing (PNPT). I'm currently deepening my expertise by tackling the Certified Penetration Testing Specialist (CPTS) from Hack The Box.</p>
+        <p>This blog is my playbook, my lab journal, and my contribution to the community. My goal is to move beyond generic tutorials and establish a unique expert persona: <strong>The Network-Aware Pentester</strong>. Here, we'll explore how a deep understanding of the network stack is the ultimate weapon in an ethical hacker's arsenal.</p>
+    </section>
+
+    <section id="pillars">
+        <h2>What to Expect: The Core Vectors</h2>
+
+        <article class="pillar" id="pillar1">
+            <h3>Vector 1: The Professional Pentesting Playbook</h3>
+            <ul>
+                <li><strong>Real-World Engagement Walkthroughs:</strong> Multi-part series simulating professional engagements, from OSINT to domain compromise and reporting.</li>
+                <li><strong>Active Directory Domination:</strong> Deep dives into AD attacks like Kerberoasting, with a defender's perspective.</li>
+                <li><strong>The Art of the Report:</strong> Learn to communicate risk and write impactful findings.</li>
+            </ul>
+        </article>
+
+        <article class="pillar" id="pillar2">
+            <h3>Vector 2: Hacking the Network Stack</h3>
+            <ul>
+                <li><strong>Exploiting Layer 2/3:</strong> Dive into VLAN hopping, ARP spoofing, and OSPF attacks.</li>
+                <li><strong>Pivoting and Lateral Movement Masterclass:</strong> Techniques from SSH tunneling to Ligolo-ng.</li>
+                <li><strong>Firewall & IDS/IPS Evasion:</strong> Learn firewall theory and bypass techniques.</li>
+            </ul>
+        </article>
+
+        <article class="pillar" id="pillar3">
+            <h3>Vector 3: The Certification Journey & Homelab Chronicles</h3>
+            <ul>
+                <li><strong>Deconstructing CPTS:</strong> A detailed learning log of the CPTS certification process.</li>
+                <li><strong>Building the Ultimate Pentesting Lab:</strong> Guides for building segmented home labs with pfSense and AD domains.</li>
+                <li><strong>Certification Reviews:</strong> Compare PNPT, CPTS, and other certifications.</li>
+            </ul>
+        </article>
+
+        <article class="pillar" id="pillar4">
+            <h3>Vector 4: Tool-Craft & Automation</h3>
+            <ul>
+                <li><strong>Building Simple Security Tools with Python:</strong> Tutorials for scripting custom scanners and recon tools.</li>
+                <li><strong>Customizing and Chaining Open-Source Tooling:</strong> Combine tools like Nmap, httpx, and Amass.</li>
+                <li><strong>Scripting for Recon and Post-Exploitation:</strong> Automate parsing and enumeration workflows.</li>
+            </ul>
+        </article>
+    </section>
+
+    <section id="audience">
+        <h2>Who is this for?</h2>
+        <ul>
+            <li><strong>Aspiring and Junior Penetration Testers:</strong> Structured, methodology-driven learning paths.</li>
+            <li><strong>Network Engineers and System Administrators:</strong> Blue teamers learning the offensive mindset.</li>
+            <li><strong>Mid-Level Security Professionals:</strong> Deep dives into network-layer and AD exploitation.</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 | Built by Zerotrace</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
