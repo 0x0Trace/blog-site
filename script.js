@@ -62,7 +62,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarCloseBtn = document.getElementById('sidebarClose');
     if (sidebarCloseBtn) {
         sidebarCloseBtn.addEventListener('click', () => setSidebar(false));
+        sidebarCloseBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setSidebar(false);
+            }
+        });
     }
+
+    // Optional UX: close sidebar on link click on small screens
+    document.querySelectorAll('.sidebar a').forEach(a => {
+        a.addEventListener('click', () => {
+            if (window.matchMedia('(max-width: 767px)').matches) setSidebar(false);
+        });
+    });
 
     // Mark current page link active in sidebar
     const currentPath = location.pathname.split('/').pop() || 'index.html';

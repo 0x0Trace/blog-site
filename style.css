@@ -264,6 +264,7 @@ a:hover {
 .sidebar-header {
     padding: 1rem;
     border-bottom: 1px solid rgba(0,255,204,0.15);
+    position: relative;
 }
 
 .sidebar-header h3 {
@@ -290,6 +291,7 @@ a:hover {
     justify-content: center;
     cursor: pointer;
     transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    z-index: 2;
 }
 
 .sidebar-close:hover {
