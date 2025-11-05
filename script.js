@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
     const sidebarToggleBtn = document.getElementById('sidebarToggle');
+    const termTarget = document.getElementById('term-typing');
+    const termCursor = document.getElementById('term-cursor');
 
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) {
@@ -23,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Sidebar open/close
-    function setSidebar(open) {
+    function setSidebar(open, options = {}) {
+        const { focus = false } = options;
         if (!sidebar || !sidebarBackdrop) return;
         sidebar.classList.toggle('open', open);
         // Show backdrop only on small screens
@@ -33,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sidebarToggleBtn) {
             sidebarToggleBtn.setAttribute('aria-expanded', String(open));
         }
-        if (open) {
+        if (open && focus) {
             // Focus first focusable element for accessibility
             const firstLink = sidebar.querySelector('a');
             if (firstLink) firstLink.focus({ preventScroll: true });
@@ -43,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sidebarToggleBtn) {
         sidebarToggleBtn.addEventListener('click', () => {
             const open = !sidebar.classList.contains('open');
-            setSidebar(open);
+            setSidebar(open, { focus: open });
             sidebarToggleBtn.setAttribute('aria-expanded', String(open));
         });
     }
@@ -77,6 +80,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Typing effect for terminal-style header
+    if (termTarget && termCursor) {
+        const text = 'Zerotrace Logs';
+        // Always animate typing and keep the cursor blinking
+        termTarget.textContent = '';
+        termCursor.classList.remove('stopped');
+
+        let i = 0;
+    const speed = 140; // ms per char (slower)
+        const interval = setInterval(() => {
+            i++;
+            termTarget.textContent = text.slice(0, i);
+            if (i >= text.length) {
+                clearInterval(interval);
+            }
+        }, speed);
+    }
+
     // Mark current page link active in sidebar
     const currentPath = location.pathname.split('/').pop() || 'index.html';
     document.querySelectorAll('.sidebar a').forEach(a => {
@@ -88,8 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Ensure sidebar is open by default
-    setSidebar(true);
+    // Ensure sidebar is open by default, but do not force focus on a link to avoid initial glow
+    setSidebar(true, { focus: false });
     if (sidebarToggleBtn) sidebarToggleBtn.setAttribute('aria-expanded', 'true');
 
     console.log('%cWelcome to The Network-Aware Pentester', 'color: #00ffcc; font-weight: bold; font-size: 14px;');
