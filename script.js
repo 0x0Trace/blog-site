@@ -76,7 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Optional UX: close sidebar on link click on small screens
     document.querySelectorAll('.sidebar a').forEach(a => {
         a.addEventListener('click', () => {
-            if (window.matchMedia('(max-width: 767px)').matches) setSidebar(false);
+            // On mobile, close immediately for better reading focus
+            if (window.matchMedia('(max-width: 767px)').matches) {
+                setSidebar(false);
+            }
         });
     });
 
@@ -88,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         termCursor.classList.remove('stopped');
 
         let i = 0;
-    const speed = 140; // ms per char (slower)
+    const speed = 65; // ms per char (slower)
         const interval = setInterval(() => {
             i++;
             termTarget.textContent = text.slice(0, i);
@@ -109,9 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Ensure sidebar is open by default, but do not force focus on a link to avoid initial glow
-    setSidebar(true, { focus: false });
-    if (sidebarToggleBtn) sidebarToggleBtn.setAttribute('aria-expanded', 'true');
+    // Default state: open on desktop/tablet, closed on mobile
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    setSidebar(!isMobile, { focus: false });
+    if (sidebarToggleBtn) sidebarToggleBtn.setAttribute('aria-expanded', String(!isMobile));
 
     console.log('%cWelcome to The Network-Aware Pentester', 'color: #00ffcc; font-weight: bold; font-size: 14px;');
     console.log('%cSharpen your packets and stay stealthy.', 'color: #80ffe6;');
