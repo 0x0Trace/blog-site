@@ -14,7 +14,36 @@ header {
     padding: 0.75rem 1rem;
     border-bottom: 2px solid #00B8D9;
 }
+
+img {
+  max-width: 100%; /* prevents stretching beyond container */
+  height: auto;    /* keeps aspect ratio */
+}
 /* Terminal-style header typing */
+
+.note {
+  color: #c9d1d9;              /* light text for dark background */
+  font-size: 15px;
+  background: #0d1117;         /* subtle dark block */
+  border-left: 3px solid #58a6ff; /* blue accent line */
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.note code {
+  background: #161b22;
+  color: #79c0ff;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+}
+
+.note strong {
+  color: #a5d6ff;
+}
+
 .terminal-title {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
     color: #00B8D9;
@@ -101,6 +130,7 @@ footer {
     font-size: 0.9rem;
     color: #00B8D9;
     background-color: #111;
+    position: relative;
 }
 
 .pillar {
@@ -237,6 +267,37 @@ a:hover {
     clip: rect(0, 0, 0, 0);
     border: 0;
 }
+
+/* Footer social links in bottom-left */
+.social-links {
+    position: absolute;
+    left: 1rem;
+    bottom: 0.75rem;
+    display: inline-flex;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.social-links .social {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0,184,217,0.35);
+    border-radius: 8px;
+    background: rgba(0, 184, 217, 0.06);
+    transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.social-links .social:hover {
+    background: rgba(0,184,217,0.12);
+    border-color: rgba(0,184,217,0.55);
+    box-shadow: 0 0 8px rgba(0,184,217,0.25);
+}
+
+.social-links .social svg path { fill: #00B8D9; }
+.social-links .social:hover svg path { fill: #00a2c0; }
 
 /* Sidebar hamburger button on the side */
 .hamburger-btn {
@@ -422,4 +483,54 @@ body.sidebar-open .hamburger-btn {
 /* Ensure consistent placement on wider screens */
 @media (min-width: 768px) {
     .hamburger-btn { top: 0.25rem; }
+}
+
+/* Code block styling */
+pre.code-block, pre {
+    background: #141414;
+    border: 1px solid rgba(0,184,217,0.25);
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #00B8D9 #0d0d0d;
+    margin: 1.25rem 0;
+    position: relative;
+}
+
+pre.code-block:hover, pre:hover {
+    border-color: rgba(0,184,217,0.45);
+}
+
+pre.code-block code, pre code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+    display: block;
+    white-space: pre;
+    color: #d8eefe;
+}
+
+code:not(.language-powershell) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Simple accent for PowerShell code (no parser needed) */
+code.language-powershell {
+    color: #b4e0ff;
+}
+
+/* Optional custom scrollbar (WebKit) */
+pre.code-block::-webkit-scrollbar, pre::-webkit-scrollbar {
+    height: 10px;
+}
+pre.code-block::-webkit-scrollbar-track, pre::-webkit-scrollbar-track {
+    background: #0d0d0d;
+}
+pre.code-block::-webkit-scrollbar-thumb, pre::-webkit-scrollbar-thumb {
+    background: #00B8D9;
+    border-radius: 6px;
+}
+pre.code-block::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hover {
+    background: #00a2c0;
 }
