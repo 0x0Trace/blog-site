@@ -9,10 +9,26 @@ body {
 
 header {
     background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: #00B8D9;
+    color: #00aaff;
     text-align: center;
     padding: 0.75rem 1rem;
-    border-bottom: 2px solid #00B8D9;
+    border-bottom: 2px solid #00aaff;
+}
+.disclaimer {
+    background: rgba(0, 170, 255, 0.05); /* softened cyan tint */
+    color: #d4f3ff; /* slightly brighter than body text for emphasis */
+    border: 1px solid rgba(0, 170, 255, 0.25);
+    border-left: 4px solid #adff2f; /* lime accent only on leading edge */
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 20px 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+
+.disclaimer strong {
+    color: #00aaff; /* revert to softer cyan for emphasis */
 }
 
 img {
@@ -20,7 +36,12 @@ img {
   height: auto;    /* keeps aspect ratio */
 }
 /* Terminal-style header typing */
-
+.step {
+    color: #00aaff;           /* Soft cyan to match new palette */
+    font-weight: 600;         /* Slightly bold for visibility */
+    letter-spacing: 0.5px;    /* Terminal spacing feel */
+    font-family: "Courier New", monospace;
+}
 .note {
   color: #c9d1d9;              /* light text for dark background */
   font-size: 15px;
@@ -28,8 +49,12 @@ img {
   border-left: 3px solid #58a6ff; /* blue accent line */
   padding: 10px 14px;
   border-radius: 6px;
-  margin: 10px 0;
+    margin: 10px 0;
   line-height: 1.5;
+    /* Make background fit text (not full width) */
+    display: inline-block;
+    max-width: min(100%, 68ch);
+    overflow-wrap: anywhere;
 }
 
 .note code {
@@ -46,9 +71,9 @@ img {
 
 .terminal-title {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
-    color: #00B8D9;
+    color: #00aaff;
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700; /* stronger terminal look */
     display: inline-flex;
     align-items: center;
     gap: 0.5ch;
@@ -69,10 +94,16 @@ img {
 .terminal-title .cursor {
     width: 0.6ch;
     height: 1.15em;
-    background: #00B8D9;
+    background: #00aaff;
     display: inline-block;
     border-radius: 1px;
     animation: cursor-blink 2s steps(1, end) infinite; /* slower blink */
+}
+
+/* Ensure no theme injects symbols like './' before the title */
+.terminal-title::before,
+.terminal-title::after {
+    content: none !important;
 }
 
 .terminal-title .cursor.stopped {
@@ -92,7 +123,7 @@ header h1 {
 
 .subtitle {
     font-size: 0.85rem;
-    color: #00B8D9;
+    color: #00aaff;
     margin-top: 0.25rem;
 }
 
@@ -103,15 +134,18 @@ section {
 }
 
 h2 {
-    color: #00B8D9;
-    border-left: 4px solid #00ffcc;
+    color: #00aaff;
+    border-left: 4px solid #00aaff; /* soft cyan border */
     padding-left: 10px;
     font-size: 1.8rem;
+    font-weight: 700; /* heavier heading weight */
 }
 
 h3 {
-    color: #0086A6; /* darker cyan-blue for section titles */
+    color: #00a0e6; /* slightly muted cyan-blue */
     margin-top: 2rem;
+    font-weight: 600;
+    text-shadow: none !important; /* ensure no theme glow on h3 */
 }
 
 ul {
@@ -120,15 +154,15 @@ ul {
 }
 
 strong {
-    color: #00B8D9;
+    color: #00aaff; /* softer cyan for emphasized inline text */
 }
 
 footer {
     text-align: center;
     padding: 1rem;
-    border-top: 1px solid #00B8D9;
+    border-top: 1px solid #00aaff;
     font-size: 0.9rem;
-    color: #00B8D9;
+    color: #00aaff;
     background-color: #111;
     position: relative;
 }
@@ -137,7 +171,7 @@ footer {
     background-color: #1a1a1a;
     padding: 1.5rem;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 184, 217, 0.2);
+    box-shadow: 0 0 10px rgba(0, 170, 255, 0.18);
     margin-bottom: 2rem;
     transition: transform 0.2s ease-in-out;
 }
@@ -147,7 +181,7 @@ footer {
 }
 
 a {
-    color: #00B8D9;
+    color: #00aaff;
     text-decoration: none;
 }
 
@@ -173,14 +207,14 @@ a:hover {
     width: 2.75rem;
     height: 2.75rem;
     margin: 1rem auto 0;
-    border: 1px solid #00B8D9;
+    border: 1px solid #00aaff;
     border-radius: 0.6rem;
     cursor: pointer;
     transition: background 0.2s ease-in-out;
 }
 
 .nav-toggle-label:hover {
-    background: rgba(0, 184, 217, 0.1);
+    background: rgba(0, 170, 255, 0.1);
 }
 
 .nav-toggle-icon,
@@ -189,7 +223,7 @@ a:hover {
     display: block;
     width: 1.4rem;
     height: 2px;
-    background-color: #00B8D9;
+    background-color: #00aaff;
     border-radius: 1px;
     transition: transform 0.2s ease-in-out;
 }
@@ -239,13 +273,13 @@ a:hover {
     padding: 0;
     margin: 0;
     background-color: #111;
-    border: 1px solid #00B8D9;
+    border: 1px solid #00aaff;
     border-radius: 0.6rem;
     overflow: hidden;
 }
 
 .pillar-menu li + li {
-    border-top: 1px solid rgba(0, 184, 217, 0.2);
+    border-top: 1px solid rgba(0, 170, 255, 0.2);
 }
 
 .pillar-menu a {
@@ -254,7 +288,7 @@ a:hover {
 }
 
 .pillar-menu a:hover {
-    background-color: rgba(0, 184, 217, 0.1);
+    background-color: rgba(0, 170, 255, 0.1);
 }
 
 .sr-only {
@@ -284,20 +318,20 @@ a:hover {
     height: 32px;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(0,184,217,0.35);
+    border: 1px solid rgba(0,170,255,0.35);
     border-radius: 8px;
-    background: rgba(0, 184, 217, 0.06);
+    background: rgba(0, 170, 255, 0.06);
     transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 .social-links .social:hover {
-    background: rgba(0,184,217,0.12);
-    border-color: rgba(0,184,217,0.55);
-    box-shadow: 0 0 8px rgba(0,184,217,0.25);
+    background: rgba(0,170,255,0.12);
+    border-color: rgba(0,170,255,0.55);
+    box-shadow: 0 0 8px rgba(0,170,255,0.25);
 }
 
-.social-links .social svg path { fill: #00B8D9; }
-.social-links .social:hover svg path { fill: #00a2c0; }
+.social-links .social svg path { fill: #00aaff; }
+.social-links .social:hover svg path { fill: #0094d6; }
 
 /* Sidebar hamburger button on the side */
 .hamburger-btn {
@@ -308,8 +342,8 @@ a:hover {
     width: 44px;
     height: 44px;
     border-radius: 10px;
-    border: 1px solid #00B8D9;
-    background: rgba(0, 184, 217, 0.06);
+    border: 1px solid #00aaff;
+    background: rgba(0, 170, 255, 0.06);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -319,8 +353,8 @@ a:hover {
 }
 
 .hamburger-btn:hover {
-    background: rgba(0, 184, 217, 0.12);
-    box-shadow: 0 0 8px rgba(0,184,217,0.25);
+    background: rgba(0, 170, 255, 0.12);
+    box-shadow: 0 0 8px rgba(0,170,255,0.25);
 }
 
 /* Hide hamburger when sidebar is open (X is available inside sidebar) */
@@ -332,7 +366,7 @@ body.sidebar-open .hamburger-btn {
     display: block;
     width: 22px;
     height: 2px;
-    background: #00B8D9;
+    background: #00aaff;
     border-radius: 1px;
     position: relative;
 }
@@ -376,7 +410,7 @@ body.sidebar-open .hamburger-btn {
 .sidebar-header h3 {
     margin: 0;
     font-size: 1rem;
-    color: #00B8D9;
+    color: #00aaff;
 }
 
 /* Close (X) button inside sidebar */
@@ -389,7 +423,7 @@ body.sidebar-open .hamburger-btn {
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #00B8D9;
+    color: #00aaff;
     font-size: 22px;
     line-height: 1;
     display: inline-flex;
@@ -403,12 +437,12 @@ body.sidebar-open .hamburger-btn {
 .sidebar-close:hover {
     background: transparent;
     box-shadow: none;
-    text-shadow: 0 0 6px rgba(0,184,217,0.6);
+    text-shadow: none; /* removed glow */
 }
 
 .sidebar-close:focus-visible {
-    outline: none;
-    text-shadow: 0 0 8px rgba(0,184,217,0.8);
+    outline: 2px solid #00aaff;
+    text-shadow: none; /* removed glow */
 }
 
 .sidebar-content {
@@ -436,21 +470,98 @@ body.sidebar-open .hamburger-btn {
 }
 
 .sidebar-nav a:hover {
-    background: rgba(0,184,217,0.08);
-    color: #00B8D9;
+    background: rgba(0,170,255,0.08);
+    color: #00aaff;
 }
 
 .sidebar-nav a[aria-current="page"] {
-    background: rgba(0,184,217,0.12);
-    color: #00B8D9;
+    background: rgba(0,170,255,0.12);
+    color: #00aaff;
+}
+
+/* Submenu (Writeups dropdown) */
+.sidebar-nav .has-submenu { position: relative; }
+.submenu-toggle {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #e0e0e0;
+    font: inherit;
+    padding: 0.6rem 0.5rem 0.6rem 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    border-radius: 6px;
+    text-align: left;
+    position: relative;
+    transition: background .2s ease-in-out, color .2s ease-in-out;
+}
+.submenu-toggle:hover { background: rgba(0,170,255,0.08); color: #00aaff; }
+.submenu-toggle:focus-visible { outline: 2px solid #00aaff; outline-offset: 2px; }
+.submenu-toggle[aria-expanded="true"] { background: rgba(0,170,255,0.06); }
+
+.submenu-toggle .arrow {
+    display: inline-block;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid currentColor; /* caret */
+    transform: rotate(-90deg);
+    transition: transform .25s ease;
+    filter: none; /* remove glow */
+}
+.submenu-toggle[aria-expanded="true"] .arrow { transform: rotate(0deg); }
+
+ul.submenu {
+    list-style: none;
+    margin: 0 0 0 0.75rem;
+    padding: 0 0 0.4rem 0.35rem;
+    border-left: 1px solid rgba(0,170,255,0.25);
+}
+ul.submenu li a {
+    padding: 0.45rem 0.5rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+}
+ul.submenu li a:hover { background: rgba(0,170,255,0.1); }
+
+.sidebar .sidebar-nav li,
+.sidebar .sidebar-nav .submenu li {
+    list-style: none; /* remove any theme markers */
+}
+.sidebar .sidebar-nav li::marker { content: '' !important; }
+.sidebar .sidebar-nav li::before,
+.sidebar .sidebar-nav a::before,
+.sidebar .sidebar-nav li::after,
+.sidebar .sidebar-nav a::after {
+    content: none !important; /* override imported theme arrows like '>' or '>>' */
+}
+
+/* Remove theme-injected symbols from certification nav list on vector3 */
+#certifications nav ul { list-style: none; margin: 0; padding: 0; }
+#certifications nav li::marker { content: '' !important; }
+#certifications nav li::before,
+#certifications nav a::before,
+#certifications nav li::after,
+#certifications nav a::after { content: none !important; }
+
+/* Slightly increase size for certification quick links and section headings */
+#certifications nav a {
+    font-size: 1.1rem; /* subtle bump for in-page nav items */
+    line-height: 1.45;
+}
+
+#certifications h3 {
+    font-size: 1.35rem; /* slightly larger section headings */
 }
 
 .sidebar-footer {
     margin-top: auto;
     padding: 0.75rem 1rem;
-    border-top: 1px solid rgba(0,184,217,0.15);
+    border-top: 1px solid rgba(0,170,255,0.15);
     font-size: 0.85rem;
-    color: #00B8D9;
+    color: #00aaff;
 }
 
 /* Backdrop */
@@ -488,20 +599,20 @@ body.sidebar-open .hamburger-btn {
 /* Code block styling */
 pre.code-block, pre {
     background: #141414;
-    border: 1px solid rgba(0,184,217,0.25);
+    border: 1px solid rgba(0,170,255,0.25);
     padding: 0.85rem 1rem;
     border-radius: 8px;
     font-size: 0.85rem;
     line-height: 1.4;
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: #00B8D9 #0d0d0d;
+    scrollbar-color: #00aaff #0d0d0d;
     margin: 1.25rem 0;
     position: relative;
 }
 
 pre.code-block:hover, pre:hover {
-    border-color: rgba(0,184,217,0.45);
+    border-color: rgba(0,170,255,0.45);
 }
 
 pre.code-block code, pre code {
@@ -528,9 +639,9 @@ pre.code-block::-webkit-scrollbar-track, pre::-webkit-scrollbar-track {
     background: #0d0d0d;
 }
 pre.code-block::-webkit-scrollbar-thumb, pre::-webkit-scrollbar-thumb {
-    background: #00B8D9;
+    background: #00aaff;
     border-radius: 6px;
 }
 pre.code-block::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hover {
-    background: #00a2c0;
+    background: #0094d6;
 }

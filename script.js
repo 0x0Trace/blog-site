@@ -117,6 +117,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setSidebar(!isMobile, { focus: false });
     if (sidebarToggleBtn) sidebarToggleBtn.setAttribute('aria-expanded', String(!isMobile));
 
+    // Submenu toggle (Writeups)
+    document.querySelectorAll('.submenu-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', String(!expanded));
+            const submenu = btn.nextElementSibling;
+            if (submenu) {
+                submenu.hidden = expanded; // hide if currently expanded
+            }
+        });
+        // Ensure initial hidden state matches aria-expanded
+        const submenu = btn.nextElementSibling;
+        if (submenu && btn.getAttribute('aria-expanded') === 'false') {
+            submenu.hidden = true;
+        }
+    });
+
     console.log('%cWelcome to The Network-Aware Pentester', 'color: #00ffcc; font-weight: bold; font-size: 14px;');
     console.log('%cSharpen your packets and stay stealthy.', 'color: #80ffe6;');
 });
