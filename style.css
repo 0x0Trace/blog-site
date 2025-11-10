@@ -26,7 +26,25 @@ header {
     line-height: 1.5;
 }
 
+.question {
+    background: rgba(0, 170, 255, 0.08);
+    border-left: 4px solid #00aaff;
+    padding: 12px 16px;
+    margin: 1.5rem 0 0.5rem;
+    border-radius: 6px;
+    color: #b4e9ff;
+    font-weight: 600;
+}
 
+/* Answer block following a question */
+.answer {
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 4px solid #0077cc;
+    padding: 12px 16px;
+    margin: 0 0 1.5rem;
+    border-radius: 6px;
+    color: #d0eaff;
+}
 .disclaimer strong {
     color: #00aaff; /* revert to softer cyan for emphasis */
 }
@@ -37,7 +55,7 @@ img {
 }
 /* Terminal-style header typing */
 .step {
-    color: #00aaff;           /* Soft cyan to match new palette */
+    color: #c77dff;           /* Neon purple */
     font-weight: 600;         /* Slightly bold for visibility */
     letter-spacing: 0.5px;    /* Terminal spacing feel */
     font-family: "Courier New", monospace;
@@ -165,6 +183,17 @@ footer {
     color: #00aaff;
     background-color: #111;
     position: relative;
+}
+
+/* Sticky footer only on the index page */
+body.page-index {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.page-index > footer {
+    margin-top: auto;
 }
 
 .pillar {
@@ -704,4 +733,33 @@ pre.code-block::-webkit-scrollbar-thumb, pre::-webkit-scrollbar-thumb {
 }
 pre.code-block::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hover {
     background: #0094d6;
+}
+/* Question and Answer styling */
+.question {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 170, 255, 0.08);
+    border-left: 4px solid #00aaff;
+    border-radius: 6px;
+}
+
+.question strong {
+    color: #00aaff;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.answer {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: rgba(0, 170, 255, 0.03);
+    border-left: 2px solid rgba(0, 170, 255, 0.3);
+    border-radius: 4px;
+    line-height: 1.7;
+}
+
+.answer ol, .answer ul {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
