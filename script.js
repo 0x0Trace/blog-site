@@ -134,6 +134,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Load recent updates
+    fetch('updates.json')
+        .then(response => response.json())
+        .then(updates => {
+            const list = document.getElementById('updates-list');
+            if (!list || !Array.isArray(updates)) return;
+            updates.slice(0, 5).forEach(item => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = item.link;
+                a.textContent = `${item.date} – ${item.title}`;
+                a.target = '_self';
+                li.appendChild(a);
+                list.appendChild(li);
+            });
+        })
+        .catch(err => console.error('Error loading updates:', err));
+
     console.log('%cWelcome to The Network-Aware Pentester', 'color: #00ffcc; font-weight: bold; font-size: 14px;');
     console.log('%cSharpen your packets and stay stealthy.', 'color: #80ffe6;');
 });

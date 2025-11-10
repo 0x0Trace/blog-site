@@ -18,7 +18,7 @@ header {
     background: rgba(0, 170, 255, 0.05); /* softened cyan tint */
     color: #d4f3ff; /* slightly brighter than body text for emphasis */
     border: 1px solid rgba(0, 170, 255, 0.25);
-    border-left: 4px solid #adff2f; /* lime accent only on leading edge */
+    border-left: 4px solid #c77dff; /* purple accent on leading edge */
     border-radius: 8px;
     padding: 14px 16px;
     margin: 20px 0;
@@ -46,7 +46,7 @@ header {
     color: #d0eaff;
 }
 .disclaimer strong {
-    color: #00aaff; /* revert to softer cyan for emphasis */
+    color: #c77dff !important; /* purple for emphasis */
 }
 
 img {
@@ -575,6 +575,24 @@ ul.submenu li a:hover { background: rgba(0,170,255,0.1); }
 #certifications nav li::after,
 #certifications nav a::after { content: none !important; }
 
+/* Remove theme bullet images and symbols from all lists across the website */
+ul, ol {
+    list-style: none;
+}
+ul li, ol li {
+    list-style: none;
+    list-style-image: none !important;
+}
+ul li::marker, ol li::marker {
+    content: '' !important;
+}
+ul li::before, ul a::before,
+ul li::after, ul a::after,
+ol li::before, ol a::before,
+ol li::after, ol a::after {
+    content: none !important;
+}
+
 /* Slightly increase size for certification quick links and section headings */
 #certifications nav a {
     font-size: 1.1rem; /* subtle bump for in-page nav items */
@@ -592,6 +610,11 @@ ul.submenu li a:hover { background: rgba(0,170,255,0.1); }
     gap: 0.25rem;
     box-shadow: 0 0 10px rgba(0,170,255,0.08);
     backdrop-filter: blur(2px); /* slight glass feel */
+}
+
+/* Purple color for "Recommended Resources" headings */
+#certifications h4 {
+    color: #c77dff !important;
 }
 
 #certifications nav ul {
