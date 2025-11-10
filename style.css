@@ -611,18 +611,18 @@ ul.submenu li a:hover { background: rgba(0,170,255,0.1); }
     border-radius: 8px;
     font-weight: 600;
     letter-spacing: 0.3px;
-    color: #00aaff;
-    background: linear-gradient(145deg, rgba(0,170,255,0.08), rgba(0,170,255,0.03));
-    border: 1px solid rgba(0,170,255,0.28);
+    color: #8ecde8; /* softer text colour */
+    background: linear-gradient(145deg, rgba(0, 170, 255, 0.05), rgba(0, 170, 255, 0.02)); /* Darker, subtler background */
+    border: 1px solid rgba(0, 170, 255, 0.2);
     box-shadow: 0 0 0 rgba(0,170,255,0.0);
     transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
 }
 
 #certifications nav a:hover,
 #certifications nav a:focus-visible {
-    background: linear-gradient(145deg, rgba(0,170,255,0.18), rgba(0,170,255,0.08));
-    border-color: rgba(0,170,255,0.55);
-    box-shadow: 0 0 8px rgba(0,170,255,0.35);
+    background: linear-gradient(145deg, rgba(0, 170, 255, 0.12), rgba(0, 170, 255, 0.06));
+    border-color: rgba(0, 170, 255, 0.4);
+    box-shadow: 0 0 8px rgba(0, 170, 255, 0.25);
     color: #b4e9ff;
     transform: translateY(-2px);
     text-decoration: none; /* override global underline */
