@@ -175,6 +175,71 @@ strong {
     color: #00aaff; /* softer cyan for emphasized inline text */
 }
 
+/* Defender and Red Teamer specific styling */
+.step.defender {
+    color: #1e90ff !important;
+}
+
+.step.redteam {
+    color: #ff6b6b !important;
+}
+
+/* Purple text class for specific headings */
+.purple-text {
+    color: #c77dff;
+}
+
+/* Section grouping for better visual separation */
+section > h3 {
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Container for grouped content under each h3 heading */
+section > h3 ~ p,
+section > h3 ~ ul,
+section > h3 ~ ol,
+section > h3 ~ pre,
+section > h3 ~ .question,
+section > h3 ~ .answer,
+section > h3 ~ .note,
+section > h3 ~ .disclaimer {
+    background: rgba(0, 170, 255, 0.03);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    margin-left: 0;
+}
+
+/* Special styling for defender sections */
+h3:has(.step.defender) ~ ul,
+h3:has(.step.defender) ~ p {
+    background: rgba(30, 144, 255, 0.05);
+    border-left: 3px solid #1e90ff;
+    margin-left: 0;
+    padding-left: 1.25rem;
+}
+
+/* Special styling for red teamer sections */
+h3:has(.step.redteam) ~ ul,
+h3:has(.step.redteam) ~ p {
+    background: rgba(255, 107, 107, 0.05);
+    border-left: 3px solid #ff6b6b;
+    margin-left: 0;
+    padding-left: 1.25rem;
+}
+
+/* Step sections background */
+h3:has(.step:not(.defender):not(.redteam)) ~ p,
+h3:has(.step:not(.defender):not(.redteam)) ~ ul,
+h3:has(.step:not(.defender):not(.redteam)) ~ pre,
+h3:has(.step:not(.defender):not(.redteam)) ~ .note {
+    background: rgba(199, 125, 255, 0.04);
+    border-left: 3px solid #c77dff;
+    margin-left: 0;
+    padding-left: 1.25rem;
+}
+
 footer {
     text-align: center;
     padding: 1rem;
@@ -544,53 +609,65 @@ body.sidebar-open .hamburger-btn {
 
 ul.submenu {
     list-style: none;
-    margin: 0 0 0 0.75rem;
+    margin: 0 0 0 -1rem;
     padding: 0 0 0.4rem 0.35rem;
-    border-left: 1px solid rgba(0,170,255,0.25);
 }
 ul.submenu li a {
     padding: 0.45rem 0.5rem;
     font-size: 0.9rem;
     border-radius: 4px;
+    white-space: nowrap;
 }
 ul.submenu li a:hover { background: rgba(0,170,255,0.1); }
 
 .sidebar .sidebar-nav li,
 .sidebar .sidebar-nav .submenu li {
-    list-style: none; /* remove any theme markers */
+    list-style: none;
 }
-.sidebar .sidebar-nav li::marker { content: '' !important; }
+.sidebar .sidebar-nav li::marker { content: ''; }
 .sidebar .sidebar-nav li::before,
 .sidebar .sidebar-nav a::before,
 .sidebar .sidebar-nav li::after,
 .sidebar .sidebar-nav a::after {
-    content: none !important; /* override imported theme arrows like '>' or '>>' */
+    content: none;
 }
 
-/* Remove theme-injected symbols from certification nav list on vector3 */
+/* Remove symbols from certification nav list on vector3 */
 #certifications nav ul { list-style: none; margin: 0; padding: 0; }
-#certifications nav li::marker { content: '' !important; }
+#certifications nav li::marker { content: ''; }
 #certifications nav li::before,
 #certifications nav a::before,
 #certifications nav li::after,
-#certifications nav a::after { content: none !important; }
+#certifications nav a::after { content: none; }
 
-/* Remove theme bullet images and symbols from all lists across the website */
+/* Add purple arrow tips to all list items */
 ul, ol {
     list-style: none;
+    padding-left: 0;
 }
 ul li, ol li {
     list-style: none;
-    list-style-image: none !important;
+    list-style-image: none;
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+ul li::before, ol li::before {
+    content: '▸';
+    color: #c77dff;
+    font-size: 1.1em;
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 ul li::marker, ol li::marker {
-    content: '' !important;
+    content: '';
 }
-ul li::before, ul a::before,
+ul a::before,
 ul li::after, ul a::after,
-ol li::before, ol a::before,
+ol a::before,
 ol li::after, ol a::after {
-    content: none !important;
+    content: none;
 }
 
 /* Slightly increase size for certification quick links and section headings */
@@ -708,39 +785,86 @@ ol li::after, ol a::after {
     .hamburger-btn { top: 0.25rem; }
 }
 
-/* Code block styling */
+/* Code block styling - Markdown style */
 pre.code-block, pre {
-    background: #141414;
-    border: 1px solid rgba(0,170,255,0.25);
-    padding: 0.85rem 1rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    line-height: 1.4;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-left: 3px solid #ff6b6b;
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    line-height: 1.6;
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: #00aaff #0d0d0d;
-    margin: 1.25rem 0;
+    scrollbar-color: #ff6b6b #161b22;
+    margin: 1rem 0;
     position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 pre.code-block:hover, pre:hover {
-    border-color: rgba(0,170,255,0.45);
+    border-left-color: #ff8787;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 pre.code-block code, pre code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     display: block;
     white-space: pre;
-    color: #d8eefe;
+    color: #c9d1d9;
+    background: transparent;
+    padding: 0;
 }
 
-code:not(.language-powershell) {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+/* Inline code styling - Markdown style */
+code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    background: #161b22;
+    color: #ff8787;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+    border: 1px solid #30363d;
 }
 
-/* Simple accent for PowerShell code (no parser needed) */
+pre code {
+    background: transparent;
+    padding: 0;
+    border: none;
+    font-size: 0.9rem;
+}
+
+/* PowerShell code highlighting */
 code.language-powershell {
-    color: #b4e0ff;
+    color: #79c0ff;
+}
+
+/* Ordered list styling - Markdown style */
+ol {
+    counter-reset: item;
+    padding-left: 0;
+}
+
+ol li {
+    counter-increment: item;
+    position: relative;
+    padding-left: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+
+ol li::before {
+    content: counter(item) ".";
+    color: #ff6b6b;
+    font-weight: 600;
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 1em;
+}
+
+/* Override the purple arrow for ol items */
+ol li::before {
+    content: counter(item) "." !important;
 }
 
 /* Optional custom scrollbar (WebKit) */
