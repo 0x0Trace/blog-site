@@ -786,3 +786,21 @@ pre.code-block::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hove
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
 }
+
+/* Mobile-specific footer adjustments */
+@media (max-width: 768px) {
+    footer {
+        padding-bottom: 3rem; /* Add extra padding at bottom for social links */
+    }
+    
+    footer p {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1; /* Ensure text is above social icons if they overlap */
+    }
+    
+    .social-links {
+        bottom: 0.5rem; /* Position social links at the very bottom */
+    }
+}
