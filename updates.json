@@ -1,4 +1,5 @@
 [
+  {"date": "2025-11-16", "title": "Getting Started with Sliver C2", "link": "writeups/sliver-c2-getting-started.html"},
   {"date": "2025-11-13", "title": "PowerShell file transfer via DNS", "link": "writeups/ps-file-transfer-dns.html"},
   {"date": "2025-11-10", "title": "Certification journey – PNPT section added", "link": "vector3.html#pnpt"}
 ]
