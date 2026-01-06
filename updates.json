@@ -1,8 +1,8 @@
 [
-  {"date": "2026-01-06", "title": "Welcome - ADCS ESC1 Certificate Attack Walkthrough", "link": "walkthroughs/welcome.html"},
-  {"date": "2026-01-06", "title": "Staged - Sliver C2 Shellcode Staging and SSH Pivoting", "link": "walkthroughs/staged.html"},
-  {"date": "2026-01-06", "title": "Arasaka - Active Directory ADCS ESC1 Exploitation", "link": "walkthroughs/arasaka.html"},
-  {"date": "2026-01-06", "title": "Midgarden2 - BadSuccessor CVE-2025 dMSA Exploitation", "link": "walkthroughs/midgarden2-badsuccessor.html"},
+  {"date": "2026-01-06", "title": "Welcome - ADCS ESC1 Certificate Attack Walkthrough", "link": "HackSmarter/welcome.html"},
+  {"date": "2026-01-06", "title": "Staged - Sliver C2 Shellcode Staging and SSH Pivoting", "link": "HackSmarter/staged.html"},
+  {"date": "2026-01-06", "title": "Arasaka - Active Directory ADCS ESC1 Exploitation", "link": "HackSmarter/arasaka.html"},
+  {"date": "2026-01-06", "title": "Midgarden2 - BadSuccessor CVE-2025 dMSA Exploitation", "link": "HackSmarter/midgarden2-badsuccessor.html"},
   {"date": "2025-11-28", "title": "Dual Cloud Redirector C2 Infrastructure - Complete Setup Guide", "link": "projects/dual-cloud-c2-redirector.html"},
   {"date": "2025-11-16", "title": "Getting Started with Sliver C2", "link": "writeups/sliver-c2-getting-started.html"},
   {"date": "2025-11-13", "title": "PowerShell file transfer via DNS", "link": "writeups/ps-file-transfer-dns.html"},

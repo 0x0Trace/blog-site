@@ -10,7 +10,7 @@
   <meta property="og:title" content="BankSmarter CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
   <meta property="og:description" content="Complete walkthrough covering SNMP enumeration, cron job hijacking, Unix socket exploitation, and PYTHONPATH hijacking for privilege escalation on Ubuntu 24.04." />
   <meta property="og:image" content="https://z3rotrace.live/assets/banksmarter/hydra-ssh-bruteforce.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/banksmarter.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/banksmarter.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -121,16 +121,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html" aria-current="page">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html" aria-current="page">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -194,9 +194,9 @@
   <pre><code>$ snmpwalk -v 2c -c public 10.1.54.58</code></pre>
 
   <p>Key finding in the contact information:</p>
-  <pre><code>iso.3.6.1.2.1.1.4.0 = STRING: "Admin Layne.Stanley:5t6^jahTRjab'"</code></pre>
+  <pre><code>iso.3.6.1.2.1.1.4.0 = STRING: "Admin Layne.Stanley:[REDACTED]'"</code></pre>
 
-  <p>Credentials leaked via SNMP: <code>Layne.Stanley:5t6^jahTRjab</code></p>
+  <p>Credentials leaked via SNMP: <code>Layne.Stanley:[REDACTED]</code></p>
 
   <div class="note">
     <strong>Lesson:</strong> SNMP with default community strings is a common misconfiguration. Always enumerate UDP services, especially SNMP (161), TFTP (69), and DNS (53).
@@ -215,7 +215,7 @@ stanley</code></pre>
 
   <h3><span class="step">[Step 5]</span> SSH Brute Force</h3>
   <p>Using Hydra to validate the discovered credentials against the username list:</p>
-  <pre><code>$ hydra -L users.list -p '5t6^jahTRjab' ssh://10.1.54.58</code></pre>
+  <pre><code>$ hydra -L users.list -p '[REDACTED]' ssh://10.1.54.58</code></pre>
 
   <p><img src="../assets/banksmarter/hydra-ssh-bruteforce.png" alt="Hydra confirms valid credentials for layne.stanley"></p>
 
@@ -307,7 +307,7 @@ $ chmod 600 /home/scott.weiland/.ssh/authorized_keys</code></pre>
 [bank_backupd] Starting backup for BankSmarter accounts...
 [bank_backup.py] Running internal Python verification...
 [bank_backup.py] Hashing account transactions...
-86d9050926fde112924e2f71ea8d17b88d90068f39c9907bb3932c2df3c46dfc
+[REDACTED]
 [bank_backup.py] Backup completed successfully.</code></pre>
 
   <h3><span class="step">[Step 12]</span> Python Script Analysis</h3>

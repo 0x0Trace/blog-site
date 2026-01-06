@@ -10,7 +10,7 @@
   <meta property="og:title" content="Ascension CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
   <meta property="og:description" content="Complete walkthrough covering FTP enumeration, NFS misconfiguration, SSH key cracking, cron job exploitation, and Linux capabilities abuse for privilege escalation." />
   <meta property="og:image" content="https://z3rotrace.live/assets/ascension/python-setuid-cap.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/ascension.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/ascension.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -152,16 +152,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html" aria-current="page">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html" aria-current="page">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -344,7 +344,7 @@ user2@ip-10-0-26-230:~$</code></pre>
   <ul>
     <li><strong>Database:</strong> wordpress</li>
     <li><strong>User:</strong> wpuser</li>
-    <li><strong>Password:</strong> wppassword</li>
+    <li><strong>Password:</strong> [REDACTED]</li>
   </ul>
 
   <p>I also confirmed MySQL was running locally:</p>
@@ -353,7 +353,7 @@ user2@ip-10-0-26-230:~$</code></pre>
   <h3><span class="step">[Step 9]</span> Database Enumeration</h3>
   <p>I connected to MySQL and enumerated the database:</p>
   <pre><code>user2@ip-10-0-26-230:~$ mysql -u wpuser -p
-Enter password: wppassword</code></pre>
+Enter password: [REDACTED]</code></pre>
 
   <pre><code>mysql> SHOW DATABASES;
 +--------------------+
@@ -386,12 +386,12 @@ mysql> SHOW TABLES;
 +----+----------+---------------+
 | id | username | password      |
 +----+----------+---------------+
-|  1 | user3    | user3password |
+|  1 | user3    | [REDACTED] |
 +----+----------+---------------+</code></pre>
 
   <h3><span class="step">[Step 10]</span> Switching to user3</h3>
   <pre><code>user2@ip-10-0-26-230:~$ su user3
-Password: user3password
+Password: [REDACTED]
 user3@ip-10-0-26-230:~$</code></pre>
 
   <h2>Privilege Escalation: user3 to root</h2>

