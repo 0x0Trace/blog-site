@@ -516,6 +516,61 @@ SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:[REDACTED]</code>
   <pre><code>*Evil-WinRM* PS C:\Users\a.flatch\Documents> type C:\Users\Administrator\Desktop\root.txt
 9557e6</code></pre>
 
+  <h2>Credentials Summary</h2>
+  <table class="credentials-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password/Hash</th>
+        <th>Method</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>r.widdleton</td>
+        <td><code>[REDACTED]</code></td>
+        <td>MD5 crack</td>
+      </tr>
+      <tr>
+        <td>t.ren</td>
+        <td><code>[REDACTED]</code></td>
+        <td>MD5 crack (not valid for domain access)</td>
+      </tr>
+      <tr>
+        <td>r.haggard</td>
+        <td><code>[REDACTED]</code></td>
+        <td>Kerberoasting</td>
+      </tr>
+      <tr>
+        <td>h.potch</td>
+        <td><code>[REDACTED]</code></td>
+        <td>ForceChangePassword abuse</td>
+      </tr>
+      <tr>
+        <td>h.grangon</td>
+        <td><code>[REDACTED]</code></td>
+        <td>NTLM theft + NTLMv2 crack</td>
+      </tr>
+      <tr>
+        <td>a.flatch</td>
+        <td><code>520126a03f5d5a8d836f1c4f34ede7ce</code> (NT hash)</td>
+        <td>SAM dump + password reuse</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-list">
+    <li><strong>CrackStation</strong> - Online hash lookup</li>
+    <li><strong>Hashcat</strong> - Password cracking</li>
+    <li><strong>NetExec</strong> - Credential validation & attacks</li>
+    <li><strong>BloodHound</strong> - AD enumeration</li>
+    <li><strong>ntlm_theft</strong> - Malicious file generation</li>
+    <li><strong>Responder</strong> - NTLM hash capture</li>
+    <li><strong>Evil-WinRM</strong> - WinRM shell access</li>
+    <li><strong>Impacket</strong> - secretsdump.py</li>
+  </ul>
+
   <h2>Attack Path Summary</h2>
   <div class="attack-chain">
     <pre><code>Leaked DB -> r.widdleton (password crack)
@@ -591,61 +646,6 @@ Domain Compromise</code></pre>
     <li>Writable file share enabling NTLM theft</li>
     <li>SeBackupPrivilege assigned to non-admin user</li>
     <li>Password reuse between local Administrator and domain user</li>
-  </ul>
-
-  <h2>Credentials Summary</h2>
-  <table class="credentials-table">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Password/Hash</th>
-        <th>Method</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>r.widdleton</td>
-        <td><code>[REDACTED]</code></td>
-        <td>MD5 crack</td>
-      </tr>
-      <tr>
-        <td>t.ren</td>
-        <td><code>[REDACTED]</code></td>
-        <td>MD5 crack (not valid for domain access)</td>
-      </tr>
-      <tr>
-        <td>r.haggard</td>
-        <td><code>[REDACTED]</code></td>
-        <td>Kerberoasting</td>
-      </tr>
-      <tr>
-        <td>h.potch</td>
-        <td><code>[REDACTED]</code></td>
-        <td>ForceChangePassword abuse</td>
-      </tr>
-      <tr>
-        <td>h.grangon</td>
-        <td><code>[REDACTED]</code></td>
-        <td>NTLM theft + NTLMv2 crack</td>
-      </tr>
-      <tr>
-        <td>a.flatch</td>
-        <td><code>520126a03f5d5a8d836f1c4f34ede7ce</code> (NT hash)</td>
-        <td>SAM dump + password reuse</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h2>Tools Used</h2>
-  <ul class="tools-list">
-    <li><strong>CrackStation</strong> - Online hash lookup</li>
-    <li><strong>Hashcat</strong> - Password cracking</li>
-    <li><strong>NetExec</strong> - Credential validation & attacks</li>
-    <li><strong>BloodHound</strong> - AD enumeration</li>
-    <li><strong>ntlm_theft</strong> - Malicious file generation</li>
-    <li><strong>Responder</strong> - NTLM hash capture</li>
-    <li><strong>Evil-WinRM</strong> - WinRM shell access</li>
-    <li><strong>Impacket</strong> - secretsdump.py</li>
   </ul>
 
   <h2>Key Takeaways</h2>

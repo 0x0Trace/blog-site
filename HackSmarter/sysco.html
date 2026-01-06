@@ -450,6 +450,34 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <p><img src="../assets/sysco/administrator-access-confirmed.png" alt="Evil-WinRM session confirming Administrator access" loading="lazy"></p>
 
+  <h2>Credentials Summary</h2>
+  <table class="credentials-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>jack.dowland</code></td>
+        <td><code>[REDACTED]</code></td>
+        <td>AS-REP Roasting</td>
+      </tr>
+      <tr>
+        <td><code>lainey.moore</code></td>
+        <td><code>[REDACTED]</code></td>
+        <td>Cisco config crack</td>
+      </tr>
+      <tr>
+        <td><code>greg.shields</code></td>
+        <td><code>[REDACTED]</code></td>
+        <td>PuTTY shortcut</td>
+      </tr>
+    </tbody>
+  </table>
+
   <h2>Attack Chain Summary</h2>
   <div class="attack-chain">
     <pre><code>Web Enumeration (Team Page)
@@ -491,34 +519,6 @@ GPO Abuse --> Domain Administrator</code></pre>
       <li><strong>GPO Abuse</strong> - Exploited GPO edit permissions to gain Administrator access</li>
     </ol>
   </div>
-
-  <h2>Credentials Summary</h2>
-  <table class="credentials-table">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Password</th>
-        <th>Source</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>jack.dowland</code></td>
-        <td><code>[REDACTED]</code></td>
-        <td>AS-REP Roasting</td>
-      </tr>
-      <tr>
-        <td><code>lainey.moore</code></td>
-        <td><code>[REDACTED]</code></td>
-        <td>Cisco config crack</td>
-      </tr>
-      <tr>
-        <td><code>greg.shields</code></td>
-        <td><code>[REDACTED]</code></td>
-        <td>PuTTY shortcut</td>
-      </tr>
-    </tbody>
-  </table>
 
   <h2>Lessons Learned</h2>
 

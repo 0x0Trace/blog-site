@@ -468,6 +468,19 @@ root@ip-10-0-26-230:~#</code></pre>
     </tbody>
   </table>
 
+  <h2>Tools Used</h2>
+  <ul class="tools-list">
+    <li><strong>RustScan</strong> - Fast port scanning</li>
+    <li><strong>FTP</strong> - Anonymous file retrieval</li>
+    <li><strong>showmount</strong> - NFS share enumeration</li>
+    <li><strong>ssh2john</strong> - SSH key hash extraction</li>
+    <li><strong>John the Ripper</strong> - Password cracking</li>
+    <li><strong>pspy</strong> - Process monitoring</li>
+    <li><strong>LinPEAS</strong> - Automated enumeration</li>
+    <li><strong>MySQL</strong> - Database enumeration</li>
+    <li><strong>getcap</strong> - Capability discovery</li>
+  </ul>
+
   <h2>Attack Chain Summary</h2>
   <div class="attack-chain">
     <pre><code>Anonymous FTP --> pwlist.txt (password wordlist)
@@ -505,19 +518,6 @@ getcap --> /home/user3/python3 with cap_setuid=ep
         v
 Python setuid(0) --> ROOT SHELL --> FLAG 6</code></pre>
   </div>
-
-  <h2>Tools Used</h2>
-  <ul class="tools-list">
-    <li><strong>RustScan</strong> - Fast port scanning</li>
-    <li><strong>FTP</strong> - Anonymous file retrieval</li>
-    <li><strong>showmount</strong> - NFS share enumeration</li>
-    <li><strong>ssh2john</strong> - SSH key hash extraction</li>
-    <li><strong>John the Ripper</strong> - Password cracking</li>
-    <li><strong>pspy</strong> - Process monitoring</li>
-    <li><strong>LinPEAS</strong> - Automated enumeration</li>
-    <li><strong>MySQL</strong> - Database enumeration</li>
-    <li><strong>getcap</strong> - Capability discovery</li>
-  </ul>
 
   <h2>Key Takeaways</h2>
   <div class="answer lessons-learned">

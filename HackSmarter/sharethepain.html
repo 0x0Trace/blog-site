@@ -364,19 +364,6 @@ The command completed successfully.</code></pre>
 *Evil-WinRM* PS C:\Users\Administrator\Desktop> type root.txt
 YWxsIGFib3V0IHRoYXQgcm9vdCwgYm91dCB0aGF0IHJvb3QsIEpVU1QgREEK</code></pre>
 
-  <h2>Attack Chain Summary</h2>
-  <div class="attack-chain">
-    <ol>
-      <li><strong>Initial Access:</strong> Exploited writable SMB share to plant LLMNR poisoning file</li>
-      <li><strong>Credential Capture:</strong> Captured bob.ross NTLMv2 hash via Responder</li>
-      <li><strong>Lateral Movement:</strong> Used GenericAll rights to reset alice.wonderland password</li>
-      <li><strong>Internal Pivot:</strong> Tunneled to internal MSSQL server via Chisel</li>
-      <li><strong>Code Execution:</strong> Achieved RCE through MSSQL xp_cmdshell</li>
-      <li><strong>Privilege Escalation:</strong> Exploited SeImpersonatePrivilege with GodPotato</li>
-      <li><strong>Domain Compromise:</strong> Added controlled user to Administrators group</li>
-    </ol>
-  </div>
-
   <h2>Tools Used</h2>
   <ul class="tools-grid">
     <li><strong>Nmap</strong> - Port scanning and service enumeration</li>
@@ -389,6 +376,19 @@ YWxsIGFib3V0IHRoYXQgcm9vdCwgYm91dCB0aGF0IHJvb3QsIEpVU1QgREEK</code></pre>
     <li><strong>Sliver</strong> - C2 framework</li>
     <li><strong>GodPotato</strong> - SeImpersonatePrivilege exploitation</li>
   </ul>
+
+  <h2>Attack Chain Summary</h2>
+  <div class="attack-chain">
+    <ol>
+      <li><strong>Initial Access:</strong> Exploited writable SMB share to plant LLMNR poisoning file</li>
+      <li><strong>Credential Capture:</strong> Captured bob.ross NTLMv2 hash via Responder</li>
+      <li><strong>Lateral Movement:</strong> Used GenericAll rights to reset alice.wonderland password</li>
+      <li><strong>Internal Pivot:</strong> Tunneled to internal MSSQL server via Chisel</li>
+      <li><strong>Code Execution:</strong> Achieved RCE through MSSQL xp_cmdshell</li>
+      <li><strong>Privilege Escalation:</strong> Exploited SeImpersonatePrivilege with GodPotato</li>
+      <li><strong>Domain Compromise:</strong> Added controlled user to Administrators group</li>
+    </ol>
+  </div>
 
   <h2>Lessons Learned</h2>
 

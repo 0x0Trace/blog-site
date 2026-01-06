@@ -181,35 +181,6 @@
   <p>Another operator already exploited a file upload vulnerability and provided a web shell:</p>
   <pre><code>http://web.hacksmarter/hacksmarter/shell.php?cmd=whoami</code></pre>
 
-  <h3>Attack Chain Summary</h3>
-  <div class="attack-chain">
-    <pre><code>Web Shell (provided by prior operator)
-    |
-    v
-Nim Stager + Sliver C2 --> Session as j.smith (IIS AppPool)
-    |
-    v
-SharpChrome --> b.morgan browser credentials extracted
-    |
-    v
-RDP as b.morgan --> Interactive access
-    |
-    v
-Unquoted Service Path --> b.morgan added to local Administrators
-    |
-    v
-GodPotato --> SYSTEM access
-    |
-    v
-SAM/SECURITY Hive Dump --> p.richardson hash cracked
-    |
-    v
-Reverse SSH Tunnel --> SOCKS proxy to internal network
-    |
-    v
-MySQL Access (sqlsrv.hacksmarter) --> Final Flag Retrieved</code></pre>
-  </div>
-
   <h2>Reconnaissance</h2>
 
   <h3>Nmap Scan</h3>
@@ -636,6 +607,35 @@ MariaDB [hacksmarter_db]> select * from final_config;
       </tr>
     </tbody>
   </table>
+
+  <h3>Attack Chain Summary</h3>
+  <div class="attack-chain">
+    <pre><code>Web Shell (provided by prior operator)
+    |
+    v
+Nim Stager + Sliver C2 --> Session as j.smith (IIS AppPool)
+    |
+    v
+SharpChrome --> b.morgan browser credentials extracted
+    |
+    v
+RDP as b.morgan --> Interactive access
+    |
+    v
+Unquoted Service Path --> b.morgan added to local Administrators
+    |
+    v
+GodPotato --> SYSTEM access
+    |
+    v
+SAM/SECURITY Hive Dump --> p.richardson hash cracked
+    |
+    v
+Reverse SSH Tunnel --> SOCKS proxy to internal network
+    |
+    v
+MySQL Access (sqlsrv.hacksmarter) --> Final Flag Retrieved</code></pre>
+  </div>
 
   <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
 

@@ -605,6 +605,27 @@ C:\></code></pre>
 C:\Users\Administrator\Desktop> type root.txt
 [FLAG REDACTED]</code></pre>
 
+  <h2>Key Takeaways</h2>
+  <ol class="takeaways-list">
+    <li><strong>Default credentials</strong> on Jenkins provided initial access - always change default passwords</li>
+    <li><strong>Kerberos keytabs</strong> on Linux servers joined to AD can expose domain credentials</li>
+    <li><strong>Passwords in description fields</strong> are a common misconfiguration that LDAP queries can reveal</li>
+    <li><strong>AD CS misconfigurations</strong> (ESC1/ESC4) remain a critical path to domain compromise</li>
+    <li><strong>Machine Account Quota</strong> defaults (10) allow any authenticated user to add computer accounts</li>
+    <li><strong>AV evasion</strong> tools like wmiexec2 can bypass endpoint protection when standard tools are blocked</li>
+  </ol>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-grid">
+    <li><a href="https://nmap.org/" target="_blank" rel="noopener">Nmap</a> - Network scanning</li>
+    <li><a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener">NetExec (nxc)</a> - SMB/LDAP enumeration</li>
+    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy</a> - AD CS enumeration and exploitation</li>
+    <li><a href="https://github.com/fortra/impacket" target="_blank" rel="noopener">Impacket</a> - addcomputer.py for machine account creation</li>
+    <li><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener">BloodHound</a> - Active Directory attack path analysis</li>
+    <li><a href="https://github.com/sosdave/KeyTabExtract" target="_blank" rel="noopener">KeyTabExtract</a> - Kerberos keytab hash extraction</li>
+    <li><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2</a> - AV-evasive WMI execution</li>
+  </ul>
+
   <h2>Attack Path Summary</h2>
   <div class="attack-diagram">
     <pre><code>Jenkins (Default Creds: admin:[REDACTED])
@@ -633,27 +654,6 @@ UnPAC-the-Hash --> anna_molly NTLM hash
          v
 Pass-the-Hash (wmiexec2 for AV evasion) --> Domain Controller</code></pre>
   </div>
-
-  <h2>Key Takeaways</h2>
-  <ol class="takeaways-list">
-    <li><strong>Default credentials</strong> on Jenkins provided initial access - always change default passwords</li>
-    <li><strong>Kerberos keytabs</strong> on Linux servers joined to AD can expose domain credentials</li>
-    <li><strong>Passwords in description fields</strong> are a common misconfiguration that LDAP queries can reveal</li>
-    <li><strong>AD CS misconfigurations</strong> (ESC1/ESC4) remain a critical path to domain compromise</li>
-    <li><strong>Machine Account Quota</strong> defaults (10) allow any authenticated user to add computer accounts</li>
-    <li><strong>AV evasion</strong> tools like wmiexec2 can bypass endpoint protection when standard tools are blocked</li>
-  </ol>
-
-  <h2>Tools Used</h2>
-  <ul class="tools-grid">
-    <li><a href="https://nmap.org/" target="_blank" rel="noopener">Nmap</a> - Network scanning</li>
-    <li><a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener">NetExec (nxc)</a> - SMB/LDAP enumeration</li>
-    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy</a> - AD CS enumeration and exploitation</li>
-    <li><a href="https://github.com/fortra/impacket" target="_blank" rel="noopener">Impacket</a> - addcomputer.py for machine account creation</li>
-    <li><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener">BloodHound</a> - Active Directory attack path analysis</li>
-    <li><a href="https://github.com/sosdave/KeyTabExtract" target="_blank" rel="noopener">KeyTabExtract</a> - Kerberos keytab hash extraction</li>
-    <li><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2</a> - AV-evasive WMI execution</li>
-  </ul>
 
   <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
 

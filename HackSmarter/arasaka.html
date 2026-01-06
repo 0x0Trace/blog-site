@@ -406,24 +406,6 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
   <p>The NT hash can be used for pass-the-hash attacks to authenticate as <code>the_emperor</code> without knowing the plaintext password:</p>
   <pre><code>$ nxc smb 10.1.61.68 -u 'the_emperor' -H '[REDACTED]'</code></pre>
 
-  <h2>Attack Chain Summary</h2>
-
-  <div class="attack-chain">
-    <pre><code>alt.svc (initial access)
-    |
-    | ForceChangePassword
-    v
-yorinobu (password reset to [REDACTED])
-    |
-    | Targeted Kerberoasting
-    v
-soulkiller.svc (cracked: [REDACTED])
-    |
-    | ESC1 - Certificate with arbitrary SAN
-    v
-the_emperor (obtained NT hash via certificate authentication)</code></pre>
-  </div>
-
   <h2>Tools Used</h2>
 
   <table class="tools-table">
@@ -456,6 +438,24 @@ the_emperor (obtained NT hash via certificate authentication)</code></pre>
       </tr>
     </tbody>
   </table>
+
+  <h2>Attack Chain Summary</h2>
+
+  <div class="attack-chain">
+    <pre><code>alt.svc (initial access)
+    |
+    | ForceChangePassword
+    v
+yorinobu (password reset to [REDACTED])
+    |
+    | Targeted Kerberoasting
+    v
+soulkiller.svc (cracked: [REDACTED])
+    |
+    | ESC1 - Certificate with arbitrary SAN
+    v
+the_emperor (obtained NT hash via certificate authentication)</code></pre>
+  </div>
 
   <h2>Key Takeaways</h2>
 
