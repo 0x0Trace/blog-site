@@ -23,38 +23,27 @@
   <link rel="apple-touch-icon" href="../assets/favicon.png" />
   <link rel="stylesheet" href="../style.css?v=4"/>
   <style>
-    /* Page-specific table styling for machine info */
+    /* Machine info box styling */
     .machine-info {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
       background: rgba(0, 170, 255, 0.05);
-      border: 1px solid rgba(0, 170, 255, 0.2);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
       border-radius: 8px;
-      padding: 1.25rem;
+      padding: 1rem 1.25rem;
       margin: 1.5rem 0;
     }
 
-    .machine-info-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
     }
 
-    .machine-info-item .label {
-      font-size: 0.85rem;
-      color: #8ecde8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .machine-info li {
+      margin-bottom: 0.25rem;
     }
 
-    .machine-info-item .value {
-      font-weight: 600;
-      color: #c77dff;
-    }
-
-    .machine-info-item .value.difficulty-medium {
-      color: #ffaa00;
+    .machine-info li::before {
+      color: #00aaff;
     }
 
     /* Attack chain visualization */
@@ -211,22 +200,11 @@
   <h2>Anomaly</h2>
 
   <div class="machine-info">
-    <div class="machine-info-item">
-      <span class="label">Platform</span>
-      <span class="value">HackSmarter Labs</span>
-    </div>
-    <div class="machine-info-item">
-      <span class="label">Difficulty</span>
-      <span class="value difficulty-medium">Medium</span>
-    </div>
-    <div class="machine-info-item">
-      <span class="label">Key Topics</span>
-      <span class="value">Jenkins RCE, Kerberos Keytab, AD CS ESC1/ESC4, Pass-the-Hash</span>
-    </div>
-  </div>
-
-  <div class="disclaimer">
-    <strong>Disclaimer:</strong> This walkthrough is provided for <strong>educational purposes only</strong>. The techniques demonstrated should only be used in authorized penetration testing engagements or controlled lab environments. Unauthorized access to computer systems is illegal.
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> <span class="difficulty-medium">Medium</span></li>
+      <li><strong>Key Topics:</strong> Jenkins RCE, Kerberos Keytab, AD CS ESC1/ESC4, Pass-the-Hash</li>
+    </ul>
   </div>
 
   <h3>Overview</h3>
