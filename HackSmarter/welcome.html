@@ -346,10 +346,6 @@ Press 'q' or Ctrl-C to abort, almost any other key for status
 1g 0:00:00:03 DONE (2026-01-04 09:16) 0.2604g/s 241800p/s 241800c/s 241800C/s humphrey06..huitar
 Session completed.</code></pre>
 
-  <div class="key-finding">
-    <strong>Cracked password:</strong> <code>[REDACTED]</code>
-  </div>
-
   <h3><span class="step">[Step 7]</span> Extracting Credentials from the PDF</h3>
   <p>Opening the PDF with the cracked password revealed an HR onboarding document containing a default password for new employees:</p>
 
@@ -374,10 +370,6 @@ Session completed.</code></pre>
   <pre><code>$ nxc smb 10.1.159.7 -u users_spray -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/welcome/password-spray-results.png" alt="Password spray results showing a.harris with valid credentials" loading="lazy"></p>
-
-  <div class="key-finding">
-    <strong>Valid credentials found:</strong> <code>a.harris:[REDACTED]</code>
-  </div>
 
   <h3><span class="step">[Step 9]</span> Exploiting Group Permissions</h3>
   <p>While <code>a.harris</code> was not the user I was hoping for (I wanted <code>i.park</code>), BloodHound showed that <code>a.harris</code> is a member of the <code>HR</code> group, which has <code>GenericAll</code> privileges over <code>i.park</code>:</p>
@@ -466,19 +458,6 @@ SMB         10.1.159.7      445    DC01             [+] WELCOME.local\SVC_CA:[RE
   <div class="answer">
     PKINIT (Public Key Cryptography for Initial Authentication) is a Kerberos extension that allows authentication using X.509 certificates instead of passwords. When exploiting ADCS vulnerabilities, attackers use PKINIT to obtain a TGT with a forged certificate, then extract the user's NT hash via a technique called UnPAC-the-hash.
   </div>
-
-  <h2>Proof</h2>
-
-  <table class="proof-table">
-    <tr>
-      <th>Flag</th>
-      <th>Hash</th>
-    </tr>
-    <tr>
-      <td><strong>Administrator NT Hash</strong></td>
-      <td><code>[REDACTED]</code></td>
-    </tr>
-  </table>
 
   <h2>Tools Used</h2>
 

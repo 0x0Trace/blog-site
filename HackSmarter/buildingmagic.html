@@ -269,10 +269,6 @@
     <strong>What is hashcat -m 0?</strong> The <code>-m</code> flag in hashcat specifies the hash type. Mode <code>0</code> is for raw MD5 hashes. The <code>--show</code> flag displays already-cracked hashes from hashcat's potfile.
   </div>
 
-  <div class="key-finding">
-    <strong>Validated Credentials:</strong> <code>t.ren:[REDACTED]</code> and <code>r.widdleton:[REDACTED]</code>
-  </div>
-
   <h2>Initial Access</h2>
 
   <h3><span class="step">[Step 3]</span> Credential Validation</h3>
@@ -318,10 +314,6 @@ $krb5tgs$23$*r.haggard$BUILDINGMAGIC.LOCAL$...:[REDACTED]</code></pre>
     <strong>What is hashcat -m 13100?</strong> Mode <code>13100</code> is for Kerberos 5 TGS-REP etype 23 (RC4) hashes. These are the hashes obtained from Kerberoasting attacks.
   </div>
 
-  <div class="key-finding">
-    <strong>New Credentials:</strong> <code>r.haggard:[REDACTED]</code>
-  </div>
-
   <p>Validated access:</p>
   <pre><code>$ nxc ldap 10.1.167.230 -u r.haggard -p '[REDACTED]'
 LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:[REDACTED]</code></pre>
@@ -344,10 +336,6 @@ LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:[REDACTED]</cod
   <p>Validated the new credentials:</p>
   <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p '[REDACTED]'
 SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\h.potch:[REDACTED]</code></pre>
-
-  <div class="key-finding">
-    <strong>New Credentials:</strong> <code>h.potch:[REDACTED]</code>
-  </div>
 
   <h3><span class="step">[Step 8]</span> NTLM Hash Capture via Malicious LNK File</h3>
   <p>I discovered that <code>h.potch</code> has read/write access to a file share. I used this to capture NTLM hashes through a malicious LNK file.</p>
@@ -389,10 +377,6 @@ H.GRANGON::BUILDINGMAGIC:...:[REDACTED]</code></pre>
 
   <div class="note">
     <strong>What is hashcat -m 5600?</strong> Mode <code>5600</code> is for NTLMv2 hashes (NetNTLMv2). These are network authentication hashes captured during NTLM relay or theft attacks, different from the NT hashes stored in SAM/NTDS.
-  </div>
-
-  <div class="key-finding">
-    <strong>New Credentials:</strong> <code>h.grangon:[REDACTED]</code>
   </div>
 
   <p><img src="../assets/buildingmagic/nxc-hgrangon-validation.png" alt="NetExec validating h.grangon credentials" loading="lazy"></p>

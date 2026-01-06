@@ -282,10 +282,6 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
   <p>The tool retrieved a Kerberos TGS ticket for the <code>soulkiller.svc</code> account. I cracked the hash using hashcat:</p>
   <pre><code>$ hashcat -m 13100 soulkiller.hash /usr/share/wordlists/rockyou.txt</code></pre>
 
-  <div class="key-finding">
-    <strong>Cracked password:</strong> <code>[REDACTED]</code>
-  </div>
-
   <h3><span class="step">[Step 3]</span> Enumerating ADCS Vulnerabilities</h3>
   <p>With the <code>soulkiller.svc</code> credentials, I used Certipy to enumerate Active Directory Certificate Services for vulnerable certificate templates:</p>
 
@@ -362,15 +358,6 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
   <div class="answer">
     <p>The NT hash (also called NTLM hash) is a cryptographic representation of a Windows password. Unlike a plaintext password, it can be used directly for authentication through pass-the-hash attacks, making it just as valuable as the password itself.</p>
   </div>
-
-  <h2>Proof</h2>
-
-  <div class="key-finding">
-    <strong>the_emperor NT Hash:</strong> <code>[REDACTED]</code>
-  </div>
-
-  <p>The NT hash can be used for pass-the-hash attacks to authenticate as <code>the_emperor</code> without knowing the plaintext password:</p>
-  <pre><code>$ nxc smb 10.1.61.68 -u 'the_emperor' -H '[REDACTED]'</code></pre>
 
   <h2>Tools Used</h2>
 

