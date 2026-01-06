@@ -181,7 +181,7 @@
   <div class="machine-info">
     <ul>
       <li><strong>Platform:</strong> HackSmarter Labs</li>
-      <li><strong>Difficulty:</strong> Medium</li>
+      <li><strong>Difficulty:</strong> <span class="difficulty-medium">Medium</span></li>
       <li><strong>OS:</strong> Windows 11 / Server 2025</li>
       <li><strong>Key Skills:</strong> SMB Enumeration, RDP Access, PowerShell History Analysis, Service Binary Path Manipulation</li>
     </ul>
@@ -528,83 +528,21 @@ The command completed successfully.</code></pre>
   <h2>Attack Chain Summary</h2>
 
   <div class="attack-chain">
-    <p><strong>Path 1 (Fastest):</strong></p>
-    <pre><code>tyler.ramsey:P@ssw0rd! -> RDP Access -> PowerShell History -> Admin Creds -> wmiexec2 -> ROOT</code></pre>
+    <pre><code>tyler.ramsey (starting creds: P@ssw0rd!)
+    |
+    v
+SMB Validation --> RDP Access
+    |
+    +---> PATH 1: PowerShell History --> Admin Password --> wmiexec2 --> ROOT
+    |
+    +---> PATH 2: desktop.ini --> alice.wonderland creds
+                      |
+                      v
+              PrivescCheck --> SysMgmtAgent Service
+                      |
+                      v
+              sc config binPath --> Service Start --> ROOT</code></pre>
   </div>
-
-  <div class="attack-chain">
-    <p><strong>Path 2 (Alternative):</strong></p>
-    <pre><code>tyler.ramsey:P@ssw0rd! -> RDP Access -> C:\Management\desktop.ini -> alice.wonderland creds
-                                                                          |
-                                      ROOT <- Service Start <- sc config SysMgmtAgent</code></pre>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Step</th>
-        <th>Action</th>
-        <th>Result</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>1</td>
-        <td>Nmap scan</td>
-        <td>Identified SMB (445), RDP (3389)</td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td>Validate creds via SMB</td>
-        <td>Confirmed <code>tyler.ramsey:P@ssw0rd!</code> works</td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td>RID brute force</td>
-        <td>Discovered <code>alice.wonderland</code> account</td>
-      </tr>
-      <tr>
-        <td>4</td>
-        <td>RDP as tyler.ramsey</td>
-        <td>Initial access to workstation</td>
-      </tr>
-      <tr>
-        <td><strong>Path 1</strong></td>
-        <td>Check PowerShell history</td>
-        <td>Found admin password in <code>ConsoleHost_history.txt</code></td>
-      </tr>
-      <tr>
-        <td><strong>Path 1</strong></td>
-        <td>wmiexec2 as Administrator</td>
-        <td>Root flag obtained</td>
-      </tr>
-      <tr>
-        <td><strong>Path 2</strong></td>
-        <td>Enumerate hidden files</td>
-        <td>Found alice.wonderland creds in <code>desktop.ini</code></td>
-      </tr>
-      <tr>
-        <td><strong>Path 2</strong></td>
-        <td>RDP as alice.wonderland</td>
-        <td>Lateral movement</td>
-      </tr>
-      <tr>
-        <td><strong>Path 2</strong></td>
-        <td>PrivescCheck</td>
-        <td>Identified <code>SysMgmtAgent</code> service misconfiguration</td>
-      </tr>
-      <tr>
-        <td><strong>Path 2</strong></td>
-        <td>Modify service binary path</td>
-        <td>Added tyler.ramsey to Administrators group</td>
-      </tr>
-      <tr>
-        <td><strong>Path 2</strong></td>
-        <td>Elevated access</td>
-        <td>Root flag obtained</td>
-      </tr>
-    </tbody>
-  </table>
 
   <h2>Lessons Learned</h2>
 

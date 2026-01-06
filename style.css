@@ -924,6 +924,22 @@ pre.code-block::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hove
     margin-bottom: 0.5rem;
 }
 
+/* Difficulty level color coding */
+.difficulty-easy {
+    color: #3fb950;
+    font-weight: 600;
+}
+
+.difficulty-medium {
+    color: #d29922;
+    font-weight: 600;
+}
+
+.difficulty-hard {
+    color: #f85149;
+    font-weight: 600;
+}
+
 /* Mobile-specific footer adjustments */
 @media (max-width: 768px) {
     footer {
