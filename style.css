@@ -184,6 +184,10 @@ strong {
     color: #ff6b6b !important;
 }
 
+.step.pentester {
+    color: #ff6b6b !important;
+}
+
 /* Purple text class for specific headings */
 .purple-text {
     color: #c77dff;
@@ -229,11 +233,20 @@ h3:has(.step.redteam) ~ p {
     padding-left: 1.25rem;
 }
 
+/* Special styling for pentester sections */
+h3:has(.step.pentester) ~ ul,
+h3:has(.step.pentester) ~ p {
+    background: rgba(255, 107, 107, 0.05);
+    border-left: 3px solid #ff6b6b;
+    margin-left: 0;
+    padding-left: 1.25rem;
+}
+
 /* Step sections background */
-h3:has(.step:not(.defender):not(.redteam)) ~ p,
-h3:has(.step:not(.defender):not(.redteam)) ~ ul,
-h3:has(.step:not(.defender):not(.redteam)) ~ pre,
-h3:has(.step:not(.defender):not(.redteam)) ~ .note {
+h3:has(.step:not(.defender):not(.redteam):not(.pentester)) ~ p,
+h3:has(.step:not(.defender):not(.redteam):not(.pentester)) ~ ul,
+h3:has(.step:not(.defender):not(.redteam):not(.pentester)) ~ pre,
+h3:has(.step:not(.defender):not(.redteam):not(.pentester)) ~ .note {
     background: rgba(199, 125, 255, 0.04);
     border-left: 3px solid #c77dff;
     margin-left: 0;

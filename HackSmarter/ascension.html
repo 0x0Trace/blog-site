@@ -281,14 +281,14 @@ $ john --wordlist=/usr/share/wordlists/rockyou.txt ssh.hash</code></pre>
     <code>ssh2john</code> is a utility that converts password-protected SSH private keys into a hash format that John the Ripper can crack. It extracts the encrypted key material and outputs it in a format suitable for offline password attacks.
   </div>
 
-  <p><img src="../assets/ascension/john-ssh-crack.png" alt="John the Ripper successfully cracking the SSH key passphrase as sammie1" loading="lazy"></p>
+  <p><img src="../assets/ascension/john-ssh-crack.png" alt="John the Ripper successfully cracking the SSH key passphrase" loading="lazy"></p>
 
-  <p>The passphrase was cracked: <code>sammie1</code></p>
+  <p>The passphrase was cracked: <code>[REDACTED]</code></p>
 
   <h3><span class="step">[Step 5]</span> SSH Access as user1</h3>
   <p>With the cracked passphrase, I connected to the target as <code>user1</code>:</p>
   <pre><code>$ ssh -i target-NFS/id_rsa user1@10.0.26.230
-Enter passphrase for key 'target-NFS/id_rsa': sammie1</code></pre>
+Enter passphrase for key 'target-NFS/id_rsa': [REDACTED]</code></pre>
 
   <p><img src="../assets/ascension/ssh-user1-shell.png" alt="Successful SSH connection as user1" loading="lazy"></p>
 
@@ -470,16 +470,40 @@ root@ip-10-0-26-230:~#</code></pre>
 
   <h2>Attack Chain Summary</h2>
   <div class="attack-chain">
-    <ol>
-      <li><strong>Anonymous FTP:</strong> Retrieved password wordlist from exposed FTP server</li>
-      <li><strong>NFS Misconfiguration:</strong> Mounted world-readable share containing SSH private key</li>
-      <li><strong>SSH Key Cracking:</strong> Used John the Ripper to crack weak key passphrase</li>
-      <li><strong>Initial Access:</strong> SSH as user1 with cracked key</li>
-      <li><strong>Cron Job Hijack:</strong> Created missing script in /tmp to pivot to user2</li>
-      <li><strong>WordPress Credentials:</strong> Found MySQL credentials in wp-config.php</li>
-      <li><strong>Database Enumeration:</strong> Retrieved user3 password from MySQL</li>
-      <li><strong>Capabilities Abuse:</strong> Exploited cap_setuid on Python binary for root</li>
-    </ol>
+    <pre><code>Anonymous FTP --> pwlist.txt (password wordlist)
+        |
+        v
+NFS Share (*) --> user1's SSH keys (id_rsa, id_rsa.pub)
+        |
+        v
+John the Ripper --> Cracked SSH passphrase
+        |
+        v
+SSH as user1 --> FLAG 1
+        |
+        v
+pspy --> Discovered /tmp/backup.sh cron job (UID 1002 = user2)
+        |
+        v
+Malicious backup.sh --> SSH key injection to user2
+        |
+        v
+SSH as user2 --> FLAG 2
+        |
+        v
+LinPEAS --> wp-config.php MySQL credentials
+        |
+        v
+MySQL enum --> user3 credentials from users table + FLAG 4
+        |
+        v
+su user3 --> FLAG 5
+        |
+        v
+getcap --> /home/user3/python3 with cap_setuid=ep
+        |
+        v
+Python setuid(0) --> ROOT SHELL --> FLAG 6</code></pre>
   </div>
 
   <h2>Tools Used</h2>

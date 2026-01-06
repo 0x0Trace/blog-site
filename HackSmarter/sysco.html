@@ -56,6 +56,27 @@
       margin: 1.5rem 0;
     }
 
+    .attack-chain pre {
+      background: rgba(0, 0, 0, 0.3);
+      border: none;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 0 0 1rem 0;
+      overflow-x: auto;
+    }
+
+    .attack-chain pre code {
+      color: #c77dff;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .attack-chain h4 {
+      color: #00aaff;
+      margin: 1rem 0 0.75rem 0;
+      font-size: 1rem;
+    }
+
     .attack-chain ol {
       margin: 0;
     }
@@ -431,6 +452,33 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <h2>Attack Chain Summary</h2>
   <div class="attack-chain">
+    <pre><code>Web Enumeration (Team Page)
+         |
+         v
+Username Enumeration (Kerbrute)
+         |
+         v
+AS-REP Roasting --> jack.dowland
+         |
+         v
+Credential Reuse --> Roundcube Webmail
+         |
+         v
+Cisco Config File --> MD5 Hash Crack
+         |
+         v
+Password Spraying --> lainey.moore
+         |
+         v
+RDP Access --> PuTTY Shortcut Credentials
+         |
+         v
+Password Spraying --> greg.shields
+         |
+         v
+GPO Abuse --> Domain Administrator</code></pre>
+
+    <h4>Detailed Steps:</h4>
     <ol>
       <li><strong>Web Enumeration</strong> - Discovered employee names on the company website</li>
       <li><strong>Username Enumeration</strong> - Generated and validated usernames via Kerbrute</li>
@@ -486,7 +534,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
     </ul>
   </div>
 
-  <h3><span class="step redteam">For Attackers</span></h3>
+  <h3><span class="step pentester">For Pentesters</span></h3>
   <div class="answer lessons-learned">
     <ul>
       <li>Always check webmail and other internal apps for credential reuse</li>
