@@ -240,39 +240,6 @@
   <h3>Summary</h3>
   <p>This machine focuses on Active Directory exploitation through a chain of privilege escalation techniques. Starting with a service account that has the ability to force password changes, I pivoted through Kerberoasting to eventually exploit an ADCS ESC1 misconfiguration for domain privilege escalation.</p>
 
-  <h2>Credentials Obtained</h2>
-
-  <table class="credentials-table">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Password/Hash</th>
-        <th>Source</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>alt.svc</code></td>
-        <td><code>babygirl1</code></td>
-        <td>Initial Access</td>
-      </tr>
-      <tr>
-        <td><code>yorinobu</code></td>
-        <td><code>[REDACTED]</code></td>
-        <td>Forced Password Change</td>
-      </tr>
-      <tr>
-        <td><code>soulkiller.svc</code></td>
-        <td><code>[REDACTED]</code></td>
-        <td>Kerberoasting</td>
-      </tr>
-      <tr>
-        <td><code>the_emperor</code></td>
-        <td><code>[REDACTED]</code> (NT hash)</td>
-        <td>ADCS ESC1</td>
-      </tr>
-    </tbody>
-  </table>
 
   <h2>Exploitation Chain</h2>
 

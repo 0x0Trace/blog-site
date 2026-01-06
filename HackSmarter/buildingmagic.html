@@ -516,49 +516,6 @@ SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:[REDACTED]</code>
   <pre><code>*Evil-WinRM* PS C:\Users\a.flatch\Documents> type C:\Users\Administrator\Desktop\root.txt
 9557e6</code></pre>
 
-  <h2>Credentials Summary</h2>
-  <table class="credentials-table">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Password/Hash</th>
-        <th>Method</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>r.widdleton</td>
-        <td><code>[REDACTED]</code></td>
-        <td>MD5 crack</td>
-      </tr>
-      <tr>
-        <td>t.ren</td>
-        <td><code>[REDACTED]</code></td>
-        <td>MD5 crack (not valid for domain access)</td>
-      </tr>
-      <tr>
-        <td>r.haggard</td>
-        <td><code>[REDACTED]</code></td>
-        <td>Kerberoasting</td>
-      </tr>
-      <tr>
-        <td>h.potch</td>
-        <td><code>[REDACTED]</code></td>
-        <td>ForceChangePassword abuse</td>
-      </tr>
-      <tr>
-        <td>h.grangon</td>
-        <td><code>[REDACTED]</code></td>
-        <td>NTLM theft + NTLMv2 crack</td>
-      </tr>
-      <tr>
-        <td>a.flatch</td>
-        <td><code>520126a03f5d5a8d836f1c4f34ede7ce</code> (NT hash)</td>
-        <td>SAM dump + password reuse</td>
-      </tr>
-    </tbody>
-  </table>
-
   <h2>Tools Used</h2>
   <ul class="tools-list">
     <li><strong>CrackStation</strong> - Online hash lookup</li>
@@ -571,7 +528,7 @@ SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:[REDACTED]</code>
     <li><strong>Impacket</strong> - secretsdump.py</li>
   </ul>
 
-  <h2>Attack Path Summary</h2>
+  <h2>Attack Chain Summary</h2>
   <div class="attack-chain">
     <pre><code>Leaked DB -> r.widdleton (password crack)
     |
@@ -593,60 +550,6 @@ Pass-the-Hash -> a.flatch (Domain Admin)
     v
 Domain Compromise</code></pre>
   </div>
-
-  <h2>Attack Chain Summary</h2>
-  <table class="credentials-table">
-    <thead>
-      <tr>
-        <th>Step</th>
-        <th>Account</th>
-        <th>Technique</th>
-        <th>Outcome</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>1</td>
-        <td>r.widdleton</td>
-        <td>MD5 hash cracking (leaked database)</td>
-        <td>Initial domain access</td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td>r.haggard</td>
-        <td>Kerberoasting (SPN-enabled account)</td>
-        <td>Lateral movement</td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td>h.potch</td>
-        <td>ForceChangePassword abuse</td>
-        <td>AD permission exploitation</td>
-      </tr>
-      <tr>
-        <td>4</td>
-        <td>h.grangon</td>
-        <td>NTLM theft via malicious LNK file</td>
-        <td>WinRM shell access</td>
-      </tr>
-      <tr>
-        <td>5</td>
-        <td>a.flatch</td>
-        <td>SeBackupPrivilege + Pass-the-Hash</td>
-        <td>Domain Admin compromise</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3>Critical Vulnerabilities Exploited</h3>
-  <ul>
-    <li>Weak passwords stored as unsalted MD5 hashes in leaked database</li>
-    <li>Kerberoastable service account with weak password</li>
-    <li>Misconfigured AD permissions (ForceChangePassword)</li>
-    <li>Writable file share enabling NTLM theft</li>
-    <li>SeBackupPrivilege assigned to non-admin user</li>
-    <li>Password reuse between local Administrator and domain user</li>
-  </ul>
 
   <h2>Key Takeaways</h2>
   <div class="answer lessons-learned">
