@@ -154,4 +154,108 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('%cWelcome to The Network-Aware Pentester', 'color: #00ffcc; font-weight: bold; font-size: 14px;');
     console.log('%cSharpen your packets and stay stealthy.', 'color: #80ffe6;');
+
+    // ============================================
+    // Back to Top Button
+    // ============================================
+    const backToTopBtn = document.createElement('button');
+    backToTopBtn.className = 'back-to-top';
+    backToTopBtn.setAttribute('aria-label', 'Back to top');
+    backToTopBtn.innerHTML = '<span aria-hidden="true">&#9650;</span>';
+    document.body.appendChild(backToTopBtn);
+
+    // Show/hide back to top button based on scroll position
+    const scrollThreshold = 300;
+    let ticking = false;
+
+    function updateBackToTopVisibility() {
+        if (window.scrollY > scrollThreshold) {
+            backToTopBtn.classList.add('visible');
+        } else {
+            backToTopBtn.classList.remove('visible');
+        }
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(updateBackToTopVisibility);
+            ticking = true;
+        }
+    });
+
+    // Smooth scroll to top when clicked
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // ============================================
+    // Copy to Clipboard for Code Blocks
+    // ============================================
+    function initCopyButtons() {
+        // Find all pre elements that contain code
+        const codeBlocks = document.querySelectorAll('pre:not(.code-preview):not(.code-full)');
+
+        // Clipboard SVG icon
+        const clipboardIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        const checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+        codeBlocks.forEach((pre) => {
+            // Skip if already has a copy button
+            if (pre.querySelector('.copy-btn')) return;
+
+            // Create copy button with icon
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.setAttribute('aria-label', 'Copy code to clipboard');
+            copyBtn.innerHTML = clipboardIcon;
+
+            // Add button inside pre
+            pre.appendChild(copyBtn);
+
+            // Copy functionality
+            copyBtn.addEventListener('click', async () => {
+                const code = pre.querySelector('code');
+                const textToCopy = code ? code.textContent : pre.textContent;
+
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    copyBtn.innerHTML = checkIcon;
+                    copyBtn.classList.add('copied');
+
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        copyBtn.innerHTML = clipboardIcon;
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = textToCopy;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-9999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        copyBtn.innerHTML = checkIcon;
+                        copyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyBtn.innerHTML = clipboardIcon;
+                            copyBtn.classList.remove('copied');
+                        }, 2000);
+                    } catch (fallbackErr) {
+                        // Keep clipboard icon on error
+                    }
+                    document.body.removeChild(textArea);
+                }
+            });
+        });
+    }
+
+    // Initialize copy buttons
+    initCopyButtons();
 });

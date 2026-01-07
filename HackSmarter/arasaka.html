@@ -21,7 +21,7 @@
 
   <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../style.css?v=4"/>
+  <link rel="stylesheet" href="../style.css?v=5"/>
   <style>
     /* Machine info box styling */
     .machine-info {
@@ -231,12 +231,12 @@
     <ul>
       <li><strong>Platform:</strong> HackSmarter Labs</li>
       <li><strong>Difficulty:</strong> <span class="difficulty-easy">Easy</span></li>
-      <li><strong>Domain:</strong> hacksmarter.local</li>
+      <li><strong>OS:</strong> Windows Server 2022</li>
       <li><strong>Key Topics:</strong> Active Directory, Forced Password Change, Targeted Kerberoasting, ADCS ESC1</li>
     </ul>
   </div>
 
-  <h3>Summary</h3>
+  <h3>Overview</h3>
   <p>This machine focuses on Active Directory exploitation through a chain of privilege escalation techniques. Starting with a service account that has the ability to force password changes, I pivoted through Kerberoasting to eventually exploit an ADCS ESC1 misconfiguration for domain privilege escalation.</p>
 
 
@@ -283,7 +283,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
   <pre><code>$ hashcat -m 13100 soulkiller.hash /usr/share/wordlists/rockyou.txt</code></pre>
 
   <h3><span class="step">[Step 3]</span> Enumerating ADCS Vulnerabilities</h3>
-  <p>With the <code>soulkiller.svc</code> credentials, I used Certipy to enumerate Active Directory Certificate Services for vulnerable certificate templates:</p>
+  <p>With the <code>soulkiller.svc</code> credentials, I used <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a> to enumerate Active Directory Certificate Services for vulnerable certificate templates:</p>
 
   <pre><code>$ certipy find -u soulkiller.svc@hacksmarter.local -p '[REDACTED]' -dc-ip 10.1.61.68 -vulnerable</code></pre>
 
@@ -315,11 +315,11 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
     <strong>What is ESC1?</strong>
   </div>
   <div class="answer">
-    <p>ESC1 is an ADCS misconfiguration where a certificate template allows the enrollee to specify an arbitrary Subject Alternative Name (SAN). Combined with client authentication capabilities, an attacker can request a certificate for any user, including Domain Admins, and use it to authenticate as that user.</p>
+    <p>ESC1 is an ADCS misconfiguration where a certificate template allows the enrollee to specify an arbitrary Subject Alternative Name (SAN). Combined with client authentication capabilities, an attacker can request a certificate for any user, including Domain Admins, and use it to authenticate as that user. For more details, see the <a href="https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf" target="_blank" rel="noopener noreferrer">SpecterOps Certified Pre-Owned whitepaper</a> and <a href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation" target="_blank" rel="noopener noreferrer">HackTricks ADCS documentation</a>.</p>
   </div>
 
   <h3><span class="step">[Step 4]</span> Exploiting ESC1 for Privilege Escalation</h3>
-  <p>The vulnerable template <code>AI_Takeover</code> allows <code>soulkiller.svc</code> to request certificates with arbitrary UPNs. I requested a certificate for <code>the_emperor</code>, a high-privileged account:</p>
+  <p>The vulnerable template <code>AI_Takeover</code> allows <code>soulkiller.svc</code> to request certificates with arbitrary UPNs. I used <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a> to request a certificate for <code>the_emperor</code>, a high-privileged account:</p>
 
   <pre><code>$ certipy req -u 'soulkiller.svc@hacksmarter.local' -p '[REDACTED]' -dc-ip 10.1.61.68 \
     -ca hacksmarter-DC01-CA -target 'DC01.hacksmarter.local' \
@@ -382,7 +382,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
         <td>Targeted Kerberoasting attacks</td>
       </tr>
       <tr>
-        <td><strong>Certipy</strong></td>
+        <td><strong><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a></strong></td>
         <td>ADCS enumeration and exploitation</td>
       </tr>
       <tr>
@@ -417,16 +417,16 @@ the_emperor (obtained NT hash via certificate authentication)</code></pre>
       <li><strong>ForceChangePassword</strong> permissions on service accounts are a common AD misconfiguration that can lead to lateral movement</li>
       <li><strong>Targeted Kerberoasting</strong> is stealthier than requesting all SPNs and should be considered when specific accounts are identified</li>
       <li><strong>ADCS ESC1</strong> remains one of the most impactful AD certificate vulnerabilities, often leading to domain compromise</li>
-      <li>Always enumerate certificate templates with Certipy when testing AD environments</li>
+      <li>Always enumerate certificate templates with <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a> when testing AD environments</li>
     </ul>
   </div>
 
   <h2>References</h2>
 
   <ul class="references">
-    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy Documentation</a></li>
-    <li><a href="https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf" target="_blank" rel="noopener">SpecterOps - Certified Pre-Owned</a></li>
-    <li><a href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation" target="_blank" rel="noopener">HackTricks - ADCS Attacks</a></li>
+    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy Documentation</a></li>
+    <li><a href="https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf" target="_blank" rel="noopener noreferrer">SpecterOps - Certified Pre-Owned</a></li>
+    <li><a href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation" target="_blank" rel="noopener noreferrer">HackTricks - ADCS Attacks</a></li>
   </ul>
 
   <p><em>Walkthrough by Zerotrace | HackSmarter Labs</em></p>

