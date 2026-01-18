@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://z3rotrace.live/sitemap.xml
