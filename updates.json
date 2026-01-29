@@ -1,4 +1,5 @@
 [
+  {"date": "2026-01-29", "title": "StellarComms - ACL Abuse, Firefox Credentials & GMSA", "link": "HackSmarter/stellarcomms.html"},
   {"date": "2026-01-18", "title": "Lumon - NTLM Relay, LAPS & AD CS Exploitation", "link": "HackSmarter/lumon.html"},
   {"date": "2026-01-06", "title": "Sysco - Active Directory Penetration Testing", "link": "HackSmarter/sysco.html"},
   {"date": "2026-01-06", "title": "ShareThePain - LLMNR Poisoning & BloodHound", "link": "HackSmarter/sharethepain.html"},
