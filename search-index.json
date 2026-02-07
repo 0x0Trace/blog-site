@@ -1,0 +1,3200 @@
+[
+  {
+    "title": "404-Bank",
+    "url": "HackSmarter/404bank.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium-Hard",
+    "keywords": [
+      "ESC4",
+      "ADCS",
+      "Active Directory",
+      "ACL Abuse",
+      "Kerberoasting",
+      "Certipy",
+      "Certificate Services",
+      "GenericWrite",
+      "ForceChangePassword",
+      "WriteAccountRestrictions",
+      "AS-REP Roasting",
+      "Ligolo-ng",
+      "Pivoting",
+      "Custom Wordlist",
+      "CeWL",
+      "BloodHound",
+      "NetExec",
+      "404finance.local",
+      "username-anarchy",
+      "Kerbrute",
+      "bloodyAD",
+      "Evil-WinRM",
+      "targeted Kerberoasting",
+      "Hashcat",
+      "Nmap",
+      "MD5",
+      "Base64",
+      "Roundcube",
+      "WinRM",
+      "RDP",
+      "IIS",
+      "PFX",
+      "Pass-the-Hash",
+      "Domain Compromise",
+      "Windows Server 2019",
+      "ADCS ESC4 exploitation",
+      "password cracking",
+      "custom wordlist generation",
+      "internal pivoting",
+      "ACE abuse",
+      "certificate template",
+      "domain admin",
+      "NTDS.dit",
+      "lateral movement",
+      "RDP access",
+      "ZIP file cracking",
+      "recycle bin",
+      "webadmin",
+      "tunneling",
+      "localhost pivoting",
+      "port 5000",
+      "Cisco router config",
+      "credential harvesting"
+    ],
+    "description": "Active Directory exploitation covering ACL abuse, Kerberoasting, password cracking, ADCS ESC4 exploitation, and pivoting techniques for domain compromise.",
+    "sections": [
+      {
+        "heading": "404-Bank",
+        "anchor": "HackSmarter/404bank.html#404-bank",
+        "keywords": [
+          "ADCS ESC4",
+          "Kerberoasting"
+        ]
+      },
+      {
+        "heading": "Nmap Scan",
+        "anchor": "HackSmarter/404bank.html#nmap-scan",
+        "keywords": [
+          "Nmap",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Creating a Username List",
+        "anchor": "HackSmarter/404bank.html#username-list",
+        "keywords": [
+          "username-anarchy"
+        ]
+      },
+      {
+        "heading": "Hash Cracking",
+        "anchor": "HackSmarter/404bank.html#hash-cracking",
+        "keywords": [
+          "Hashcat"
+        ]
+      },
+      {
+        "heading": "Username Validation",
+        "anchor": "HackSmarter/404bank.html#username-validation",
+        "keywords": [
+          "Kerbrute",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Password Spraying",
+        "anchor": "HackSmarter/404bank.html#password-spraying",
+        "keywords": [
+          "Password Spraying"
+        ]
+      },
+      {
+        "heading": "Active Directory Enumeration",
+        "anchor": "HackSmarter/404bank.html#ad-enumeration",
+        "keywords": [
+          "BloodHound",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation - Multi-Stage ACL Abuse",
+        "anchor": "HackSmarter/404bank.html#privilege-escalation-acl-abuse",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Attack Path Discovery",
+        "anchor": "HackSmarter/404bank.html#attack-path-discovery",
+        "keywords": [
+          "BloodHound",
+          "ForceChangePassword",
+          "GenericWrite",
+          "WriteAccountRestrictions"
+        ]
+      },
+      {
+        "heading": "Compromising tom.reboot via Targeted Kerberoasting",
+        "anchor": "HackSmarter/404bank.html#targeted-kerberoasting",
+        "keywords": [
+          "GenericWrite",
+          "Hashcat",
+          "Kerberoasting",
+          "targetedKerberoast"
+        ]
+      },
+      {
+        "heading": "Compromising robert.graef via ForceChangePassword",
+        "anchor": "HackSmarter/404bank.html#forcechangepassword",
+        "keywords": [
+          "ForceChangePassword",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Targeting svc.services via WriteAccountRestrictions",
+        "anchor": "HackSmarter/404bank.html#writeaccountrestrictions",
+        "keywords": [
+          "WriteAccountRestrictions",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Lateral Movement - Hunting for Credentials",
+        "anchor": "HackSmarter/404bank.html#lateral-movement",
+        "keywords": [
+          "Credential Discovery",
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "Expanding Access via robert.graef",
+        "anchor": "HackSmarter/404bank.html#expanding-access",
+        "keywords": [
+          "BloodHound",
+          "ForceChangePassword",
+          "RDP Access"
+        ]
+      },
+      {
+        "heading": "Compromising RDP Accounts",
+        "anchor": "HackSmarter/404bank.html#compromising-rdp-accounts",
+        "keywords": [
+          "RDP Access",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Credential Discovery",
+        "anchor": "HackSmarter/404bank.html#credential-discovery",
+        "keywords": [
+          "Credential Discovery",
+          "RDP Access"
+        ]
+      },
+      {
+        "heading": "Validating daniel.hoffmann Access",
+        "anchor": "HackSmarter/404bank.html#validating-daniel-hoffmann",
+        "keywords": [
+          "BloodHound",
+          "Evil-WinRM",
+          "NetExec",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Port Enumeration",
+        "anchor": "HackSmarter/404bank.html#port-enumeration",
+        "keywords": [
+          "Nmap"
+        ]
+      },
+      {
+        "heading": "Setting Up a Pivot with Ligolo-ng",
+        "anchor": "HackSmarter/404bank.html#ligolo-ng",
+        "keywords": [
+          "Ligolo-ng",
+          "Port Forwarding"
+        ]
+      },
+      {
+        "heading": "Accessing the Internal Admin Interface",
+        "anchor": "HackSmarter/404bank.html#internal-admin-interface",
+        "keywords": [
+          "BloodHound",
+          "ForceChangePassword",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Password-Protected Archive",
+        "anchor": "HackSmarter/404bank.html#password-protected-archive",
+        "keywords": [
+          "CeWL"
+        ]
+      },
+      {
+        "heading": "Domain Compromise - ADCS ESC4 Exploitation",
+        "anchor": "HackSmarter/404bank.html#adcs-esc4",
+        "keywords": [
+          "ADCS",
+          "ADCS ESC4",
+          "Certificate Template"
+        ]
+      },
+      {
+        "heading": "Understanding ESC4",
+        "anchor": "HackSmarter/404bank.html#understanding-esc4",
+        "keywords": [
+          "ADCS ESC4",
+          "Certificate Template",
+          "Certipy"
+        ]
+      },
+      {
+        "heading": "Exploitation Steps",
+        "anchor": "HackSmarter/404bank.html#esc4-exploitation-steps",
+        "keywords": [
+          "ADCS ESC4",
+          "Certificate Template",
+          "Certipy"
+        ]
+      },
+      {
+        "heading": "Administrator Access",
+        "anchor": "HackSmarter/404bank.html#administrator-access",
+        "keywords": [
+          "Evil-WinRM",
+          "Pass-the-Hash",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/404bank.html#attack-chain-summary",
+        "keywords": [
+          "ADCS ESC4",
+          "ForceChangePassword",
+          "GenericWrite",
+          "Kerberoasting",
+          "Ligolo-ng",
+          "Nmap",
+          "Pass-the-Hash",
+          "Port Forwarding",
+          "RDP Access",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Lessons Learned",
+        "anchor": "HackSmarter/404bank.html#lessons-learned",
+        "keywords": [
+          "ADCS ESC4",
+          "CeWL",
+          "Certificate Template",
+          "ForceChangePassword",
+          "GenericWrite",
+          "WriteAccountRestrictions"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/404bank.html#tools-used",
+        "keywords": [
+          "BloodHound",
+          "CeWL",
+          "Certipy",
+          "Evil-WinRM",
+          "Hashcat",
+          "Kerberoasting",
+          "Kerbrute",
+          "Ligolo-ng",
+          "NetExec",
+          "Nmap",
+          "Port Forwarding",
+          "WinRM",
+          "bloodyAD",
+          "targetedKerberoast",
+          "username-anarchy"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "StellarComms",
+    "url": "HackSmarter/stellarcomms.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "ACL Abuse",
+      "WriteOwner",
+      "WriteDACL",
+      "ForceChangePassword",
+      "Active Directory",
+      "Anonymous FTP",
+      "Firefox Credentials",
+      "GMSA",
+      "Group Managed Service Account",
+      "DCSync",
+      "BloodHound",
+      "Credential Extraction",
+      "NetExec",
+      "Impacket",
+      "owneredit.py",
+      "dacledit.py",
+      "secretsdump.py",
+      "Evil-WinRM",
+      "firepwd",
+      "Firefox profile",
+      "logins.json",
+      "key4.db",
+      "browser credential harvesting",
+      "stellarcomms.local",
+      "NTLM hash",
+      "msDS-ManagedPassword",
+      "STELLAROPS-CONTROL",
+      "ops.controller",
+      "astro.researcher",
+      "eng.payload",
+      "SATLINK-SERVICE$",
+      "ReadGMSAPassword",
+      "GenericAll",
+      "FTP enumeration",
+      "Default password",
+      "browser policy",
+      "password rotation",
+      "Remote Management Users",
+      "LDAP",
+      "Remote Desktop Users",
+      "domain database",
+      "PAC",
+      "privilege escalation",
+      "SDDL"
+    ],
+    "description": "Active Directory CTF walkthrough covering anonymous FTP, ACL abuse, Firefox credential extraction, GMSA exploitation, and DCSync attacks.",
+    "sections": [
+      {
+        "heading": "StellarComms",
+        "anchor": "HackSmarter/stellarcomms.html#stellarcomms",
+        "keywords": [
+          "GMSA"
+        ]
+      },
+      {
+        "heading": "Port Scanning",
+        "anchor": "HackSmarter/stellarcomms.html#port-scanning",
+        "keywords": [
+          "FTP Enumeration",
+          "Nmap",
+          "RDP Access",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "FTP Enumeration",
+        "anchor": "HackSmarter/stellarcomms.html#ftp-enumeration",
+        "keywords": [
+          "FTP Enumeration"
+        ]
+      },
+      {
+        "heading": "Anonymous FTP Access",
+        "anchor": "HackSmarter/stellarcomms.html#anonymous-ftp",
+        "keywords": [
+          "FTP Enumeration"
+        ]
+      },
+      {
+        "heading": "Extracting FTP Contents",
+        "anchor": "HackSmarter/stellarcomms.html#extracting-ftp",
+        "keywords": [
+          "FTP Enumeration"
+        ]
+      },
+      {
+        "heading": "Testing Default Credentials",
+        "anchor": "HackSmarter/stellarcomms.html#default-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "BloodHound Data Collection",
+        "anchor": "HackSmarter/stellarcomms.html#bloodhound-collection",
+        "keywords": [
+          "BloodHound",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Attack Path Discovery",
+        "anchor": "HackSmarter/stellarcomms.html#attack-path-discovery",
+        "keywords": [
+          "BloodHound",
+          "ForceChangePassword",
+          "WinRM",
+          "WriteOwner"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation: Part 1",
+        "anchor": "HackSmarter/stellarcomms.html#privilege-escalation-part1",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Exploiting WriteOwner ACL",
+        "anchor": "HackSmarter/stellarcomms.html#writeowner-acl",
+        "keywords": [
+          "Impacket",
+          "WriteOwner",
+          "owneredit.py"
+        ]
+      },
+      {
+        "heading": "Modifying Group DACL",
+        "anchor": "HackSmarter/stellarcomms.html#modifying-dacl",
+        "keywords": [
+          "WriteDACL",
+          "dacledit.py"
+        ]
+      },
+      {
+        "heading": "Adding Junior.Analyst to STELLAROPS-CONTROL",
+        "anchor": "HackSmarter/stellarcomms.html#adding-group-member",
+        "keywords": [
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Forcing Password Reset on OPS.CONTROLLER",
+        "anchor": "HackSmarter/stellarcomms.html#forcechangepassword",
+        "keywords": [
+          "ForceChangePassword",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Establishing WinRM Session",
+        "anchor": "HackSmarter/stellarcomms.html#winrm-session",
+        "keywords": [
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "WinRM Access",
+        "anchor": "HackSmarter/stellarcomms.html#winrm-access",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Credential Harvesting: Firefox Profile",
+        "anchor": "HackSmarter/stellarcomms.html#firefox-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "Firefox Credentials"
+        ]
+      },
+      {
+        "heading": "Locating Firefox Profile",
+        "anchor": "HackSmarter/stellarcomms.html#locating-firefox-profile",
+        "keywords": [
+          "Evil-WinRM",
+          "Firefox Credentials",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Extracting Credential Files",
+        "anchor": "HackSmarter/stellarcomms.html#extracting-credential-files",
+        "keywords": [
+          "Credential Discovery",
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Decrypting Firefox Credentials",
+        "anchor": "HackSmarter/stellarcomms.html#decrypting-firefox-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "Firefox Credentials",
+          "firepwd"
+        ]
+      },
+      {
+        "heading": "Validating New Credentials",
+        "anchor": "HackSmarter/stellarcomms.html#validating-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation: Part 2",
+        "anchor": "HackSmarter/stellarcomms.html#privilege-escalation-part2",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "BloodHound Analysis of Astro.Researcher",
+        "anchor": "HackSmarter/stellarcomms.html#bloodhound-analysis",
+        "keywords": [
+          "BloodHound",
+          "GMSA",
+          "WriteDACL"
+        ]
+      },
+      {
+        "heading": "Abusing WriteDacl",
+        "anchor": "HackSmarter/stellarcomms.html#writedacl-abuse",
+        "keywords": [
+          "GenericAll",
+          "WriteDACL",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Forcing Password Reset on ENG.PAYLOAD",
+        "anchor": "HackSmarter/stellarcomms.html#password-reset-eng-payload",
+        "keywords": [
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "Reading GMSA Password",
+        "anchor": "HackSmarter/stellarcomms.html#gmsa-password",
+        "keywords": [
+          "DCSync",
+          "GMSA",
+          "Pass-the-Hash",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "NTDS.dit Extraction",
+        "anchor": "HackSmarter/stellarcomms.html#dcsync",
+        "keywords": [
+          "DCSync",
+          "GMSA",
+          "Impacket",
+          "NTDS.dit",
+          "secretsdump"
+        ]
+      },
+      {
+        "heading": "Administrator Access via Pass-the-Hash",
+        "anchor": "HackSmarter/stellarcomms.html#pass-the-hash",
+        "keywords": [
+          "Evil-WinRM",
+          "Pass-the-Hash",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/stellarcomms.html#attack-chain-summary",
+        "keywords": [
+          "DCSync",
+          "FTP Enumeration",
+          "ForceChangePassword",
+          "GMSA",
+          "GenericAll",
+          "NTDS.dit",
+          "Pass-the-Hash",
+          "WinRM",
+          "WriteDACL",
+          "WriteOwner"
+        ]
+      },
+      {
+        "heading": "Key Vulnerabilities Identified",
+        "anchor": "HackSmarter/stellarcomms.html#vulnerabilities",
+        "keywords": [
+          "BloodHound",
+          "DCSync",
+          "FTP Enumeration",
+          "ForceChangePassword",
+          "GMSA",
+          "WriteDACL",
+          "WriteOwner"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/stellarcomms.html#tools-used",
+        "keywords": [
+          "BloodHound",
+          "DCSync",
+          "Evil-WinRM",
+          "GMSA",
+          "Impacket",
+          "NTDS.dit",
+          "NetExec",
+          "Nmap",
+          "WinRM",
+          "WriteOwner",
+          "bloodyAD",
+          "dacledit.py",
+          "firepwd",
+          "owneredit.py",
+          "secretsdump"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Lumon",
+    "url": "HackSmarter/lumon.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "NTLM Relay",
+      "LAPS",
+      "BloodHound",
+      "ForceChangePassword",
+      "Command Injection",
+      "LSA Dump",
+      "Active Directory",
+      "Windows Server 2025",
+      "Privilege Escalation",
+      "ACE Abuse",
+      "NetExec",
+      "bloodyAD",
+      "ntlm_theft",
+      "Responder",
+      "Hashcat",
+      "xfreerdp",
+      "RDP",
+      "feroxbuster",
+      "internal service discovery",
+      "UNC path",
+      "hash capture",
+      "watering hole attack",
+      "SMB share",
+      "MDRepo",
+      "Ligolo-ng",
+      "port forwarding",
+      "admin panel",
+      "ping functionality",
+      "file share browser",
+      "UAC bypass",
+      "local admin",
+      "DCC2 hashes",
+      "Domain Cached Credentials",
+      "hellyr",
+      "MARKS",
+      "INTRANETSVC",
+      "harmonyc",
+      "hellye",
+      "service account",
+      "remote desktop users",
+      "intranet server",
+      "lumons.hacksmarter",
+      "PDF analysis",
+      "credential discovery",
+      "LAPS extraction",
+      "service hardening",
+      "SMB signing",
+      "ntlm theft",
+      "malicious URL",
+      "custom wordlist",
+      "watering hole",
+      "PuTTY shortcut"
+    ],
+    "description": "Complete walkthrough covering NTLM Relay, LAPS extraction, BloodHound analysis, ForceChangePassword ACE abuse, Command Injection, and LSA Dump techniques.",
+    "sections": [
+      {
+        "heading": "Lumon",
+        "anchor": "HackSmarter/lumon.html#lumon",
+        "keywords": [
+          "BloodHound",
+          "Command Injection",
+          "ForceChangePassword",
+          "LAPS",
+          "LSA Dump",
+          "NTLM Relay"
+        ]
+      },
+      {
+        "heading": "Domain Controller Enumeration",
+        "anchor": "HackSmarter/lumon.html#domain-controller-enumeration",
+        "keywords": [
+          "Nmap"
+        ]
+      },
+      {
+        "heading": "Intranet Server Enumeration",
+        "anchor": "HackSmarter/lumon.html#intranet-server-enumeration",
+        "keywords": [
+          "Nmap",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Credential Validation and Host Setup",
+        "anchor": "HackSmarter/lumon.html#credential-validation-and-host-setup",
+        "keywords": [
+          "Credential Discovery",
+          "NTLM Relay",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "SMB Share Discovery",
+        "anchor": "HackSmarter/lumon.html#smb-share-discovery",
+        "keywords": [
+          "NetExec",
+          "SMB Enumeration",
+          "smbclient"
+        ]
+      },
+      {
+        "heading": "Web Directory Enumeration",
+        "anchor": "HackSmarter/lumon.html#web-directory-enumeration",
+        "keywords": [
+          "feroxbuster"
+        ]
+      },
+      {
+        "heading": "BloodHound Enumeration",
+        "anchor": "HackSmarter/lumon.html#bloodhound-enumeration",
+        "keywords": [
+          "BloodHound"
+        ]
+      },
+      {
+        "heading": "Active Directory Data Collection",
+        "anchor": "HackSmarter/lumon.html#active-directory-data-collection",
+        "keywords": [
+          "BloodHound",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Attack Path Analysis",
+        "anchor": "HackSmarter/lumon.html#attack-path-analysis",
+        "keywords": [
+          "LAPS"
+        ]
+      },
+      {
+        "heading": "ForceChangePassword ACE Discovery",
+        "anchor": "HackSmarter/lumon.html#forcechangepassword-ace-discovery",
+        "keywords": [
+          "ForceChangePassword",
+          "LAPS",
+          "LSA Dump"
+        ]
+      },
+      {
+        "heading": "Exploitation - NTLM Hash Capture",
+        "anchor": "HackSmarter/lumon.html#exploitation-ntlm-hash-capture",
+        "keywords": [
+          "NTLM Relay"
+        ]
+      },
+      {
+        "heading": "Creating Malicious Files with ntlm_theft",
+        "anchor": "HackSmarter/lumon.html#creating-malicious-files-with-ntlm-theft",
+        "keywords": [
+          "NTLM Relay",
+          "SMB Enumeration",
+          "ntlm_theft",
+          "smbclient"
+        ]
+      },
+      {
+        "heading": "Capturing NTLMv2 Hash",
+        "anchor": "HackSmarter/lumon.html#capturing-ntlmv2-hash",
+        "keywords": [
+          "NTLM Relay",
+          "NTLMv2 Hash",
+          "Responder"
+        ]
+      },
+      {
+        "heading": "Cracking the Hash",
+        "anchor": "HackSmarter/lumon.html#cracking-the-hash",
+        "keywords": [
+          "Hashcat",
+          "NTLMv2 Hash"
+        ]
+      },
+      {
+        "heading": "1. Command Injection via Ping Functionality",
+        "anchor": "HackSmarter/lumon.html#1-command-injection-via-ping-functionality",
+        "keywords": [
+          "Command Injection"
+        ]
+      },
+      {
+        "heading": "Method 1: UNC Path Hash Capture",
+        "anchor": "HackSmarter/lumon.html#method-1-unc-path-hash-capture",
+        "keywords": [
+          "Hashcat",
+          "Responder"
+        ]
+      },
+      {
+        "heading": "Method 2: Command Injection (Alternative)",
+        "anchor": "HackSmarter/lumon.html#method-2-command-injection-alternative",
+        "keywords": [
+          "Command Injection"
+        ]
+      },
+      {
+        "heading": "Lateral Movement to MARKS",
+        "anchor": "HackSmarter/lumon.html#lateral-movement-to-marks",
+        "keywords": [
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "Force Changing MARKS Password",
+        "anchor": "HackSmarter/lumon.html#force-changing-marks-password",
+        "keywords": [
+          "ForceChangePassword",
+          "bloodyAD"
+        ]
+      },
+      {
+        "heading": "LAPS Password Extraction",
+        "anchor": "HackSmarter/lumon.html#laps-password-extraction",
+        "keywords": [
+          "LAPS"
+        ]
+      },
+      {
+        "heading": "Extracting LAPS Credentials",
+        "anchor": "HackSmarter/lumon.html#extracting-laps-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "LAPS",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation on INTRANET",
+        "anchor": "HackSmarter/lumon.html#privilege-escalation-on-intranet",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "UAC Bypass via RDP",
+        "anchor": "HackSmarter/lumon.html#uac-bypass-via-rdp",
+        "keywords": [
+          "RDP Access",
+          "UAC Bypass",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "LSA Dump and Domain Admin Compromise",
+        "anchor": "HackSmarter/lumon.html#lsa-dump-and-domain-admin-compromise",
+        "keywords": [
+          "LSA Dump"
+        ]
+      },
+      {
+        "heading": "Dumping LSA Secrets",
+        "anchor": "HackSmarter/lumon.html#dumping-lsa-secrets",
+        "keywords": [
+          "DCC2",
+          "LSA Dump"
+        ]
+      },
+      {
+        "heading": "Cracking Domain Admin Hash",
+        "anchor": "HackSmarter/lumon.html#cracking-domain-admin-hash",
+        "keywords": [
+          "DCC2",
+          "Hashcat"
+        ]
+      },
+      {
+        "heading": "Domain Controller Access",
+        "anchor": "HackSmarter/lumon.html#domain-controller-access",
+        "keywords": [
+          "RDP Access"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/lumon.html#attack-chain-summary",
+        "keywords": [
+          "Command Injection",
+          "DCC2",
+          "ForceChangePassword",
+          "LAPS",
+          "LSA Dump",
+          "RDP Access",
+          "SMB Enumeration",
+          "ntlm_theft"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Sysco",
+    "url": "HackSmarter/sysco.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "Active Directory",
+      "SMB",
+      "Bloodhound",
+      "GenericAll",
+      "Group Membership",
+      "Kerberos",
+      "Privilege Escalation",
+      "AS-REP Roasting",
+      "Password Spraying",
+      "Credential Reuse",
+      "GPO Abuse",
+      "Kerbrute",
+      "username-anarchy",
+      "NetExec",
+      "Nmap",
+      "Roundcube",
+      "Apache",
+      "IIS",
+      "Windows Server 2022",
+      "SYSCO.LOCAL",
+      "MD5-crypt",
+      "Cisco secret 5",
+      "pyGPOAbuse",
+      "Default Domain Policy",
+      "Group Policy",
+      "scheduled task",
+      "net localgroup",
+      "Evil-WinRM",
+      "web enumeration",
+      "employee names",
+      "username enumeration",
+      "RID brute force",
+      "Hashcat",
+      "email credentials",
+      "router config",
+      "password cracking",
+      "feroxbuster",
+      "webmail",
+      "hash cracking",
+      "cisco config",
+      "configuration file",
+      "greg.shields",
+      "jack.dowland",
+      "lainey.moore",
+      "Administrators group"
+    ],
+    "description": "Active Directory machine focusing on SMB enumeration, BloodHound analysis, and privilege escalation through group membership abuse.",
+    "sections": [
+      {
+        "heading": "Sysco",
+        "anchor": "HackSmarter/sysco.html#sysco",
+        "keywords": [
+          "GPO Abuse"
+        ]
+      },
+      {
+        "heading": "Nmap Scan",
+        "anchor": "HackSmarter/sysco.html#nmap-scan",
+        "keywords": [
+          "Nmap"
+        ]
+      },
+      {
+        "heading": "Web Enumeration",
+        "anchor": "HackSmarter/sysco.html#web-enumeration",
+        "keywords": [
+          "feroxbuster"
+        ]
+      },
+      {
+        "heading": "Username Enumeration",
+        "anchor": "HackSmarter/sysco.html#username-enumeration",
+        "keywords": [
+          "Kerbrute",
+          "username-anarchy"
+        ]
+      },
+      {
+        "heading": "Initial Access - AS-REP Roasting",
+        "anchor": "HackSmarter/sysco.html#initial-access-as-rep-roasting",
+        "keywords": [
+          "AS-REP Roasting"
+        ]
+      },
+      {
+        "heading": "AS-REP Roasting Attack",
+        "anchor": "HackSmarter/sysco.html#as-rep-roasting-attack",
+        "keywords": [
+          "AS-REP Roasting",
+          "Hashcat",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Lateral Movement",
+        "anchor": "HackSmarter/sysco.html#lateral-movement",
+        "keywords": [
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "BloodHound Collection",
+        "anchor": "HackSmarter/sysco.html#bloodhound-collection",
+        "keywords": [
+          "BloodHound"
+        ]
+      },
+      {
+        "heading": "Credential Reuse - Roundcube",
+        "anchor": "HackSmarter/sysco.html#credential-reuse-roundcube",
+        "keywords": [
+          "Credential Discovery"
+        ]
+      },
+      {
+        "heading": "Cracking the Cisco Secret",
+        "anchor": "HackSmarter/sysco.html#cracking-the-cisco-secret",
+        "keywords": [
+          "Cisco Config",
+          "Hashcat"
+        ]
+      },
+      {
+        "heading": "Password Spraying",
+        "anchor": "HackSmarter/sysco.html#password-spraying",
+        "keywords": [
+          "NetExec",
+          "Password Spraying"
+        ]
+      },
+      {
+        "heading": "Enumerating Lainey's Access",
+        "anchor": "HackSmarter/sysco.html#enumerating-lainey-s-access",
+        "keywords": [
+          "BloodHound"
+        ]
+      },
+      {
+        "heading": "RDP Session and More Credentials",
+        "anchor": "HackSmarter/sysco.html#rdp-session-and-more-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec",
+          "RDP Access",
+          "xfreerdp"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation - GPO Abuse",
+        "anchor": "HackSmarter/sysco.html#privilege-escalation-gpo-abuse",
+        "keywords": [
+          "GPO Abuse",
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Identifying the Attack Path",
+        "anchor": "HackSmarter/sysco.html#identifying-the-attack-path",
+        "keywords": [
+          "BloodHound",
+          "GPO Abuse"
+        ]
+      },
+      {
+        "heading": "Exploiting the GPO",
+        "anchor": "HackSmarter/sysco.html#exploiting-the-gpo",
+        "keywords": [
+          "Evil-WinRM",
+          "GPO Abuse",
+          "WinRM",
+          "pyGPOAbuse"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/sysco.html#attack-chain-summary",
+        "keywords": [
+          "Cisco Config",
+          "GPO Abuse",
+          "Kerbrute",
+          "RDP Access"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "ShareThePain",
+    "url": "HackSmarter/sharethepain.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "SMB Shares",
+      "Active Directory",
+      "Credential Discovery",
+      "Lateral Movement",
+      "Password Reuse",
+      "LLMNR",
+      "NBT-NS poisoning",
+      "Responder",
+      "NetExec",
+      "BloodHound",
+      "GenericAll",
+      "MSSQL",
+      "xp_cmdshell",
+      "Chisel",
+      "port forwarding",
+      "SOCKS proxy",
+      "Sliver C2",
+      "GodPotato",
+      "SeImpersonatePrivilege",
+      "null session",
+      "anonymous SMB",
+      "writable shares",
+      "URL file",
+      "NTLMv2 hash",
+      "hash cracking",
+      "Hashcat",
+      "Evil-WinRM",
+      "service account",
+      "proxychains",
+      "mssqlclient.py",
+      "Impacket",
+      "token impersonation",
+      "bob.ross",
+      "alice.wonderland",
+      "hack.smarter",
+      "linked servers",
+      "command execution",
+      "potato exploit",
+      "Domain Controller",
+      "Windows Server 2022",
+      "internal service",
+      "localhost tunneling"
+    ],
+    "description": "Walkthrough demonstrating SMB share enumeration, credential discovery, and lateral movement in Active Directory.",
+    "sections": [
+      {
+        "heading": "ShareThePain",
+        "anchor": "HackSmarter/sharethepain.html#sharethepain",
+        "keywords": [
+          "BloodHound",
+          "LLMNR Poisoning",
+          "MSSQL"
+        ]
+      },
+      {
+        "heading": "Nmap Scan",
+        "anchor": "HackSmarter/sharethepain.html#nmap-scan",
+        "keywords": [
+          "Nmap",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "SMB Enumeration",
+        "anchor": "HackSmarter/sharethepain.html#smb-enumeration",
+        "keywords": [
+          "LLMNR Poisoning",
+          "NTLMv2 Hash",
+          "NetExec",
+          "SMB Enumeration"
+        ]
+      },
+      {
+        "heading": "Credential Harvesting with URL File",
+        "anchor": "HackSmarter/sharethepain.html#credential-harvesting-with-url-file",
+        "keywords": [
+          "Credential Discovery",
+          "NTLMv2 Hash",
+          "Responder",
+          "smbclient"
+        ]
+      },
+      {
+        "heading": "Cracking the Hash",
+        "anchor": "HackSmarter/sharethepain.html#cracking-the-hash",
+        "keywords": [
+          "Hashcat",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "BloodHound Collection",
+        "anchor": "HackSmarter/sharethepain.html#bloodhound-collection",
+        "keywords": [
+          "BloodHound",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Attack Path Discovery",
+        "anchor": "HackSmarter/sharethepain.html#attack-path-discovery",
+        "keywords": [
+          "BloodHound",
+          "GenericAll"
+        ]
+      },
+      {
+        "heading": "Lateral Movement",
+        "anchor": "HackSmarter/sharethepain.html#lateral-movement",
+        "keywords": [
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "Password Reset via GenericAll",
+        "anchor": "HackSmarter/sharethepain.html#password-reset-via-genericall",
+        "keywords": [
+          "GenericAll",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Shell Access via WinRM",
+        "anchor": "HackSmarter/sharethepain.html#shell-access-via-winrm",
+        "keywords": [
+          "BloodHound",
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "[User Flag]",
+        "anchor": "HackSmarter/sharethepain.html#user-flag",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation",
+        "anchor": "HackSmarter/sharethepain.html#privilege-escalation",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Internal Service Discovery",
+        "anchor": "HackSmarter/sharethepain.html#internal-service-discovery",
+        "keywords": [
+          "Evil-WinRM",
+          "MSSQL",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Port Forwarding with Chisel",
+        "anchor": "HackSmarter/sharethepain.html#port-forwarding-with-chisel",
+        "keywords": [
+          "Chisel",
+          "Evil-WinRM",
+          "Port Forwarding",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "MSSQL Access",
+        "anchor": "HackSmarter/sharethepain.html#mssql-access",
+        "keywords": [
+          "MSSQL",
+          "mssqlclient.py",
+          "xp_cmdshell"
+        ]
+      },
+      {
+        "heading": "Implant Deployment",
+        "anchor": "HackSmarter/sharethepain.html#implant-deployment",
+        "keywords": [
+          "MSSQL",
+          "Sliver C2",
+          "xp_cmdshell"
+        ]
+      },
+      {
+        "heading": "SeImpersonatePrivilege Exploitation",
+        "anchor": "HackSmarter/sharethepain.html#seimpersonateprivilege-exploitation",
+        "keywords": [
+          "GodPotato",
+          "MSSQL",
+          "Sliver C2"
+        ]
+      },
+      {
+        "heading": "Domain Admin Access",
+        "anchor": "HackSmarter/sharethepain.html#domain-admin-access",
+        "keywords": [
+          "GodPotato"
+        ]
+      },
+      {
+        "heading": "Root Flag",
+        "anchor": "HackSmarter/sharethepain.html#root-flag",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/sharethepain.html#tools-used",
+        "keywords": [
+          "BloodHound",
+          "Chisel",
+          "Evil-WinRM",
+          "GodPotato",
+          "Hashcat",
+          "Impacket",
+          "LLMNR Poisoning",
+          "MSSQL",
+          "NetExec",
+          "Nmap",
+          "Port Forwarding",
+          "Responder",
+          "Sliver C2",
+          "WinRM",
+          "mssqlclient.py"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/sharethepain.html#attack-chain-summary",
+        "keywords": [
+          "Chisel",
+          "GenericAll",
+          "GodPotato",
+          "LLMNR Poisoning",
+          "MSSQL",
+          "NTLMv2 Hash",
+          "Port Forwarding",
+          "Responder",
+          "SMB Enumeration",
+          "xp_cmdshell"
+        ]
+      },
+      {
+        "heading": "Key Takeaways",
+        "anchor": "HackSmarter/sharethepain.html#key-takeaways",
+        "keywords": [
+          "GenericAll",
+          "MSSQL",
+          "SMB Enumeration"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Anomaly",
+    "url": "HackSmarter/anomaly.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "Active Directory",
+      "MSSQL",
+      "SQL Server",
+      "Linked Servers",
+      "xp_cmdshell",
+      "BloodHound",
+      "Privilege Escalation",
+      "Jenkins",
+      "RCE",
+      "Kerberos keytab",
+      "AD CS",
+      "ESC1",
+      "ESC4",
+      "Pass-the-Hash",
+      "NetExec",
+      "Certipy",
+      "Impacket",
+      "KeyTabExtract",
+      "wmiexec2",
+      "Ubuntu Linux",
+      "Windows Server 2022",
+      "Jenkins script console",
+      "Groovy",
+      "keytab extraction",
+      "kinit",
+      "AES256 hash",
+      "Machine Account Quota",
+      "addcomputer",
+      "certificate request",
+      "PKINIT",
+      "UnPAC-the-hash",
+      "Brandon_Boyd",
+      "anna_molly",
+      "anomaly.hsm",
+      "BRANDON-PC$",
+      "anomaly-ANOMALY-DC-CA-2",
+      "LDAP enumeration",
+      "user description field",
+      "Jenkins default credentials",
+      "command injection",
+      "router_config",
+      "SSH key persistence",
+      "Kerberos authentication",
+      "certificate template",
+      "AV evasion",
+      "domain database extraction",
+      "Linux to AD pivot"
+    ],
+    "description": "Active Directory exploitation through MSSQL server abuse, linked servers, and xp_cmdshell for privilege escalation.",
+    "sections": [
+      {
+        "heading": "Anomaly",
+        "anchor": "HackSmarter/anomaly.html#anomaly",
+        "keywords": [
+          "ADCS ESC1",
+          "ADCS ESC4",
+          "Jenkins RCE",
+          "Kerberos Keytab",
+          "Pass-the-Hash"
+        ]
+      },
+      {
+        "heading": "Ubuntu Server Enumeration",
+        "anchor": "HackSmarter/anomaly.html#ubuntu-server-enumeration",
+        "keywords": [
+          "Nmap"
+        ]
+      },
+      {
+        "heading": "Domain Controller Enumeration",
+        "anchor": "HackSmarter/anomaly.html#domain-controller-enumeration",
+        "keywords": [
+          "Nmap"
+        ]
+      },
+      {
+        "heading": "Initial Access - Jenkins RCE",
+        "anchor": "HackSmarter/anomaly.html#initial-access-jenkins-rce",
+        "keywords": [
+          "Jenkins RCE"
+        ]
+      },
+      {
+        "heading": "Jenkins Default Credentials",
+        "anchor": "HackSmarter/anomaly.html#jenkins-default-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "Jenkins RCE"
+        ]
+      },
+      {
+        "heading": "Exploiting the Script Console",
+        "anchor": "HackSmarter/anomaly.html#exploiting-the-script-console",
+        "keywords": [
+          "Jenkins RCE"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation - Ubuntu Server",
+        "anchor": "HackSmarter/anomaly.html#privilege-escalation-ubuntu-server",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Command Injection in router_config",
+        "anchor": "HackSmarter/anomaly.html#command-injection-in-router-config",
+        "keywords": [
+          "Command Injection"
+        ]
+      },
+      {
+        "heading": "Lateral Movement - Kerberos Keytab Discovery",
+        "anchor": "HackSmarter/anomaly.html#lateral-movement-kerberos-keytab-discovery",
+        "keywords": [
+          "Kerberos Keytab",
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "Locating Kerberos Keytabs",
+        "anchor": "HackSmarter/anomaly.html#locating-kerberos-keytabs",
+        "keywords": [
+          "Kerberos Keytab"
+        ]
+      },
+      {
+        "heading": "Extracting Principal Information",
+        "anchor": "HackSmarter/anomaly.html#extracting-principal-information",
+        "keywords": [
+          "Kerberos Keytab"
+        ]
+      },
+      {
+        "heading": "Obtaining a Kerberos Ticket",
+        "anchor": "HackSmarter/anomaly.html#obtaining-a-kerberos-ticket",
+        "keywords": [
+          "Kerberos Keytab"
+        ]
+      },
+      {
+        "heading": "Extracting Hashes from Keytab",
+        "anchor": "HackSmarter/anomaly.html#extracting-hashes-from-keytab",
+        "keywords": [
+          "Kerberos Keytab",
+          "KeyTabExtract"
+        ]
+      },
+      {
+        "heading": "User Enumeration via SMB",
+        "anchor": "HackSmarter/anomaly.html#user-enumeration-via-smb",
+        "keywords": [
+          "NetExec",
+          "SMB Enumeration"
+        ]
+      },
+      {
+        "heading": "Credential Validation",
+        "anchor": "HackSmarter/anomaly.html#credential-validation",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "BloodHound Collection",
+        "anchor": "HackSmarter/anomaly.html#bloodhound-collection",
+        "keywords": [
+          "BloodHound",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Domain Privilege Escalation - AD CS Exploitation",
+        "anchor": "HackSmarter/anomaly.html#domain-privilege-escalation-ad-cs-exploitation",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Certificate Template Enumeration",
+        "anchor": "HackSmarter/anomaly.html#certificate-template-enumeration",
+        "keywords": [
+          "ADCS ESC1",
+          "ADCS ESC4",
+          "Certificate Template",
+          "Certipy"
+        ]
+      },
+      {
+        "heading": "Checking Machine Account Quota",
+        "anchor": "HackSmarter/anomaly.html#checking-machine-account-quota",
+        "keywords": [
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Adding a Computer Account",
+        "anchor": "HackSmarter/anomaly.html#adding-a-computer-account",
+        "keywords": [
+          "Impacket",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Certificate Request for Domain Admin",
+        "anchor": "HackSmarter/anomaly.html#certificate-request-for-domain-admin",
+        "keywords": [
+          "Certipy"
+        ]
+      },
+      {
+        "heading": "Finding Alternative Domain Admin",
+        "anchor": "HackSmarter/anomaly.html#finding-alternative-domain-admin",
+        "keywords": [
+          "BloodHound"
+        ]
+      },
+      {
+        "heading": "Requesting Certificate as anna_molly",
+        "anchor": "HackSmarter/anomaly.html#requesting-certificate-as-anna-molly",
+        "keywords": [
+          "Certipy"
+        ]
+      },
+      {
+        "heading": "Authenticating and Extracting Hash",
+        "anchor": "HackSmarter/anomaly.html#authenticating-and-extracting-hash",
+        "keywords": [
+          "Certipy",
+          "PKINIT",
+          "Pass-the-Hash"
+        ]
+      },
+      {
+        "heading": "Using wmiexec2 for Evasion",
+        "anchor": "HackSmarter/anomaly.html#using-wmiexec2-for-evasion",
+        "keywords": [
+          "wmiexec2"
+        ]
+      },
+      {
+        "heading": "Key Takeaways",
+        "anchor": "HackSmarter/anomaly.html#key-takeaways",
+        "keywords": [
+          "ADCS ESC1",
+          "ADCS ESC4",
+          "wmiexec2"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/anomaly.html#tools-used",
+        "keywords": [
+          "BloodHound",
+          "Certipy",
+          "Impacket",
+          "Kerberos Keytab",
+          "KeyTabExtract",
+          "NetExec",
+          "Nmap",
+          "wmiexec2"
+        ]
+      },
+      {
+        "heading": "Attack Path Summary",
+        "anchor": "HackSmarter/anomaly.html#attack-path-summary",
+        "keywords": [
+          "ADCS ESC1",
+          "Command Injection",
+          "Jenkins RCE",
+          "Kerberos Keytab",
+          "Pass-the-Hash",
+          "wmiexec2"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Slayer",
+    "url": "HackSmarter/slayer.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium-Hard",
+    "keywords": [
+      "Active Directory",
+      "Kerberoasting",
+      "AS-REP Roasting",
+      "Password Cracking",
+      "BloodHound",
+      "ACL Abuse",
+      "NetExec",
+      "xfreerdp",
+      "RDP",
+      "PowerShell history",
+      "ConsoleHost_history.txt",
+      "wmiexec2",
+      "service binary path",
+      "PrivescCheck",
+      "SMB enumeration",
+      "RID brute force",
+      "Windows 11",
+      "Server 2025",
+      "tyler.ramsey",
+      "alice.wonderland",
+      "desktop.ini",
+      "hidden files",
+      "SysMgmtAgent",
+      "SERVICE_CHANGE_CONFIG",
+      "sc config",
+      "Get-PSReadlineOption",
+      "credential leak",
+      "service misconfiguration",
+      "SDDL",
+      "security descriptor",
+      "automated enumeration",
+      "privilege escalation",
+      "local admin",
+      "file transfer",
+      "Impacket SMB server",
+      "binPath manipulation",
+      "net localgroup"
+    ],
+    "description": "Active Directory machine covering Kerberoasting, AS-REP roasting, password cracking, and ACL-based privilege escalation.",
+    "sections": [
+      {
+        "heading": "Slayer",
+        "anchor": "HackSmarter/slayer.html#slayer",
+        "keywords": [
+          "PowerShell History",
+          "RDP Access",
+          "Service Binary Path"
+        ]
+      },
+      {
+        "heading": "Nmap Scan",
+        "anchor": "HackSmarter/slayer.html#nmap-scan",
+        "keywords": [
+          "Nmap",
+          "RDP Access"
+        ]
+      },
+      {
+        "heading": "Validating Credentials via SMB",
+        "anchor": "HackSmarter/slayer.html#validating-credentials-via-smb",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec",
+          "SMB Enumeration"
+        ]
+      },
+      {
+        "heading": "RID Brute Force for User Enumeration",
+        "anchor": "HackSmarter/slayer.html#rid-brute-force-for-user-enumeration",
+        "keywords": [
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Generating a Hosts File",
+        "anchor": "HackSmarter/slayer.html#generating-a-hosts-file",
+        "keywords": [
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "RDP Access",
+        "anchor": "HackSmarter/slayer.html#rdp-access",
+        "keywords": [
+          "RDP Access",
+          "xfreerdp"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation",
+        "anchor": "HackSmarter/slayer.html#privilege-escalation",
+        "keywords": [
+          "PowerShell History",
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "PowerShell History Analysis",
+        "anchor": "HackSmarter/slayer.html#powershell-history-analysis",
+        "keywords": [
+          "PowerShell History"
+        ]
+      },
+      {
+        "heading": "Validating Administrator Credentials",
+        "anchor": "HackSmarter/slayer.html#validating-administrator-credentials",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Getting a Shell with wmiexec2",
+        "anchor": "HackSmarter/slayer.html#getting-a-shell-with-wmiexec2",
+        "keywords": [
+          "Impacket",
+          "wmiexec2"
+        ]
+      },
+      {
+        "heading": "Finding Hidden Credentials",
+        "anchor": "HackSmarter/slayer.html#finding-hidden-credentials",
+        "keywords": [
+          "Credential Discovery"
+        ]
+      },
+      {
+        "heading": "Automated Privilege Escalation Enumeration",
+        "anchor": "HackSmarter/slayer.html#automated-privilege-escalation-enumeration",
+        "keywords": [
+          "Impacket",
+          "PrivescCheck",
+          "Privilege Escalation",
+          "Service Binary Path",
+          "Unquoted Service Path"
+        ]
+      },
+      {
+        "heading": "Analyzing Service Permissions",
+        "anchor": "HackSmarter/slayer.html#analyzing-service-permissions",
+        "keywords": [
+          "Service Binary Path"
+        ]
+      },
+      {
+        "heading": "Exploiting the Service",
+        "anchor": "HackSmarter/slayer.html#exploiting-the-service",
+        "keywords": [
+          "Service Binary Path"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/slayer.html#tools-used",
+        "keywords": [
+          "Impacket",
+          "NetExec",
+          "Nmap",
+          "PrivescCheck",
+          "RDP Access",
+          "wmiexec2",
+          "xfreerdp"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/slayer.html#attack-chain-summary",
+        "keywords": [
+          "PowerShell History",
+          "PrivescCheck",
+          "RDP Access",
+          "Service Binary Path",
+          "wmiexec2"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Ascension",
+    "url": "HackSmarter/ascension.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "Active Directory",
+      "LDAP",
+      "Kerberos",
+      "Delegation",
+      "Constrained Delegation",
+      "Unconstrained Delegation",
+      "FTP",
+      "NFS",
+      "SSH",
+      "john the ripper",
+      "ssh2john",
+      "pspy",
+      "LinPEAS",
+      "MySQL",
+      "getcap",
+      "Linux capabilities",
+      "cap_setuid",
+      "Ubuntu Linux",
+      "vsftpd",
+      "anonymous FTP",
+      "showmount",
+      "NFS misconfiguration",
+      "cron job",
+      "backup.sh",
+      "wp-config.php",
+      "WordPress",
+      "database credentials",
+      "lateral movement",
+      "user1",
+      "user2",
+      "user3",
+      "Python binary",
+      "os.setuid",
+      "RustScan",
+      "pwlist.txt",
+      "password list",
+      "NFS mount",
+      "id_rsa",
+      "SSH key",
+      "passphrase cracking",
+      "process monitoring",
+      "UID",
+      "world-writable",
+      "/tmp",
+      "authorized_keys",
+      "service users",
+      "database enumeration",
+      "privilege escalation chain"
+    ],
+    "description": "Active Directory walkthrough focusing on Kerberos delegation attacks including constrained and unconstrained delegation.",
+    "sections": [
+      {
+        "heading": "Ascension",
+        "anchor": "HackSmarter/ascension.html#ascension",
+        "keywords": [
+          "Cron Job Exploitation",
+          "MySQL",
+          "NFS"
+        ]
+      },
+      {
+        "heading": "Port Scanning",
+        "anchor": "HackSmarter/ascension.html#port-scanning",
+        "keywords": [
+          "FTP Enumeration",
+          "NFS"
+        ]
+      },
+      {
+        "heading": "FTP Enumeration",
+        "anchor": "HackSmarter/ascension.html#ftp-enumeration",
+        "keywords": [
+          "FTP Enumeration"
+        ]
+      },
+      {
+        "heading": "NFS Enumeration",
+        "anchor": "HackSmarter/ascension.html#nfs-enumeration",
+        "keywords": [
+          "NFS"
+        ]
+      },
+      {
+        "heading": "Cracking the SSH Key",
+        "anchor": "HackSmarter/ascension.html#cracking-the-ssh-key",
+        "keywords": [
+          "John the Ripper",
+          "NFS"
+        ]
+      },
+      {
+        "heading": "SSH Access as user1",
+        "anchor": "HackSmarter/ascension.html#ssh-access-as-user1",
+        "keywords": [
+          "NFS"
+        ]
+      },
+      {
+        "heading": "Lateral Movement: user1 to user2",
+        "anchor": "HackSmarter/ascension.html#lateral-movement-user1-to-user2",
+        "keywords": [
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "Process Monitoring with pspy",
+        "anchor": "HackSmarter/ascension.html#process-monitoring-with-pspy",
+        "keywords": [
+          "pspy"
+        ]
+      },
+      {
+        "heading": "Exploiting the Cron Job",
+        "anchor": "HackSmarter/ascension.html#exploiting-the-cron-job",
+        "keywords": [
+          "Cron Job Exploitation"
+        ]
+      },
+      {
+        "heading": "Lateral Movement: user2 to user3",
+        "anchor": "HackSmarter/ascension.html#lateral-movement-user2-to-user3",
+        "keywords": [
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "WordPress Configuration Discovery",
+        "anchor": "HackSmarter/ascension.html#wordpress-configuration-discovery",
+        "keywords": [
+          "LinPEAS",
+          "MySQL",
+          "RDP Access",
+          "WordPress"
+        ]
+      },
+      {
+        "heading": "Database Enumeration",
+        "anchor": "HackSmarter/ascension.html#database-enumeration",
+        "keywords": [
+          "MySQL",
+          "WordPress"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation: user3 to root",
+        "anchor": "HackSmarter/ascension.html#privilege-escalation-user3-to-root",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Linux Capabilities Abuse",
+        "anchor": "HackSmarter/ascension.html#linux-capabilities-abuse",
+        "keywords": [
+          "Linux Capabilities"
+        ]
+      },
+      {
+        "heading": "Flags Summary",
+        "anchor": "HackSmarter/ascension.html#flags-summary",
+        "keywords": [
+          "Cron Job Exploitation",
+          "MySQL",
+          "NFS",
+          "WordPress"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/ascension.html#tools-used",
+        "keywords": [
+          "FTP Enumeration",
+          "John the Ripper",
+          "LinPEAS",
+          "Linux Capabilities",
+          "MySQL",
+          "NFS",
+          "pspy"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/ascension.html#attack-chain-summary",
+        "keywords": [
+          "Cron Job Exploitation",
+          "FTP Enumeration",
+          "John the Ripper",
+          "LinPEAS",
+          "Linux Capabilities",
+          "MySQL",
+          "NFS",
+          "WordPress",
+          "pspy"
+        ]
+      },
+      {
+        "heading": "Key Takeaways",
+        "anchor": "HackSmarter/ascension.html#key-takeaways",
+        "keywords": [
+          "Cron Job Exploitation",
+          "FTP Enumeration",
+          "Linux Capabilities",
+          "NFS",
+          "WordPress"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "BankSmarter",
+    "url": "HackSmarter/banksmarter.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "Active Directory",
+      "BloodHound",
+      "ACL Abuse",
+      "GenericWrite",
+      "Shadow Credentials",
+      "PKINIT",
+      "SNMP",
+      "snmpwalk",
+      "onesixtyone",
+      "Hydra",
+      "SSH bruteforce",
+      "Ubuntu 24.04",
+      "cron job hijacking",
+      "Unix socket",
+      "PYTHONPATH",
+      "SUID binary",
+      "UDP scan",
+      "community string",
+      "credential discovery",
+      "privilege escalation",
+      "Python library hijacking",
+      "environment variable",
+      "service misconfiguration",
+      "brute force attack",
+      "SSH enumeration",
+      "automated scanning",
+      "file permissions",
+      "socket exploitation",
+      "local privilege escalation"
+    ],
+    "description": "Active Directory exploitation using BloodHound for attack path discovery, ACL abuse, and shadow credentials attack.",
+    "sections": [
+      {
+        "heading": "BankSmarter",
+        "anchor": "HackSmarter/banksmarter.html#banksmarter",
+        "keywords": [
+          "Cron Job Exploitation",
+          "SNMP Enumeration",
+          "SUID",
+          "Unix Socket"
+        ]
+      },
+      {
+        "heading": "TCP Port Scan",
+        "anchor": "HackSmarter/banksmarter.html#tcp-port-scan",
+        "keywords": [
+          "Nmap"
+        ]
+      },
+      {
+        "heading": "UDP Port Scan",
+        "anchor": "HackSmarter/banksmarter.html#udp-port-scan",
+        "keywords": [
+          "Nmap",
+          "SNMP Enumeration"
+        ]
+      },
+      {
+        "heading": "SNMP Enumeration",
+        "anchor": "HackSmarter/banksmarter.html#snmp-enumeration",
+        "keywords": [
+          "SNMP Enumeration",
+          "snmpwalk"
+        ]
+      },
+      {
+        "heading": "Username Enumeration",
+        "anchor": "HackSmarter/banksmarter.html#username-enumeration",
+        "keywords": [
+          "username-anarchy"
+        ]
+      },
+      {
+        "heading": "SSH Brute Force",
+        "anchor": "HackSmarter/banksmarter.html#ssh-brute-force",
+        "keywords": [
+          "Hydra"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation: layne.stanley to scott.weiland",
+        "anchor": "HackSmarter/banksmarter.html#privilege-escalation-layne-stanley-to-scott-weiland",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Script Replacement Attack",
+        "anchor": "HackSmarter/banksmarter.html#script-replacement-attack",
+        "keywords": [
+          "Cron Job Exploitation",
+          "SUID"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation: scott.weiland to ronnie.stone",
+        "anchor": "HackSmarter/banksmarter.html#privilege-escalation-scott-weiland-to-ronnie-stone",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Unix Socket Discovery",
+        "anchor": "HackSmarter/banksmarter.html#unix-socket-discovery",
+        "keywords": [
+          "Unix Socket"
+        ]
+      },
+      {
+        "heading": "Socket Exploitation",
+        "anchor": "HackSmarter/banksmarter.html#socket-exploitation",
+        "keywords": [
+          "Unix Socket",
+          "socat"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation: ronnie.stone to root",
+        "anchor": "HackSmarter/banksmarter.html#privilege-escalation-ronnie-stone-to-root",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "SUID Binary Discovery",
+        "anchor": "HackSmarter/banksmarter.html#suid-binary-discovery",
+        "keywords": [
+          "SUID"
+        ]
+      },
+      {
+        "heading": "Python Script Analysis",
+        "anchor": "HackSmarter/banksmarter.html#python-script-analysis",
+        "keywords": [
+          "PYTHONPATH Hijacking",
+          "SUID"
+        ]
+      },
+      {
+        "heading": "PYTHONPATH Exploitation",
+        "anchor": "HackSmarter/banksmarter.html#pythonpath-exploitation",
+        "keywords": [
+          "PYTHONPATH Hijacking",
+          "SUID"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/banksmarter.html#tools-used",
+        "keywords": [
+          "Hydra",
+          "Nmap",
+          "SNMP Enumeration",
+          "Unix Socket",
+          "pspy",
+          "snmpwalk",
+          "socat",
+          "username-anarchy"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/banksmarter.html#attack-chain-summary",
+        "keywords": [
+          "PYTHONPATH Hijacking",
+          "SNMP Enumeration",
+          "SUID",
+          "Unix Socket"
+        ]
+      },
+      {
+        "heading": "Lessons Learned",
+        "anchor": "HackSmarter/banksmarter.html#lessons-learned",
+        "keywords": [
+          "PYTHONPATH Hijacking",
+          "SNMP Enumeration",
+          "SUID"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Midgarden2 - Bad Successor",
+    "url": "HackSmarter/midgarden2-badsuccessor.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Hard",
+    "keywords": [
+      "Active Directory",
+      "ADCS",
+      "ESC1",
+      "Certificate Services",
+      "BloodHound",
+      "Domain Takeover",
+      "BadSuccessor",
+      "CVE-2025",
+      "dMSA",
+      "Distributed Managed Service Account",
+      "DCSync",
+      "bloodyAD",
+      "NetExec",
+      "Windows Server 2025",
+      "Certipy",
+      "certificate exploitation",
+      "GMSA",
+      "Group Managed Service Account",
+      "domain compromise",
+      "msDS-ManagedPassword",
+      "freyja",
+      "attribute manipulation",
+      "service account abuse",
+      "PKI",
+      "managed service accounts",
+      "certificate authority",
+      "successor attribute",
+      "domain admin escalation"
+    ],
+    "description": "Advanced Active Directory machine featuring ADCS ESC1 vulnerability exploitation and domain takeover techniques.",
+    "sections": [
+      {
+        "heading": "Midgarden2",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#midgarden2",
+        "keywords": [
+          "BadSuccessor",
+          "BloodHound",
+          "DCSync",
+          "dMSA"
+        ]
+      },
+      {
+        "heading": "Credential Validation",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#credential-validation",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Port Scan",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#port-scan",
+        "keywords": [
+          "BadSuccessor",
+          "Nmap"
+        ]
+      },
+      {
+        "heading": "User Enumeration",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#user-enumeration",
+        "keywords": [
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "BloodHound Collection",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#bloodhound-collection",
+        "keywords": [
+          "BloodHound",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Attack Path Analysis",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#attack-path-analysis",
+        "keywords": [
+          "BloodHound",
+          "ForceChangePassword",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Lateral Movement",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#lateral-movement",
+        "keywords": [
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "Password Reset",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#password-reset",
+        "keywords": [
+          "ForceChangePassword"
+        ]
+      },
+      {
+        "heading": "WinRM Shell",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#winrm-shell",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation: BadSuccessor Attack",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#privilege-escalation-badsuccessor-attack",
+        "keywords": [
+          "BadSuccessor",
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "dMSA Discovery",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#dmsa-discovery",
+        "keywords": [
+          "BadSuccessor",
+          "Evil-WinRM",
+          "WinRM",
+          "dMSA"
+        ]
+      },
+      {
+        "heading": "Understanding the BadSuccessor Vulnerability",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#understanding-the-badsuccessor-vulnerability",
+        "keywords": [
+          "BadSuccessor",
+          "GenericAll",
+          "WriteDACL",
+          "dMSA"
+        ]
+      },
+      {
+        "heading": "Finding Vulnerable OUs",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#finding-vulnerable-ous",
+        "keywords": [
+          "BadSuccessor",
+          "GenericAll",
+          "WriteDACL",
+          "WriteOwner"
+        ]
+      },
+      {
+        "heading": "Automated Check with NetExec",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#automated-check-with-netexec",
+        "keywords": [
+          "BadSuccessor",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Exploitation with BloodyAD",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#exploitation-with-bloodyad",
+        "keywords": [
+          "BadSuccessor",
+          "bloodyAD",
+          "dMSA"
+        ]
+      },
+      {
+        "heading": "DCSync Attack",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#dcsync-attack",
+        "keywords": [
+          "DCSync",
+          "NTDS.dit",
+          "dMSA",
+          "secretsdump"
+        ]
+      },
+      {
+        "heading": "Domain Admin Access",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#domain-admin-access",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#tools-used",
+        "keywords": [
+          "BloodHound",
+          "Evil-WinRM",
+          "Impacket",
+          "NetExec",
+          "WinRM",
+          "bloodyAD",
+          "secretsdump"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#attack-chain-summary",
+        "keywords": [
+          "BadSuccessor",
+          "BloodHound",
+          "DCSync",
+          "WinRM",
+          "dMSA"
+        ]
+      },
+      {
+        "heading": "References",
+        "anchor": "HackSmarter/midgarden2-badsuccessor.html#references",
+        "keywords": [
+          "BadSuccessor",
+          "bloodyAD"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Arasaka",
+    "url": "HackSmarter/arasaka.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium-Hard",
+    "keywords": [
+      "Active Directory",
+      "Kerberos",
+      "Golden Ticket",
+      "Silver Ticket",
+      "Mimikatz",
+      "DCSync",
+      "Domain Persistence",
+      "ForceChangePassword",
+      "targeted Kerberoasting",
+      "ADCS",
+      "ESC1",
+      "BloodHound",
+      "NetExec",
+      "Certipy",
+      "Impacket",
+      "bloodyAD",
+      "ticket manipulation",
+      "TGT",
+      "TGS",
+      "krbtgt",
+      "SPN",
+      "service principal name",
+      "ticket granting ticket",
+      "domain controller",
+      "NTDS.dit",
+      "certificate template",
+      "PKI abuse",
+      "domain admin",
+      "persistence mechanisms",
+      "hash extraction",
+      "Windows Server",
+      "AD exploitation"
+    ],
+    "description": "Active Directory exploitation covering Kerberos attacks, Golden/Silver tickets, DCSync, and persistence mechanisms.",
+    "sections": [
+      {
+        "heading": "Arasaka",
+        "anchor": "HackSmarter/arasaka.html#arasaka",
+        "keywords": [
+          "ADCS ESC1",
+          "Kerberoasting"
+        ]
+      },
+      {
+        "heading": "Forcing a Password Change on Yorinobu",
+        "anchor": "HackSmarter/arasaka.html#forcing-a-password-change-on-yorinobu",
+        "keywords": [
+          "BloodHound",
+          "ForceChangePassword",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Targeted Kerberoasting",
+        "anchor": "HackSmarter/arasaka.html#targeted-kerberoasting",
+        "keywords": [
+          "Hashcat",
+          "Kerberoasting",
+          "targetedKerberoast"
+        ]
+      },
+      {
+        "heading": "Enumerating ADCS Vulnerabilities",
+        "anchor": "HackSmarter/arasaka.html#enumerating-adcs-vulnerabilities",
+        "keywords": [
+          "ADCS",
+          "ADCS ESC1",
+          "Certificate Template",
+          "Certipy"
+        ]
+      },
+      {
+        "heading": "Exploiting ESC1 for Privilege Escalation",
+        "anchor": "HackSmarter/arasaka.html#exploiting-esc1-for-privilege-escalation",
+        "keywords": [
+          "ADCS ESC1",
+          "Certipy",
+          "Pass-the-Hash",
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/arasaka.html#tools-used",
+        "keywords": [
+          "Certipy",
+          "Hashcat",
+          "Kerberoasting",
+          "NetExec",
+          "targetedKerberoast"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/arasaka.html#attack-chain-summary",
+        "keywords": [
+          "ADCS ESC1",
+          "ForceChangePassword",
+          "Kerberoasting"
+        ]
+      },
+      {
+        "heading": "Key Takeaways",
+        "anchor": "HackSmarter/arasaka.html#key-takeaways",
+        "keywords": [
+          "ADCS ESC1",
+          "Certipy",
+          "ForceChangePassword",
+          "Kerberoasting"
+        ]
+      },
+      {
+        "heading": "References",
+        "anchor": "HackSmarter/arasaka.html#references",
+        "keywords": [
+          "Certipy"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "BuildingMagic",
+    "url": "HackSmarter/buildingmagic.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Medium",
+    "keywords": [
+      "Active Directory",
+      "SMB Relay",
+      "NTLM Relay",
+      "Responder",
+      "BloodHound",
+      "Privilege Escalation",
+      "Kerberoasting",
+      "NetExec",
+      "Impacket",
+      "ntlmrelayx",
+      "SMB signing",
+      "credential relay",
+      "hash capture",
+      "NTLM authentication",
+      "man-in-the-middle",
+      "network attack",
+      "domain compromise",
+      "Windows Server 2022",
+      "service account",
+      "SPN enumeration",
+      "password cracking",
+      "Hashcat",
+      "Evil-WinRM",
+      "lateral movement",
+      "SeBackupPrivilege",
+      "backup operators",
+      "SAM dump",
+      "SYSTEM hive",
+      "registry dump",
+      "Pass-the-Hash",
+      "administrator access"
+    ],
+    "description": "Active Directory machine demonstrating SMB relay attacks, NTLM relay, and privilege escalation techniques.",
+    "sections": [
+      {
+        "heading": "BuildingMagic",
+        "anchor": "HackSmarter/buildingmagic.html#buildingmagic",
+        "keywords": [
+          "BloodHound",
+          "Kerberoasting",
+          "NTLM Relay",
+          "Pass-the-Hash",
+          "SeBackupPrivilege"
+        ]
+      },
+      {
+        "heading": "Extracting and Cracking Password Hashes",
+        "anchor": "HackSmarter/buildingmagic.html#extracting-and-cracking-password-hashes",
+        "keywords": [
+          "Hashcat"
+        ]
+      },
+      {
+        "heading": "Credential Validation",
+        "anchor": "HackSmarter/buildingmagic.html#credential-validation",
+        "keywords": [
+          "Credential Discovery",
+          "NetExec",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Lateral Movement",
+        "anchor": "HackSmarter/buildingmagic.html#lateral-movement",
+        "keywords": [
+          "Lateral Movement"
+        ]
+      },
+      {
+        "heading": "BloodHound Enumeration",
+        "anchor": "HackSmarter/buildingmagic.html#bloodhound-enumeration",
+        "keywords": [
+          "BloodHound",
+          "Kerberoasting"
+        ]
+      },
+      {
+        "heading": "Kerberoasting r.haggard",
+        "anchor": "HackSmarter/buildingmagic.html#kerberoasting-r-haggard",
+        "keywords": [
+          "Kerberoasting",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "Cracking the TGS Hash",
+        "anchor": "HackSmarter/buildingmagic.html#cracking-the-tgs-hash",
+        "keywords": [
+          "Hashcat",
+          "Kerberoasting",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "ForceChangePassword Abuse",
+        "anchor": "HackSmarter/buildingmagic.html#forcechangepassword-abuse",
+        "keywords": [
+          "BloodHound",
+          "ForceChangePassword",
+          "NetExec"
+        ]
+      },
+      {
+        "heading": "NTLM Hash Capture via Malicious LNK File",
+        "anchor": "HackSmarter/buildingmagic.html#ntlm-hash-capture-via-malicious-lnk-file",
+        "keywords": [
+          "LLMNR Poisoning",
+          "NTLM Relay",
+          "NTLMv2 Hash",
+          "Responder",
+          "ntlm_theft",
+          "smbclient"
+        ]
+      },
+      {
+        "heading": "Cracking the NTLMv2 Hash",
+        "anchor": "HackSmarter/buildingmagic.html#cracking-the-ntlmv2-hash",
+        "keywords": [
+          "Hashcat",
+          "NTLM Relay",
+          "NTLMv2 Hash"
+        ]
+      },
+      {
+        "heading": "Remote Management Access",
+        "anchor": "HackSmarter/buildingmagic.html#remote-management-access",
+        "keywords": [
+          "BloodHound",
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "User Flag",
+        "anchor": "HackSmarter/buildingmagic.html#user-flag",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation",
+        "anchor": "HackSmarter/buildingmagic.html#privilege-escalation",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "SeBackupPrivilege Abuse",
+        "anchor": "HackSmarter/buildingmagic.html#sebackupprivilege-abuse",
+        "keywords": [
+          "Evil-WinRM",
+          "SeBackupPrivilege",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Extracting Local Hashes",
+        "anchor": "HackSmarter/buildingmagic.html#extracting-local-hashes",
+        "keywords": [
+          "DCSync",
+          "Impacket",
+          "NTDS.dit",
+          "secretsdump"
+        ]
+      },
+      {
+        "heading": "Password Spraying with Hash",
+        "anchor": "HackSmarter/buildingmagic.html#password-spraying-with-hash",
+        "keywords": [
+          "NetExec",
+          "Pass-the-Hash",
+          "Password Spraying"
+        ]
+      },
+      {
+        "heading": "Domain Admin Access",
+        "anchor": "HackSmarter/buildingmagic.html#domain-admin-access",
+        "keywords": [
+          "BloodHound"
+        ]
+      },
+      {
+        "heading": "Administrator Shell",
+        "anchor": "HackSmarter/buildingmagic.html#administrator-shell",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Root Flag",
+        "anchor": "HackSmarter/buildingmagic.html#root-flag",
+        "keywords": [
+          "Evil-WinRM",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Tools Used",
+        "anchor": "HackSmarter/buildingmagic.html#tools-used",
+        "keywords": [
+          "BloodHound",
+          "Evil-WinRM",
+          "Hashcat",
+          "Impacket",
+          "NetExec",
+          "Responder",
+          "WinRM",
+          "ntlm_theft",
+          "secretsdump"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/buildingmagic.html#attack-chain-summary",
+        "keywords": [
+          "ForceChangePassword",
+          "Kerberoasting",
+          "Pass-the-Hash",
+          "SeBackupPrivilege",
+          "ntlm_theft"
+        ]
+      },
+      {
+        "heading": "Key Takeaways",
+        "anchor": "HackSmarter/buildingmagic.html#key-takeaways",
+        "keywords": [
+          "ForceChangePassword",
+          "Kerberoasting",
+          "SeBackupPrivilege"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Staged",
+    "url": "HackSmarter/staged.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Easy-Medium",
+    "keywords": [
+      "Active Directory",
+      "SMB",
+      "Enumeration",
+      "Password Spraying",
+      "Initial Access",
+      "BloodHound",
+      "Sliver C2",
+      "shellcode",
+      "staged payload",
+      "browser credentials",
+      "SharpChrome",
+      "Chrome password extraction",
+      "unquoted service path",
+      "GodPotato",
+      "SeImpersonatePrivilege",
+      "SAM hive",
+      "SECURITY hive",
+      "SSH pivoting",
+      "internal network",
+      "web shell",
+      "file upload",
+      "Windows Defender bypass",
+      "C2 infrastructure",
+      "implant deployment",
+      "credential theft",
+      "service exploitation",
+      "registry hive dump",
+      "secretsdump",
+      "SSH tunneling",
+      "MySQL",
+      "multi-host pivot",
+      "web.hacksmarter",
+      "sqlsrv.hacksmarter"
+    ],
+    "description": "Beginner-friendly Active Directory machine covering enumeration, password spraying, and basic BloodHound analysis.",
+    "sections": [
+      {
+        "heading": "Staged",
+        "anchor": "HackSmarter/staged.html#staged",
+        "keywords": [
+          "Browser Credential Extraction",
+          "GodPotato",
+          "SSH Tunneling",
+          "Sliver C2",
+          "Unquoted Service Path"
+        ]
+      },
+      {
+        "heading": "Starting Point",
+        "anchor": "HackSmarter/staged.html#starting-point",
+        "keywords": [
+          "Web Shell"
+        ]
+      },
+      {
+        "heading": "Nmap Scan",
+        "anchor": "HackSmarter/staged.html#nmap-scan",
+        "keywords": [
+          "Nmap",
+          "WinRM"
+        ]
+      },
+      {
+        "heading": "Verifying Web Shell Access",
+        "anchor": "HackSmarter/staged.html#verifying-web-shell-access",
+        "keywords": [
+          "Web Shell"
+        ]
+      },
+      {
+        "heading": "Initial Access - Sliver C2 Stager",
+        "anchor": "HackSmarter/staged.html#initial-access-sliver-c2-stager",
+        "keywords": [
+          "Sliver C2"
+        ]
+      },
+      {
+        "heading": "Generate Shellcode and Start Listener",
+        "anchor": "HackSmarter/staged.html#generate-shellcode-and-start-listener",
+        "keywords": [
+          "Sliver C2"
+        ]
+      },
+      {
+        "heading": "Create the Nim Stager",
+        "anchor": "HackSmarter/staged.html#create-the-nim-stager",
+        "keywords": [
+          "Nim Stager"
+        ]
+      },
+      {
+        "heading": "Transfer Stager to Attack Machine",
+        "anchor": "HackSmarter/staged.html#transfer-stager-to-attack-machine",
+        "keywords": [
+          "Impacket"
+        ]
+      },
+      {
+        "heading": "Upload and Execute Stager",
+        "anchor": "HackSmarter/staged.html#upload-and-execute-stager",
+        "keywords": [
+          "Sliver C2",
+          "Web Shell"
+        ]
+      },
+      {
+        "heading": "Credential Harvesting",
+        "anchor": "HackSmarter/staged.html#credential-harvesting",
+        "keywords": [
+          "Browser Credential Extraction",
+          "Credential Discovery",
+          "SharpChrome",
+          "Sliver C2"
+        ]
+      },
+      {
+        "heading": "RDP Access",
+        "anchor": "HackSmarter/staged.html#rdp-access",
+        "keywords": [
+          "RDP Access",
+          "xfreerdp"
+        ]
+      },
+      {
+        "heading": "Privilege Escalation",
+        "anchor": "HackSmarter/staged.html#privilege-escalation",
+        "keywords": [
+          "Privilege Escalation"
+        ]
+      },
+      {
+        "heading": "Finding the Vulnerability",
+        "anchor": "HackSmarter/staged.html#finding-the-vulnerability",
+        "keywords": [
+          "Unquoted Service Path"
+        ]
+      },
+      {
+        "heading": "Dumping Credentials with GodPotato",
+        "anchor": "HackSmarter/staged.html#dumping-credentials-with-godpotato",
+        "keywords": [
+          "Credential Discovery",
+          "GodPotato"
+        ]
+      },
+      {
+        "heading": "Extracting SAM/SECURITY Hives",
+        "anchor": "HackSmarter/staged.html#extracting-sam-security-hives",
+        "keywords": [
+          "esentutl"
+        ]
+      },
+      {
+        "heading": "Extracting Hashes",
+        "anchor": "HackSmarter/staged.html#extracting-hashes",
+        "keywords": [
+          "Impacket",
+          "LSA Dump",
+          "secretsdump"
+        ]
+      },
+      {
+        "heading": "Cracking Hashes",
+        "anchor": "HackSmarter/staged.html#cracking-hashes",
+        "keywords": [
+          "Hashcat"
+        ]
+      },
+      {
+        "heading": "Setting Up SSH Tunnel",
+        "anchor": "HackSmarter/staged.html#setting-up-ssh-tunnel",
+        "keywords": [
+          "SSH Tunneling"
+        ]
+      },
+      {
+        "heading": "Accessing the Database Server",
+        "anchor": "HackSmarter/staged.html#accessing-the-database-server",
+        "keywords": [
+          "MySQL"
+        ]
+      },
+      {
+        "heading": "Key Techniques",
+        "anchor": "HackSmarter/staged.html#key-techniques",
+        "keywords": [
+          "Browser Credential Extraction",
+          "GodPotato",
+          "Impacket",
+          "Nim Stager",
+          "SSH Tunneling",
+          "SharpChrome",
+          "Sliver C2",
+          "Unquoted Service Path",
+          "esentutl",
+          "secretsdump"
+        ]
+      },
+      {
+        "heading": "Attack Chain Summary",
+        "anchor": "HackSmarter/staged.html#attack-chain-summary",
+        "keywords": [
+          "Browser Credential Extraction",
+          "GodPotato",
+          "MySQL",
+          "Nim Stager",
+          "RDP Access",
+          "SSH Tunneling",
+          "SharpChrome",
+          "Sliver C2",
+          "Unquoted Service Path",
+          "Web Shell"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Welcome to HackSmarter Labs",
+    "url": "HackSmarter/welcome.html",
+    "category": "HackSmarter Labs",
+    "difficulty": "Info",
+    "keywords": [
+      "HackSmarter",
+      "Introduction",
+      "Getting Started",
+      "Lab Setup",
+      "VPN",
+      "Active Directory training",
+      "penetration testing",
+      "red team",
+      "lab environment",
+      "VM setup",
+      "networking",
+      "lab access"
+    ],
+    "description": "Introduction and setup guide for HackSmarter Labs Active Directory training environment."
+  },
+  {
+    "title": "PowerShell File Transfer via DNS Lookup",
+    "url": "writeups/ps-file-transfer-dns.html",
+    "category": "Writeups",
+    "difficulty": "Technique",
+    "keywords": [
+      "PowerShell",
+      "DNS Exfiltration",
+      "Data Transfer",
+      "Stealth",
+      "Covert Channel",
+      "DNS Tunneling",
+      "Red Team",
+      "exfiltration",
+      "data exfil",
+      "DNS queries",
+      "command and control",
+      "C2 channel",
+      "evasion",
+      "firewall bypass",
+      "restricted environment",
+      "nslookup",
+      "Resolve-DnsName",
+      "base64 encoding",
+      "chunked transfer"
+    ],
+    "description": "Learn how to exfiltrate data using DNS queries with PowerShell. A stealthy technique for transferring files in restricted environments."
+  },
+  {
+    "title": "Getting Started with Sliver C2",
+    "url": "writeups/sliver-c2-getting-started.html",
+    "category": "Writeups",
+    "difficulty": "Tutorial",
+    "keywords": [
+      "Sliver",
+      "C2",
+      "Command and Control",
+      "Red Team",
+      "Post Exploitation",
+      "Implants",
+      "Beacons",
+      "Sessions",
+      "MTLS",
+      "HTTP",
+      "DNS",
+      "payload generation",
+      "operator console",
+      "listener",
+      "staging",
+      "shellcode",
+      "implant management",
+      "remote access",
+      "post-exploitation framework",
+      "offensive security",
+      "red team tools"
+    ],
+    "description": "Comprehensive guide to setting up and using Sliver C2 framework for red team operations and post-exploitation."
+  },
+  {
+    "title": "Dual Cloud Redirector C2",
+    "url": "projects/dual-cloud-c2-redirector.html",
+    "category": "Projects",
+    "difficulty": "Advanced",
+    "keywords": [
+      "C2 Infrastructure",
+      "Redirector",
+      "Cloud",
+      "OPSEC",
+      "Red Team Infrastructure",
+      "AWS",
+      "Azure",
+      "Traffic Redirection",
+      "domain fronting",
+      "CDN",
+      "infrastructure setup",
+      "operational security",
+      "nginx",
+      "Apache mod_rewrite",
+      "firewall rules",
+      "traffic filtering",
+      "resilient infrastructure",
+      "redundancy",
+      "team server",
+      "beacon redirection"
+    ],
+    "description": "Building a resilient dual-cloud C2 infrastructure with redirectors for enhanced operational security and redundancy."
+  },
+  {
+    "title": "Certification Journey",
+    "url": "vector3.html",
+    "category": "Certifications",
+    "difficulty": "Info",
+    "keywords": [
+      "CPTS",
+      "PNPT",
+      "OSCP",
+      "Security+",
+      "CCNA",
+      "Certifications",
+      "Career Path",
+      "Study Resources",
+      "Certified Penetration Testing Specialist",
+      "Practical Network Penetration Tester",
+      "Offensive Security Certified Professional",
+      "CompTIA",
+      "Cisco",
+      "exam prep",
+      "study guide",
+      "certification path",
+      "cybersecurity career"
+    ],
+    "description": "My cybersecurity certification journey including CPTS, PNPT, Security+, and CCNA with study tips and resources."
+  }
+]

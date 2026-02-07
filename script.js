@@ -258,4 +258,326 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize copy buttons
     initCopyButtons();
+
+    // ============================================
+    // Site-wide Search Functionality
+    // ============================================
+    initSearch();
 });
+
+// ============================================
+// Search Implementation
+// ============================================
+function initSearch() {
+    const searchInput = document.getElementById('siteSearch');
+    const searchResults = document.getElementById('searchResults');
+
+    if (!searchInput || !searchResults) return;
+
+    let searchIndex = [];
+    let currentFocusIndex = -1;
+
+    // Determine correct path to search-index.json based on current page location
+    const currentPath = window.location.pathname;
+    let searchIndexPath = 'search-index.json';
+
+    if (currentPath.includes('/HackSmarter/') || currentPath.includes('/writeups/') || currentPath.includes('/projects/')) {
+        searchIndexPath = '../search-index.json';
+    }
+
+    // Load search index
+    fetch(searchIndexPath)
+        .then(response => response.json())
+        .then(data => {
+            searchIndex = data;
+        })
+        .catch(err => console.error('Error loading search index:', err));
+
+    // Debounce function to limit search frequency
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Resolve URL based on current page location
+    function resolveUrl(url) {
+        if (currentPath.includes('/HackSmarter/') || currentPath.includes('/writeups/') || currentPath.includes('/projects/')) {
+            return '../' + url;
+        }
+        return url;
+    }
+
+    // Score keywords against a query
+    function scoreKeywords(keywords, normalizedQuery, queryTerms) {
+        let score = 0;
+        const matched = [];
+        keywords.forEach(keyword => {
+            const keywordLower = keyword.toLowerCase();
+            if (keywordLower === normalizedQuery) {
+                score += 80;
+                matched.push(keyword);
+            } else if (keywordLower.includes(normalizedQuery)) {
+                score += 60;
+                matched.push(keyword);
+            } else {
+                const allTermsMatch = queryTerms.every(term => keywordLower.includes(term));
+                if (allTermsMatch) {
+                    score += 40;
+                    matched.push(keyword);
+                }
+            }
+        });
+        return { score, matched };
+    }
+
+    // Perform search
+    function performSearch(query) {
+        if (!query || query.trim().length < 2) {
+            searchResults.hidden = true;
+            searchResults.innerHTML = '';
+            currentFocusIndex = -1;
+            return;
+        }
+
+        const normalizedQuery = query.toLowerCase().trim();
+        const queryTerms = normalizedQuery.split(/\s+/);
+        const allResults = [];
+
+        searchIndex.forEach(item => {
+            // --- Page-level scoring ---
+            let pageScore = 0;
+            const pageMatchedKeywords = [];
+
+            if (item.title.toLowerCase().includes(normalizedQuery)) {
+                pageScore += 100;
+            }
+            if (item.category.toLowerCase().includes(normalizedQuery)) {
+                pageScore += 50;
+            }
+
+            const kwResult = scoreKeywords(item.keywords, normalizedQuery, queryTerms);
+            pageScore += kwResult.score;
+            pageMatchedKeywords.push(...kwResult.matched);
+
+            if (item.description.toLowerCase().includes(normalizedQuery)) {
+                pageScore += 30;
+            }
+
+            queryTerms.forEach(term => {
+                if (item.title.toLowerCase().includes(term)) pageScore += 10;
+                if (item.description.toLowerCase().includes(term)) pageScore += 5;
+            });
+
+            if (pageScore > 0) {
+                allResults.push({
+                    type: 'page',
+                    title: item.title,
+                    url: resolveUrl(item.url),
+                    category: item.category,
+                    description: item.description,
+                    score: pageScore,
+                    matchedKeywords: pageMatchedKeywords
+                });
+            }
+
+            // --- Section-level scoring ---
+            if (item.sections && item.sections.length > 0) {
+                item.sections.forEach(section => {
+                    let sectionScore = 0;
+                    const sectionMatchedKeywords = [];
+
+                    // Section heading match
+                    if (section.heading.toLowerCase().includes(normalizedQuery)) {
+                        sectionScore += 90;
+                    }
+
+                    // Section keyword matches
+                    const sKwResult = scoreKeywords(section.keywords, normalizedQuery, queryTerms);
+                    sectionScore += sKwResult.score;
+                    sectionMatchedKeywords.push(...sKwResult.matched);
+
+                    // Multi-term heading match
+                    queryTerms.forEach(term => {
+                        if (section.heading.toLowerCase().includes(term)) sectionScore += 15;
+                    });
+
+                    if (sectionScore > 0) {
+                        allResults.push({
+                            type: 'section',
+                            title: item.title,
+                            sectionHeading: section.heading,
+                            url: resolveUrl(section.anchor),
+                            category: item.category,
+                            description: item.description,
+                            score: sectionScore,
+                            matchedKeywords: sectionMatchedKeywords
+                        });
+                    }
+                });
+            }
+        });
+
+        // Sort by score descending
+        allResults.sort((a, b) => b.score - a.score);
+
+        // Deduplicate: if a section result points to the same page as a page result,
+        // keep the higher-scoring one. Also limit section results from same page.
+        const seen = new Map();
+        const dedupedResults = [];
+
+        for (const result of allResults) {
+            // Use base URL (without anchor) as the dedup key for page results
+            const baseUrl = result.url.split('#')[0];
+            const key = result.type === 'section'
+                ? result.url  // Unique per section
+                : baseUrl;    // Unique per page
+
+            // Limit to 3 section results per page
+            if (result.type === 'section') {
+                const pageCount = dedupedResults.filter(
+                    r => r.type === 'section' && r.url.split('#')[0] === baseUrl
+                ).length;
+                if (pageCount >= 3) continue;
+            }
+
+            if (!seen.has(key)) {
+                seen.set(key, true);
+                dedupedResults.push(result);
+            }
+
+            if (dedupedResults.length >= 10) break;
+        }
+
+        displayResults(dedupedResults, normalizedQuery);
+    }
+
+    // Display search results
+    function displayResults(results, query) {
+        if (results.length === 0) {
+            searchResults.innerHTML = '<div class="search-no-results">No walkthroughs found for "' + escapeHtml(query) + '"</div>';
+            searchResults.hidden = false;
+            return;
+        }
+
+        const html = results.map((item, index) => {
+            const keywordsHtml = item.matchedKeywords.length > 0
+                ? '<div class="search-result-keywords">' +
+                  item.matchedKeywords.slice(0, 5).map(kw =>
+                      `<span class="search-keyword-tag highlighted">${escapeHtml(kw)}</span>`
+                  ).join('') +
+                  '</div>'
+                : '';
+
+            // Show "Page > Section" for section-level results
+            const titleHtml = item.type === 'section'
+                ? `<span class="search-result-page">${highlightText(item.title, query)}</span> <span class="search-result-separator">&rsaquo;</span> <span class="search-result-section">${highlightText(item.sectionHeading, query)}</span>`
+                : highlightText(item.title, query);
+
+            return `
+                <div class="search-result-item${item.type === 'section' ? ' search-result-section-item' : ''}" data-index="${index}" data-url="${item.url}" tabindex="0">
+                    <div class="search-result-category">${escapeHtml(item.category)}</div>
+                    <div class="search-result-title">${titleHtml}</div>
+                    ${item.type === 'page' ? '<div class="search-result-description">' + highlightText(item.description, query) + '</div>' : ''}
+                    ${keywordsHtml}
+                </div>
+            `;
+        }).join('');
+
+        searchResults.innerHTML = html;
+        searchResults.hidden = false;
+        currentFocusIndex = -1;
+
+        // Add click handlers
+        document.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                window.location.href = item.dataset.url;
+            });
+        });
+    }
+
+    // Highlight matching text
+    function highlightText(text, query) {
+        const escapedText = escapeHtml(text);
+        const regex = new RegExp(`(${escapeHtml(query)})`, 'gi');
+        return escapedText.replace(regex, '<mark style="background: rgba(255, 107, 107, 0.3); color: #ff8787; padding: 0 2px; border-radius: 2px;">$1</mark>');
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Keyboard navigation
+    function navigateResults(direction) {
+        const items = searchResults.querySelectorAll('.search-result-item');
+        if (items.length === 0) return;
+
+        // Remove previous focus
+        if (currentFocusIndex >= 0) {
+            items[currentFocusIndex].classList.remove('focused');
+        }
+
+        // Update index
+        if (direction === 'down') {
+            currentFocusIndex = (currentFocusIndex + 1) % items.length;
+        } else if (direction === 'up') {
+            currentFocusIndex = (currentFocusIndex - 1 + items.length) % items.length;
+        }
+
+        // Add new focus
+        items[currentFocusIndex].classList.add('focused');
+        items[currentFocusIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', debounce((e) => {
+        performSearch(e.target.value);
+    }, 300));
+
+    searchInput.addEventListener('keydown', (e) => {
+        if (!searchResults.hidden) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                navigateResults('down');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateResults('up');
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const items = searchResults.querySelectorAll('.search-result-item');
+                if (currentFocusIndex >= 0 && items[currentFocusIndex]) {
+                    window.location.href = items[currentFocusIndex].dataset.url;
+                } else if (items.length > 0) {
+                    window.location.href = items[0].dataset.url;
+                }
+            } else if (e.key === 'Escape') {
+                searchResults.hidden = true;
+                searchInput.blur();
+            }
+        }
+    });
+
+    // Close results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.hidden = true;
+            currentFocusIndex = -1;
+        }
+    });
+
+    // Reopen results when focusing back on input (if there's text)
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim().length >= 2) {
+            performSearch(searchInput.value);
+        }
+    });
+}

