@@ -3,3 +3,12 @@ AGENTS.md
 GEMINI.md
 CLAUDE.md
 .claude
+
+# Dev/internal documentation (not part of the site)
+SEARCH_FEATURE.md
+SEARCH_IMPLEMENTATION_SUMMARY.md
+SEARCH_QUICK_START.md
+UPDATE_SEARCH_INDEX.md
+
+# Misplaced files
+404-bank_logo.png

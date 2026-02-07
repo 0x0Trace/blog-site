@@ -1,0 +1,98 @@
+{
+  "items": [
+    {
+      "label": "Home",
+      "url": "index.html"
+    },
+    {
+      "label": "Writeups",
+      "expanded": false,
+      "children": [
+        {
+          "label": "PS File Transfer via DNS Lookup",
+          "url": "writeups/ps-file-transfer-dns.html"
+        },
+        {
+          "label": "Getting Started with Sliver C2",
+          "url": "writeups/sliver-c2-getting-started.html"
+        }
+      ]
+    },
+    {
+      "label": "HackSmarter Labs",
+      "expanded": true,
+      "children": [
+        {
+          "label": "Welcome",
+          "url": "HackSmarter/welcome.html"
+        },
+        {
+          "label": "Staged",
+          "url": "HackSmarter/staged.html"
+        },
+        {
+          "label": "BuildingMagic",
+          "url": "HackSmarter/buildingmagic.html"
+        },
+        {
+          "label": "Arasaka",
+          "url": "HackSmarter/arasaka.html"
+        },
+        {
+          "label": "Midgarden2",
+          "url": "HackSmarter/midgarden2-badsuccessor.html"
+        },
+        {
+          "label": "BankSmarter",
+          "url": "HackSmarter/banksmarter.html"
+        },
+        {
+          "label": "Ascension",
+          "url": "HackSmarter/ascension.html"
+        },
+        {
+          "label": "Slayer",
+          "url": "HackSmarter/slayer.html"
+        },
+        {
+          "label": "Anomaly",
+          "url": "HackSmarter/anomaly.html"
+        },
+        {
+          "label": "ShareThePain",
+          "url": "HackSmarter/sharethepain.html"
+        },
+        {
+          "label": "Sysco",
+          "url": "HackSmarter/sysco.html"
+        },
+        {
+          "label": "Lumon",
+          "url": "HackSmarter/lumon.html"
+        },
+        {
+          "label": "StellarComms",
+          "url": "HackSmarter/stellarcomms.html"
+        },
+        {
+          "label": "404-Bank",
+          "url": "HackSmarter/404bank.html"
+        }
+      ]
+    },
+    {
+      "label": "Certification Journey",
+      "url": "vector3.html"
+    },
+    {
+      "label": "Projects",
+      "expanded": false,
+      "children": [
+        {
+          "label": "Dual Cloud Redirector C2",
+          "url": "projects/dual-cloud-c2-redirector.html"
+        }
+      ]
+    }
+  ]
+}
