@@ -819,7 +819,7 @@ ol li::after, ol a::after {
 
 /* Code block styling - Markdown style */
 pre.code-block, pre {
-    background: #0d1117;
+    background: #161b22;
     border: 1px solid #30363d;
     border-left: 3px solid #6B46C1;
     padding: 1rem 1.25rem 1rem 40px; /* Extra left padding to clear copy icon */
@@ -908,7 +908,7 @@ pre.code-block::-webkit-scrollbar, pre::-webkit-scrollbar {
     height: 10px;
 }
 pre.code-block::-webkit-scrollbar-track, pre::-webkit-scrollbar-track {
-    background: #0d0d0d;
+    background: #161b22;
 }
 pre.code-block::-webkit-scrollbar-thumb, pre::-webkit-scrollbar-thumb {
     background: #00aaff;
