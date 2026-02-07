@@ -181,9 +181,8 @@
 
   <div class="machine-info">
     <ul>
-      <li><strong>Platform:</strong> CTF Challenge</li>
+      <li><strong>Platform:</strong> HackSmarter Labs</li>
       <li><strong>Difficulty:</strong> <span class="difficulty-medium">Medium</span></li>
-      <li><strong>Target:</strong> 10.1.248.71</li>
       <li><strong>Domain:</strong> stellarcomms.local</li>
       <li><strong>Key Topics:</strong> Active Directory ACL Abuse, Firefox Credentials, GMSA Exploitation</li>
     </ul>
@@ -195,7 +194,6 @@
   <p>Our objective is to simulate a compromised remote worker scenario, enumerate Active Directory misconfigurations, pivot through the internal network, and ultimately compromise high-value targets including the domain controller.</p>
 
   <p><strong>Initial Access:</strong> Valid VPN access with a known username (<code>junior.analyst</code>), password unknown.</p>
-  <p><strong>Goal:</strong> Complete domain compromise and extract Administrator credentials.</p>
 
   <h2>Reconnaissance</h2>
 
@@ -230,8 +228,8 @@
   <p>Three directories were discovered:</p>
   <ul>
     <li><code>Docs/</code> - Documentation files</li>
-    <li><code>IT/</code> - IT-related content (empty)</li>
-    <li><code>Pics/</code> - Pictures directory (empty)</li>
+    <li><code>IT/</code> - A .exe Firefox ESR installation file</li>
+    <li><code>Pics/</code> - Pictures directory (nothing interesting)</li>
   </ul>
 
   <h3><span class="step">[Step 3]</span> Extracting FTP Contents</h3>
@@ -683,3 +681,7 @@ eng.payload:1106:aad3b435b51404eeaad3b435b51404ee:[REDACTED]:::</code></pre>
 <script src="../script.js"></script>
 </body>
 </html>
+
+
+
+
