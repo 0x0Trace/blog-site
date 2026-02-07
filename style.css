@@ -819,14 +819,14 @@ ol li::after, ol a::after {
 pre.code-block, pre {
     background: #0d1117;
     border: 1px solid #30363d;
-    border-left: 3px solid #ff6b6b;
+    border-left: 3px solid #6B46C1;
     padding: 1rem 1.25rem 1rem 40px; /* Extra left padding to clear copy icon */
     border-radius: 6px;
     font-size: 0.9rem;
     line-height: 1.6;
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: #ff6b6b #161b22;
+    scrollbar-color: #6B46C1 #161b22;
     margin-top: 1rem;
     margin-bottom: 1rem;
     margin-right: 0;
